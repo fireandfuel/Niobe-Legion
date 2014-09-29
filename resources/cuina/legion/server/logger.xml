@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration strict="true" name="LegionServerConfig">
+	<Properties>
+		<Property name="stdout_file">logs/server/stdout.log</Property>
+		<Property name="stderr_file">logs/server/error.log</Property>
+		<Property name="recv_file">logs/server/recv.log</Property>
+		<Property name="send_file">logs/server/send.log</Property>
+		<Property name="database_file">logs/server/database.log</Property>
+		<Property name="auth_file">logs/server/auth.log</Property>
+		<Property name="module_file">logs/server/module.log</Property>
+	</Properties>
+	<Appenders>
+		<Appender type="Console" name="STDOUT">
+			<Layout type="PatternLayout">
+				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+			</Layout>
+		</Appender>
+		<Appender type="Console" name="STDERR">
+			<Layout type="PatternLayout">
+				<Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
+			</Layout>
+		</Appender>
+		<Appender type="File" name="stdout_appender" fileName="${stdout_file}">
+			<Layout type="PatternLayout">
+				<Pattern>%d %p [%t] %m%n</Pattern>
+			</Layout>
+		</Appender>
+		<Appender type="File" name="stderr_appender" fileName="${stderr_file}">
+			<Layout type="PatternLayout">
+				<Pattern>%d %p [%t] %m%n</Pattern>
+			</Layout>
+		</Appender>
+		<Appender type="File" name="recv_appender" fileName="${recv_file}">
+			<Layout type="PatternLayout">
+				<Pattern>%d %p [%t] %m%n</Pattern>
+			</Layout>
+		</Appender>
+		<Appender type="File" name="send_appender" fileName="${send_file}">
+			<Layout type="PatternLayout">
+				<Pattern>%d %p [%t] %m%n</Pattern>
+			</Layout>
+		</Appender>
+		<Appender type="File" name="database_appender" fileName="${database_file}">
+			<Layout type="PatternLayout">
+				<Pattern>%d %p [%t] %m%n</Pattern>
+			</Layout>
+		</Appender>
+		<Appender type="File" name="auth_appender" fileName="${auth_file}">
+			<Layout type="PatternLayout">
+				<Pattern>%d %p [%t] %m%n</Pattern>
+			</Layout>
+		</Appender>
+		<Appender type="File" name="module_appender" fileName="${module_file}">
+			<Layout type="PatternLayout">
+				<Pattern>%d %p [%t] %m%n</Pattern>
+			</Layout>
+		</Appender>
+	</Appenders>
+	<Loggers>
+		<Logger name="stdout" level="trace" additivity="false">
+			<AppenderRef ref="STDOUT"/>
+			<AppenderRef ref="stdout_appender"/>
+		</Logger>
+		<Logger name="stderr" level="error" additivity="false">
+			<AppenderRef ref="STDERR"/>
+			<AppenderRef ref="stderr_appender"/>
+		</Logger>
+		<Logger name="recv" level="debug" additivity="false">
+			<AppenderRef ref="recv_appender"/>
+		</Logger>
+		<Logger name="send" level="debug" additivity="false">
+			<AppenderRef ref="send_appender"/>
+		</Logger>
+		<Logger name="database" level="debug" additivity="false">
+			<AppenderRef ref="database_appender"/>
+		</Logger>
+		<Logger name="auth" level="debug" additivity="false">
+			<AppenderRef ref="auth_appender"/>
+		</Logger>
+		<Logger name="module" level="debug" additivity="false">
+			<AppenderRef ref="module_appender"/>
+		</Logger>
+		<Root level="off">
+		</Root>
+	</Loggers>
+</Configuration>

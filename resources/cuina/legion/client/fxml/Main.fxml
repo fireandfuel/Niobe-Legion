@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.shape.SVGPath?>
+
+<AnchorPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml"
+	fx:controller="cuina.legion.client.gui.MainController">
+	<BorderPane AnchorPane.bottomAnchor="0.0"
+		AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+		AnchorPane.topAnchor="0.0">
+		<top>
+			<AnchorPane fx:id="draggableTopPane">
+				<BorderPane AnchorPane.bottomAnchor="0.0"
+					AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="7.0"
+					AnchorPane.topAnchor="0.0">
+					<left>
+						<HBox alignment="CENTER_LEFT" spacing="2">
+							<ImageView fx:id="icon" fitHeight="16.0" fitWidth="16.0"/>
+							<Label fx:id="topLabel" text="FensterTitel" />
+						</HBox>
+					</left>
+					<right>
+						<HBox alignment="CENTER_RIGHT" spacing="2">
+							<Button fx:id="iconfy" onAction="#iconfy" prefHeight="30"
+								prefWidth="30" minHeight="30" minWidth="30" maxHeight="30"
+								maxWidth="30">
+								<tooltip>
+									<Tooltip text="Minimieren" />
+								</tooltip>
+								<graphic>
+									<SVGPath content="M0 14, H16V16H0V14" stroke="WHITE" fill="WHITE"
+										strokeWidth="2.0" />
+								</graphic>
+							</Button>
+							<Button fx:id="maximize" onAction="#maximize" prefHeight="30"
+								prefWidth="30" minHeight="30" minWidth="30" maxHeight="30"
+								maxWidth="30">
+								<tooltip>
+									<Tooltip text="Maximieren/Verkleinern" />
+								</tooltip>
+								<graphic>
+									<SVGPath content="M0 0, H16V16H0V0" stroke="WHITE"
+										fill="TRANSPARENT" strokeWidth="2.0" />
+								</graphic>
+							</Button>
+							<Button fx:id="close" onAction="#close" prefHeight="30"
+								prefWidth="30" minHeight="30" minWidth="30" maxHeight="30"
+								maxWidth="30">
+								<tooltip>
+									<Tooltip text="Schließen" />
+								</tooltip>
+								<graphic>
+									<SVGPath
+										content="M0 2 L7 8 L0 14 L 2 16 L8 9 L14 16 L16 14 L9 8 L 16 2 L14 0 L8 7 L2 0 L 0 2"
+										stroke="WHITE" fill="WHITE" strokeWidth="2.0" />
+								</graphic>
+							</Button>
+						</HBox>
+					</right>
+				</BorderPane>
+			</AnchorPane>
+		</top>
+		<center>
+			<AnchorPane fx:id="mainPane" />
+		</center>
+	</BorderPane>
+</AnchorPane>
