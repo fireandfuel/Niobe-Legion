@@ -16,12 +16,6 @@ public class MysqlDialect implements ISqlDialect
 	}
 
 	@Override
-	public String longName()
-	{
-		return "BIGINT";
-	}
-
-	@Override
 	public String floatName()
 	{
 		return "FLOAT";

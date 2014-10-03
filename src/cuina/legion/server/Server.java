@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -163,6 +164,9 @@ public class Server
 				Logger.exception(LegionLogger.STDERR, e);
 			}
 		} catch (IOException e)
+		{
+			Logger.exception(LegionLogger.STDERR, e);
+		} catch (SQLException e)
 		{
 			Logger.exception(LegionLogger.STDERR, e);
 		}

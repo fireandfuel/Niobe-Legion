@@ -144,11 +144,12 @@ public class ModuleLoader
 			{
 				Attributes attributes = manifest.getMainAttributes();
 				ModuleInstance instance = new ModuleInstance(
-						attributes.getValue("ModuleDependencies"),
-						attributes.getValue("ModuleConflicts"), attributes.getValue("ModuleName"),
-						attributes.getValue("ModuleVersion"), attributes.getValue("ModuleContact"),
-						attributes.getValue("ModuleDescription"), jarFile,
-						attributes.getValue("ModuleClass"));
+						attributes.getValue("Module-Dependencies"),
+						attributes.getValue("Module-Conflicts"),
+						attributes.getValue("Module-Name"), attributes.getValue("Module-Version"),
+						attributes.getValue("Created-By"),
+						attributes.getValue("Module-Description"), jarFile,
+						attributes.getValue("Module-Class"));
 
 				if(instance.getName() != null && !instance.getName().isEmpty()
 						&& instance.getVersion() != null && !instance.getVersion().isEmpty()

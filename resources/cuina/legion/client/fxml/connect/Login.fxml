@@ -25,8 +25,14 @@
 						GridPane.rowIndex="1" />
 					<PasswordField fx:id="password" GridPane.columnIndex="1"
 						GridPane.rowIndex="1" />
-					<HBox alignment="CENTER" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2">
-						<Label fx:id="status" alignment="CENTER" textAlignment="CENTER"/>
+					<HBox alignment="CENTER" GridPane.columnIndex="0"
+						GridPane.rowIndex="2" GridPane.columnSpan="2">
+						<Label fx:id="status" alignment="CENTER" textAlignment="CENTER" />
+					</HBox>
+					<HBox alignment="BOTTOM_RIGHT" GridPane.columnIndex="0"
+						GridPane.rowIndex="3" GridPane.columnSpan="2">
+						<Button fx:id="login" text="login" onAction="#login"
+							defaultButton="true" />
 					</HBox>
 				</children>
 				<columnConstraints>
@@ -36,11 +42,5 @@
 			</GridPane>
 		</VBox>
 	</center>
-	<bottom>
-		<HBox alignment="BOTTOM_RIGHT">
-			<Button fx:id="login" text="login" onAction="#login"
-				defaultButton="true" />
-		</HBox>
-	</bottom>
 </BorderPane>
 

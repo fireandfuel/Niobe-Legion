@@ -239,6 +239,7 @@ public class ClientCommunicator extends Communicator
 										.parseLong(currentStanza.getSequenceId()));
 								if(datasets != null)
 								{
+
 									datasets.add(new Dataset(datasetType));
 									break;
 								}

@@ -64,7 +64,7 @@ public class Database
 
 	private ISqlDialect sqlDialect;
 
-	Database(String type, String... args)
+	Database(String type, String... args) throws SQLException
 	{
 		this.connectionType = type;
 
@@ -175,6 +175,7 @@ public class Database
 		} catch (SQLException e)
 		{
 			this.disconnect();
+			throw e;
 		}
 
 		List<String> users = this.getUsers();
@@ -264,8 +265,8 @@ public class Database
 		this.create(DatasetType.GROUP);
 		this.create(DatasetType.USER);
 
-		List<Dataset> results = this
-				.select(DatasetType.USER, "`name`", null, "ORDER BY `name` ASC");
+		List<Dataset> results = this.select(DatasetType.USER, "`name`", null,
+				"ORDER BY `name` ASC", false);
 
 		if(results != null)
 		{
@@ -281,7 +282,7 @@ public class Database
 	public String getPassword(String user)
 	{
 		List<Dataset> results = this.select(DatasetType.USER, "`password`",
-				"`name` = '" + this.encrypt(user) + "'", null);
+				"`name` = '" + this.encrypt(user) + "'", null, false);
 
 		if(results != null && results.size() == 1)
 		{
@@ -610,7 +611,8 @@ public class Database
 		return 0;
 	}
 
-	public List<Dataset> select(IDatasetType type, String rows, String where, String extra)
+	public List<Dataset> select(IDatasetType type, String rows, String where, String extra,
+			boolean loadForeignKey)
 	{
 		Statement query;
 
@@ -623,7 +625,7 @@ public class Database
 
 			if(table.contains("`"))
 			{
-				table.replace("`", "");
+				table = table.replace("`", "");
 			}
 
 			query = this.conn.createStatement();
@@ -644,41 +646,7 @@ public class Database
 
 			ResultSet set = query.executeQuery(sql);
 
-			List<Dataset> results = new ArrayList<Dataset>();
-			if(set != null)
-			{
-				while(set.next())
-				{
-					Dataset result = new Dataset(type);
-
-					ResultSetMetaData metadata = set.getMetaData();
-
-					int lenght = metadata.getColumnCount();
-
-					for(int i = 0; i < lenght; i++)
-					{
-						String columnName = metadata.getColumnLabel(i + 1);
-
-						DataType dataType = this.getDataTypeFromOfColumnName(type, columnName);
-						switch(dataType)
-						{
-							case BOOL:
-								result.set(columnName, set.getBoolean(i + 1));
-								break;
-							case STRING:
-								result.set(columnName, this.decrypt(set.getString(i + 1)));
-								break;
-							default:
-								result.set(columnName, set.getObject(i + 1));
-								break;
-						}
-					}
-
-					results.add(result);
-				}
-			}
-			return Collections.unmodifiableList(results);
-
+			return this.getResult(type, set, loadForeignKey);
 		} catch (SQLException e)
 		{
 			Logger.exception(LegionLogger.DATABASE, e);
@@ -689,6 +657,83 @@ public class Database
 		{
 			this.disconnect();
 			this.semaphore.release();
+		}
+
+		return null;
+	}
+
+	private List<Dataset> getResult(IDatasetType type, ResultSet set, boolean loadForeignKey)
+			throws SQLException
+	{
+		List<Dataset> results = new ArrayList<Dataset>();
+		if(set != null)
+		{
+			while(set.next())
+			{
+				Dataset result = new Dataset(type);
+
+				ResultSetMetaData metadata = set.getMetaData();
+
+				int lenght = metadata.getColumnCount();
+
+				for(int i = 0; i < lenght; i++)
+				{
+					String columnName = metadata.getColumnLabel(i + 1);
+
+					DataType dataType = this.getDataTypeFromOfColumnName(type, columnName);
+					switch(dataType)
+					{
+						case BOOL:
+							result.set(columnName, set.getBoolean(i + 1));
+							break;
+						case STRING:
+							result.set(columnName, this.decrypt(set.getString(i + 1)));
+							break;
+						default:
+
+							IDatasetType foreignKey = this.getForeignKey(type, columnName);
+
+							if(foreignKey != null && loadForeignKey)
+							{
+								// load foreign key
+								String fkSql = "SELECT * FROM `"
+										+ foreignKey.getTableName().replace("`", "")
+										+ "` WHERE id = " + set.getInt(i + 1);
+								Statement fkQuery = this.conn.createStatement();
+
+								ResultSet fkResult = fkQuery.executeQuery(fkSql);
+								List<Dataset> fkDatasets = this.getResult(foreignKey, fkResult,
+										loadForeignKey);
+								if(fkDatasets != null && fkDatasets.size() == 1)
+								{
+									result.set(columnName, fkDatasets.get(0));
+								}
+							} else
+							{
+								result.set(columnName, set.getObject(i + 1));
+							}
+							break;
+					}
+				}
+
+				results.add(result);
+
+			}
+		}
+		return Collections.unmodifiableList(results);
+	}
+
+	private IDatasetType getForeignKey(IDatasetType type, String columnName)
+	{
+		if(type != null && columnName != null)
+		{
+			for(Column column : type.getColumns())
+			{
+				if(columnName.equals(column.getColumnName()))
+				{
+					return column.getForeignKeyReference();
+				}
+			}
 		}
 
 		return null;
@@ -825,8 +870,6 @@ public class Database
 					return this.sqlDialect.floatName();
 				case INTEGER:
 					return this.sqlDialect.integerName();
-				case LONG:
-					return this.sqlDialect.longName();
 				case STRING:
 					return this.sqlDialect.stringName();
 			}

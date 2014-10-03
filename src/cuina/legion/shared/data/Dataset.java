@@ -226,10 +226,16 @@ public class Dataset
 			} else if(Double.class.getSimpleName().equals(type))
 			{
 				object = Double.parseDouble(stanza.getValue());
+			} else if(Dataset.class.getSimpleName().equals(type))
+			{
+				XmlStanza embedded = new XmlStanza();
+				embedded.setValue(stanza.getValue());
+				object = embedded;
 			} else if("legion:void".equals(type) && "legion:null".equals(stanza.getValue()))
 			{
 				this.set(column, null);
 			}
+
 			if(type != null && !type.isEmpty() && object != null)
 			{
 				this.set(column, object);

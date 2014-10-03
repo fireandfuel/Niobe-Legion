@@ -671,7 +671,12 @@ public class ServerCommunicator extends Communicator
 			switch(this.getParameterValueAt(1, "action"))
 			{
 				case "get":
-					this.getDatasets(id, datasetType);
+					String loadForeignKeyStr = this.getParameterValueAt(1, "loadForeignKey");
+					boolean loadForeignKey = loadForeignKeyStr != null
+							&& ("1".equals(loadForeignKeyStr) || "true".equals(loadForeignKeyStr) || "yes"
+									.equals(loadForeignKeyStr));
+
+					this.getDatasets(id, datasetType, loadForeignKey);
 					break;
 				case "set":
 					if(currentStanza.getSequenceId() != null
@@ -689,7 +694,8 @@ public class ServerCommunicator extends Communicator
 		}
 	}
 
-	private void getDatasets(final long id, final IDatasetType datasetType)
+	private void getDatasets(final long id, final IDatasetType datasetType,
+			final boolean loadForeignKey)
 	{
 		// asynchron database action - otherwise the
 		// connection can
@@ -701,7 +707,7 @@ public class ServerCommunicator extends Communicator
 			{
 				Database db = Server.getDatabase();
 
-				List<Dataset> result = db.select(datasetType, "*", null, null);
+				List<Dataset> result = db.select(datasetType, "*", null, null, loadForeignKey);
 
 				if(result != null)
 				{

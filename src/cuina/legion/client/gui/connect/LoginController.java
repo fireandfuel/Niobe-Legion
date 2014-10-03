@@ -84,14 +84,28 @@ public class LoginController
 		}
 	}
 
-	public void loginFailed(int sender)
+	public void loginFailed(final int sender)
 	{
-		this.status
-				.setText("Authenfizierung ist auf Grund eines\n"
-						+ (sender == ClientCommunicator.CLIENT_AUTH_ERR ? "Clientfehlers"
-								: "Serverfehlers") + " fehlgeschlagen.");
-		this.login.setDisable(false);
-		this.username.setEditable(true);
-		this.password.setEditable(true);
+		if(Platform.isFxApplicationThread())
+		{
+			this.status.setText("Authenfizierung ist auf Grund eines\n"
+					+ (sender == ClientCommunicator.CLIENT_AUTH_ERR ? "Clientfehlers"
+							: "Serverfehlers") + " fehlgeschlagen.");
+			this.login.setDisable(false);
+			this.username.setEditable(true);
+			this.password.setEditable(true);
+		} else
+		{
+			Platform.runLater(new Runnable()
+			{
+
+				@Override
+				public void run()
+				{
+					LoginController.this.loginFailed(sender);
+				}
+			});
+		}
+
 	}
 }

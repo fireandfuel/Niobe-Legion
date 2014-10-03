@@ -16,12 +16,6 @@ public class SqliteDialect implements ISqlDialect
 	}
 
 	@Override
-	public String longName()
-	{
-		return "INTEGER";
-	}
-
-	@Override
 	public String floatName()
 	{
 		return "REAL";
