@@ -1,16 +1,5 @@
 package cuina.legion.client.gui.admin;
 
-import java.io.IOException;
-import java.util.List;
-
-import javafx.event.EventHandler;
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyEvent;
-import javafx.stage.Stage;
 import cuina.legion.client.Client;
 import cuina.legion.client.DatasetReceiver;
 import cuina.legion.client.gui.FxDatasetWrapper;
@@ -19,6 +8,17 @@ import cuina.legion.shared.data.Dataset;
 import cuina.legion.shared.data.DatasetType;
 import cuina.legion.shared.logger.LegionLogger;
 import cuina.legion.shared.logger.Logger;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.util.List;
 
 public class UserEditorController implements ICloseableDialogController, DatasetReceiver
 {
@@ -27,30 +27,27 @@ public class UserEditorController implements ICloseableDialogController, Dataset
 
 	@FXML
 	private PasswordField password;
-
-	@FXML
-	private ComboBox<FxDatasetWrapper> group;
-
-	@FXML
-	private Button saveButton;
-
-	private DatasetReceiver datasetRetriever;
-	private Dataset dataset;
-
 	private final EventHandler<KeyEvent> keyHandler = new EventHandler<KeyEvent>()
 	{
 		@Override
 		public void handle(KeyEvent arg0)
 		{
 			UserEditorController.this.saveButton
-					.setDisable((UserEditorController.this.password == null || UserEditorController.this.password
+					.setDisable((UserEditorController.this.password == null
+							|| UserEditorController.this.password
 							.getText().length() <= 7)
-							|| (UserEditorController.this.userName == null || UserEditorController.this.userName
-									.getText().length() <= 1));
+							|| (UserEditorController.this.userName == null
+							|| UserEditorController.this.userName
+							.getText().length() <= 1));
 		}
 	};
-
-	private Stage stage;
+	@FXML
+	private ComboBox<FxDatasetWrapper> group;
+	@FXML
+	private Button                     saveButton;
+	private DatasetReceiver            datasetRetriever;
+	private Dataset                    dataset;
+	private Stage                      stage;
 
 	@FXML
 	private void initialize()
@@ -60,7 +57,7 @@ public class UserEditorController implements ICloseableDialogController, Dataset
 
 		try
 		{
-			Client.getCommunicator().getDataset(DatasetType.GROUP, this);
+			Client.getCommunicator().getDataset(DatasetType.GROUP, this, false);
 		} catch (IOException e)
 		{
 			Logger.exception(LegionLogger.STDERR, e);
@@ -78,7 +75,7 @@ public class UserEditorController implements ICloseableDialogController, Dataset
 		this.dataset = wrapper.getData();
 		this.userName.setText(this.dataset.getString("name"));
 		this.password.setText(this.dataset.getString("password"));
-
+		this.group.getSelectionModel().select(wrapper.getNested("group"));
 	}
 
 	@FXML

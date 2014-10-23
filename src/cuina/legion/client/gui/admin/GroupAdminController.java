@@ -1,13 +1,5 @@
 package cuina.legion.client.gui.admin;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.scene.control.TableView;
 import cuina.legion.client.Client;
 import cuina.legion.client.DatasetReceiver;
 import cuina.legion.client.gui.FxDatasetColumn;
@@ -16,16 +8,23 @@ import cuina.legion.shared.data.Dataset;
 import cuina.legion.shared.data.DatasetType;
 import cuina.legion.shared.logger.LegionLogger;
 import cuina.legion.shared.logger.Logger;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.TableView;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GroupAdminController implements DatasetReceiver
 {
-	private ObservableList<FxDatasetWrapper> groups = FXCollections
-			.observableList(new ArrayList<FxDatasetWrapper>());
-
-	private static FxDatasetColumn[] columns = new FxDatasetColumn[] {
+	private static FxDatasetColumn[]                columns = new FxDatasetColumn[] {
 			new FxDatasetColumn<Long>("id", "Nr."), new FxDatasetColumn<String>("name", "Name"),
-			new FxDatasetColumn<String>("active", "aktiviert") };
-
+			new FxDatasetColumn<String>("active", "aktiviert"),
+			new FxDatasetColumn<String>("can_administrate", "Admin") };
+	private        ObservableList<FxDatasetWrapper> groups  = FXCollections
+			.observableList(new ArrayList<FxDatasetWrapper>());
 	@FXML
 	private TableView<FxDatasetWrapper> groupTable;
 
@@ -44,7 +43,7 @@ public class GroupAdminController implements DatasetReceiver
 		try
 		{
 			this.groups.clear();
-			Client.getCommunicator().getDataset(DatasetType.GROUP, this);
+			Client.getCommunicator().getDataset(DatasetType.GROUP, this, false);
 		} catch (IOException e)
 		{
 			Logger.exception(LegionLogger.STDERR, e);

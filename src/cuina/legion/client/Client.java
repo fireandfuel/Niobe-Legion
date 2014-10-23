@@ -1,16 +1,11 @@
 package cuina.legion.client;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Properties;
-
+import cuina.legion.client.gui.MainController;
+import cuina.legion.client.gui.connect.ConnectController;
+import cuina.legion.client.gui.connect.ReconnectController;
+import cuina.legion.shared.logger.LegionLogger;
+import cuina.legion.shared.logger.Logger;
+import cuina.legion.shared.module.ModuleLoader;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
@@ -21,23 +16,29 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 
-import cuina.legion.client.gui.MainController;
-import cuina.legion.client.gui.connect.ConnectController;
-import cuina.legion.client.gui.connect.ReconnectController;
-import cuina.legion.shared.logger.LegionLogger;
-import cuina.legion.shared.logger.Logger;
-import cuina.legion.shared.module.ModuleLoader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.*;
+import java.util.Properties;
 
 public class Client extends Application
 {
-	private static ClientCommunicator communicator;
-	private static MainController javaFxController;
-	private static ModuleLoader moduleLoader;
+	public static final int MAX_CONNECT_TRIALS = 10;
 
+	static String   port                    = "";
+	static String   server                  = "";
+	static String   keyStoreFile            = null;
+	static String   keyStorePassword        = null;
+	static String[] cipherSuites            = null;
+	static String   authMechanisms          = "";
+	static String   blacklistedServersRegex = "";
+
+	private static ClientCommunicator communicator;
 	private static Service<ClientCommunicator> clientCommService = new Service<ClientCommunicator>()
 	{
 		@Override
@@ -52,8 +53,10 @@ public class Client extends Application
 			if(Client.communicator == null || Client.communicator.isClosed())
 			{
 				final ConnectController connectController = (Client.getFxController()
-						.getCurrentController() instanceof ConnectController) ? (ConnectController) Client
-						.getFxController().getCurrentController() : null;
+						.getCurrentController() instanceof ConnectController) ?
+						(ConnectController) Client
+								.getFxController().getCurrentController() :
+						null;
 
 				if(connectController != null)
 				{
@@ -75,22 +78,59 @@ public class Client extends Application
 
 				super.start();
 			}
-		};
+		}
+
+		;
 	};
-
-	public static final int MAX_CONNECT_TRIALS = 10;
-
-	static String port = "";
-	static String server = "";
-	static String keyStoreFile = null;
-	static String keyStorePassword = null;
-	static String authMechanisms = "";
-	static String blacklistedServersRegex = "";
+	private static MainController      javaFxController;
+	private static ModuleLoader        moduleLoader;
 	private static ReconnectController reconnectController;
 
 	public static void main(String[] args)
 	{
 		Application.launch(args);
+	}
+
+	/**
+	 * Gibt den Kommunikation-Thread zwischen Client und Server zurück
+	 *
+	 * @return
+	 */
+	public static ClientCommunicator getCommunicator()
+	{
+		if(Client.communicator == null || Client.communicator.isClosed())
+		{
+			Client.clientCommService.restart();
+		}
+
+		return Client.communicator;
+	}
+
+	public static void bindConnectionProgress(StringProperty property,
+			ReconnectController reconnectController)
+	{
+		property.bind(Client.clientCommService.messageProperty());
+		Client.reconnectController = reconnectController;
+	}
+
+	/**
+	 * Gibt den Haupt-Controller der JavaFX-GUI zurück
+	 *
+	 * @return
+	 */
+	public static MainController getFxController()
+	{
+
+		return Client.javaFxController;
+	}
+
+	public static void close() throws SocketException, IOException
+	{
+		if(Client.getCommunicator() != null && !Client.getCommunicator().isClosed())
+		{
+			Client.getCommunicator().close();
+		}
+		Platform.exit();
 	}
 
 	@Override
@@ -113,6 +153,13 @@ public class Client extends Application
 				Client.server = properties.getProperty("server", "localhost");
 				Client.keyStoreFile = properties.getProperty("keystore_file", null);
 				Client.keyStorePassword = properties.getProperty("keystore_password", null);
+
+				String cipherSuitesString = properties.getProperty("cipher_suites");
+				if(cipherSuitesString != null && !cipherSuitesString.isEmpty())
+				{
+					Client.cipherSuites = cipherSuitesString.split(" ");
+				}
+
 				Client.authMechanisms = properties.getProperty("auth_mechanisms", "PLAIN");
 				Client.blacklistedServersRegex = properties.getProperty(
 						"blacklisted_servers_regex", "");
@@ -168,48 +215,6 @@ public class Client extends Application
 		}
 	}
 
-	/**
-	 * Gibt den Kommunikation-Thread zwischen Client und Server zurück
-	 *
-	 * @return
-	 */
-	public static ClientCommunicator getCommunicator()
-	{
-		if(Client.communicator == null || Client.communicator.isClosed())
-		{
-			Client.clientCommService.restart();
-		}
-
-		return Client.communicator;
-	}
-
-	public static void bindConnectionProgress(StringProperty property,
-			ReconnectController reconnectController)
-	{
-		property.bind(Client.clientCommService.messageProperty());
-		Client.reconnectController = reconnectController;
-	}
-
-	/**
-	 * Gibt den Haupt-Controller der JavaFX-GUI zurück
-	 *
-	 * @return
-	 */
-	public static MainController getFxController()
-	{
-
-		return Client.javaFxController;
-	}
-
-	public static void close() throws SocketException, IOException
-	{
-		if(Client.getCommunicator() != null && !Client.getCommunicator().isClosed())
-		{
-			Client.getCommunicator().close();
-		}
-		Platform.exit();
-	}
-
 	public static class CommunicatorTask extends Task<ClientCommunicator>
 	{
 		private CommunicatorTask()
@@ -232,13 +237,14 @@ public class Client extends Application
 
 					Logger.info(LegionLogger.STDOUT, "Client: Connect");
 
-					communicator = new ClientCommunicator(socket, Client.keyStoreFile,
-							Client.keyStorePassword, Client.authMechanisms,
-							Client.blacklistedServersRegex);
+					communicator = new ClientCommunicator(socket, Client.authMechanisms,
+							Client.blacklistedServersRegex, Client.keyStoreFile,
+							Client.keyStorePassword, Client.cipherSuites);
 					trials = 1;
 				} catch (IOException | NumberFormatException e)
 				{
-					Logger.error(LegionLogger.STDERR, "Verbindung konnte nicht hergestellt werden.");
+					Logger.error(LegionLogger.STDERR,
+							"Verbindung konnte nicht hergestellt werden.");
 
 					this.updateMessage("Verbindung mit Server wird hergestellt (Versuch "
 							+ ++trials + " von " + Client.MAX_CONNECT_TRIALS + ") ...");
@@ -253,7 +259,8 @@ public class Client extends Application
 			}
 			if(communicator == null && trials == Client.MAX_CONNECT_TRIALS)
 			{
-				this.updateMessage("Der Server ist nicht erreichbar.\nBitte beenden Sie die Anwendung und\nversuchen Sie es später erneut.");
+				this.updateMessage(
+						"Der Server ist nicht erreichbar.\nBitte beenden Sie die Anwendung und\nversuchen Sie es später erneut.");
 			} else
 			{
 				Client.communicator = communicator;

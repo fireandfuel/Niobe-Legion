@@ -1,14 +1,7 @@
 package cuina.legion.shared.data;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import javax.xml.stream.XMLStreamConstants;
+import java.util.*;
 
 public class Dataset
 {
@@ -47,7 +40,7 @@ public class Dataset
 				(Long) object) : (object instanceof java.sql.Date) ? new Date(
 				((java.sql.Date) object).getTime())
 				: (object instanceof java.sql.Timestamp) ? new Date(
-						((java.sql.Timestamp) object).getTime()) : null;
+				((java.sql.Timestamp) object).getTime()) : null;
 	}
 
 	public Integer getInteger(String column)
@@ -70,8 +63,8 @@ public class Dataset
 
 		return (object instanceof Boolean) ? (Boolean) object
 				: (object instanceof Integer) ? ((Integer) object).intValue() == 1
-						: (object instanceof String) ? "true".equals(object) || "1".equals(object)
-								: null;
+				: (object instanceof String) ? "true".equals(object) || "1".equals(object)
+				: null;
 	}
 
 	public Double getDouble(String column)
@@ -168,6 +161,7 @@ public class Dataset
 					list.addAll(((Dataset) value).toXML(sequenceId));
 					stanza = new XmlStanza();
 					stanza.setName("legion:column");
+					stanza.setSequenceId(sequenceId);
 					stanza.setEventType(XMLStreamConstants.END_ELEMENT);
 				}
 			} else
@@ -257,8 +251,7 @@ public class Dataset
 	}
 
 	/**
-	 * @param classType
-	 *            the classType to set
+	 * @param classType the classType to set
 	 */
 	public void setClassType(IDatasetType classType)
 	{

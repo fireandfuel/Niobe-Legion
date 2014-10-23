@@ -1,23 +1,18 @@
 package cuina.legion.client.gui;
 
+import cuina.legion.shared.data.Dataset;
+import javafx.beans.property.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleFloatProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleLongProperty;
-import javafx.beans.property.SimpleStringProperty;
-import cuina.legion.shared.data.Dataset;
-
 public class FxDatasetWrapper
 {
 	private Dataset dataset;
-	private HashMap<String, Property<?>> properties = new HashMap<String, Property<?>>();
+	private HashMap<String, Property<?>>      properties       = new HashMap<String, Property<?>>();
+	private HashMap<String, FxDatasetWrapper> nestedProperties = new HashMap<String, FxDatasetWrapper>();
 
 	private String toStringProperty = null;
 
@@ -53,6 +48,9 @@ public class FxDatasetWrapper
 			} else if(value instanceof String)
 			{
 				this.properties.put(key, new SimpleStringProperty((String) value));
+			} else if(value instanceof Dataset)
+			{
+				this.nestedProperties.put(key, new FxDatasetWrapper((Dataset) value));
 			}
 		}
 	}
@@ -82,9 +80,32 @@ public class FxDatasetWrapper
 		return this.properties.keySet();
 	}
 
+	public Set<String> getNestedKeys()
+	{
+		return this.nestedProperties.keySet();
+	}
+
 	public Property<?> getProperty(String key)
 	{
+		if(key.contains("::"))
+		{
+			String[] nestedKeys = key.split("::", 2);
+
+			if(this.nestedProperties.containsKey(nestedKeys[0]))
+			{
+				return this.nestedProperties.get(nestedKeys[0]).getProperty(nestedKeys[1]);
+			} else
+			{
+				return new SimpleStringProperty("");
+			}
+		}
+
 		return this.properties.get(key);
+	}
+
+	public FxDatasetWrapper getNested(String key)
+	{
+		return this.nestedProperties.get(key);
 	}
 
 	public void set(String key, Object value)
@@ -105,5 +126,43 @@ public class FxDatasetWrapper
 			return this.getProperty(this.toStringProperty).getValue().toString();
 		}
 		return this.dataset.toString();
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if(obj instanceof FxDatasetWrapper)
+		{
+			FxDatasetWrapper wrapper = (FxDatasetWrapper) obj;
+
+			for(String key : this.getKeys())
+			{
+				if(!wrapper.getKeys().contains(key))
+				{
+					return false;
+				}
+
+				if(!this.getProperty(key).getValue().equals(wrapper.getProperty(key).getValue()))
+				{
+					return false;
+				}
+			}
+
+			for(String key : this.getNestedKeys())
+			{
+				if(!wrapper.getNestedKeys().contains(key))
+				{
+					return false;
+				}
+
+				if(!this.getNested(key).equals(wrapper.getNested(key)))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+		return super.equals(obj);
 	}
 }

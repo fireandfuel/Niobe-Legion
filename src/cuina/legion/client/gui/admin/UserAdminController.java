@@ -1,13 +1,5 @@
 package cuina.legion.client.gui.admin;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.scene.control.TableView;
 import cuina.legion.client.Client;
 import cuina.legion.client.DatasetReceiver;
 import cuina.legion.client.gui.FxDatasetColumn;
@@ -16,16 +8,22 @@ import cuina.legion.shared.data.Dataset;
 import cuina.legion.shared.data.DatasetType;
 import cuina.legion.shared.logger.LegionLogger;
 import cuina.legion.shared.logger.Logger;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.TableView;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserAdminController implements DatasetReceiver
 {
-	private ObservableList<FxDatasetWrapper> users = FXCollections
-			.observableList(new ArrayList<FxDatasetWrapper>());
-
-	private static FxDatasetColumn[] columns = new FxDatasetColumn[] {
+	private static FxDatasetColumn[]                columns = new FxDatasetColumn[] {
 			new FxDatasetColumn<Long>("id", "Nr."), new FxDatasetColumn<String>("name", "Name"),
-			new FxDatasetColumn<String>("group", "Gruppe") };
-
+			new FxDatasetColumn<String>("group::name", "Gruppe") };
+	private        ObservableList<FxDatasetWrapper> users   = FXCollections
+			.observableList(new ArrayList<FxDatasetWrapper>());
 	@FXML
 	private TableView<FxDatasetWrapper> userTable;
 
@@ -44,7 +42,7 @@ public class UserAdminController implements DatasetReceiver
 		try
 		{
 			this.users.clear();
-			Client.getCommunicator().getDataset(DatasetType.USER, this);
+			Client.getCommunicator().getDataset(DatasetType.USER, this, true);
 		} catch (IOException e)
 		{
 			Logger.exception(LegionLogger.STDERR, e);

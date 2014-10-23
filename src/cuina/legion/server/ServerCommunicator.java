@@ -1,42 +1,5 @@
 package cuina.legion.server;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.Socket;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
-import javax.net.ssl.HandshakeCompletedEvent;
-import javax.net.ssl.HandshakeCompletedListener;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.sasl.AuthorizeCallback;
-import javax.security.sasl.RealmCallback;
-import javax.security.sasl.Sasl;
-import javax.security.sasl.SaslException;
-import javax.security.sasl.SaslServer;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-
 import cuina.legion.shared.Base64;
 import cuina.legion.shared.Communicator;
 import cuina.legion.shared.data.Dataset;
@@ -46,29 +9,44 @@ import cuina.legion.shared.data.XmlStanza;
 import cuina.legion.shared.logger.LegionLogger;
 import cuina.legion.shared.logger.Logger;
 
+import javax.net.ssl.*;
+import javax.security.auth.callback.*;
+import javax.security.sasl.*;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Socket;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
 public class ServerCommunicator extends Communicator
 {
-	protected final static String SERVER_NAME = "legion_server";
-	protected final static String SERVER_VERSION = "0";
-	private final static List<String> SERVER_FEATURES = new ArrayList<String>();
+	protected final static String       SERVER_NAME     = "legion_server";
+	protected final static String       SERVER_VERSION  = "0";
+	private final static   List<String> SERVER_FEATURES = new ArrayList<String>();
+	final         String   keyStoreFile;
+	final         String   keyStorePassword;
+	final         String[] cipherSuites;
 	private final String[] authMechanisms;
-
+	SaslServer saslServer;
+	String     userName;
+	String     blacklistedClientsRegex;
 	private boolean serverAcceptedFromClient;
 	private boolean tlsEstablished;
-
-	private String clientName;
-	private String clientVersion;
+	private String  clientName;
+	private String  clientVersion;
 	private List<String> clientFeatures = new ArrayList<String>();
 
-	final String keyStoreFile;
-	final String keyStorePassword;
-
-	SaslServer saslServer;
-	String userName;
-	String blacklistedClientsRegex;
-
-	public ServerCommunicator(Socket socket, final String keyStoreFile,
-			final String keyStorePassword, String authMechanisms, String blacklistedClientsRegex)
+	public ServerCommunicator(Socket socket, String authMechanisms, String blacklistedClientsRegex,
+			final String keyStoreFile,
+			final String keyStorePassword, final String[] cipherSuites)
 	{
 		super(socket);
 
@@ -77,6 +55,7 @@ public class ServerCommunicator extends Communicator
 
 		this.keyStoreFile = keyStoreFile;
 		this.keyStorePassword = keyStorePassword;
+		this.cipherSuites = cipherSuites;
 
 		if(this.keyStoreFile != null && !this.keyStoreFile.isEmpty()
 				&& new File(this.keyStoreFile).exists())
@@ -198,7 +177,7 @@ public class ServerCommunicator extends Communicator
 							stanza.setSequenceId(this.localStanzaSequenceId++);
 							this.write(stanza);
 							this.tlsEstablished = this.setSslSocket(this.keyStorePassword,
-									this.keyStoreFile);
+									this.keyStoreFile, this.cipherSuites);
 							if(this.tlsEstablished)
 							{
 								this.resetReader();
@@ -223,8 +202,9 @@ public class ServerCommunicator extends Communicator
 
 						if(Arrays.asList(this.authMechanisms).contains(mechanism)
 								|| (Arrays.asList(this.authMechanisms).contains(mechanism)
-										&& "PLAIN".equalsIgnoreCase(mechanism) && ServerCommunicator.SERVER_FEATURES
-											.contains("starttls")))
+								&& "PLAIN".equalsIgnoreCase(mechanism)
+								&& ServerCommunicator.SERVER_FEATURES
+								.contains("starttls")))
 						{
 
 							byte[] initialResponse = new byte[0];
@@ -284,10 +264,10 @@ public class ServerCommunicator extends Communicator
 
 												if(Server.getDatabase().getUsers() != null
 														&& Server
-																.getDatabase()
-																.getUsers()
-																.contains(
-																		ServerCommunicator.this.userName))
+														.getDatabase()
+														.getUsers()
+														.contains(
+																ServerCommunicator.this.userName))
 												{
 													String password = Server
 															.getDatabase()
@@ -612,7 +592,8 @@ public class ServerCommunicator extends Communicator
 	}
 
 	@Override
-	protected final boolean setSslSocket(String keyStorePassword, String keyStoreFile)
+	protected final boolean setSslSocket(String keyStorePassword, String keyStoreFile,
+			String[] cipherSuites)
 			throws IOException, NoSuchAlgorithmException, KeyManagementException,
 			CertificateException, KeyStoreException, UnrecoverableKeyException, XMLStreamException,
 			SSLException
@@ -637,7 +618,9 @@ public class ServerCommunicator extends Communicator
 			this.sslSocket = (SSLSocket) sslFactory.createSocket(this.socket, null,
 					this.socket.getLocalPort(), false);
 			this.sslSocket
-					.setEnabledCipherSuites(new String[] { "TLS_RSA_WITH_AES_128_CBC_SHA256" });
+					.setEnabledCipherSuites(cipherSuites != null && cipherSuites.length > 0 ?
+							cipherSuites :
+							new String[] { "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256" });
 			this.sslSocket.addHandshakeCompletedListener(new HandshakeCompletedListener()
 			{
 
@@ -649,7 +632,7 @@ public class ServerCommunicator extends Communicator
 			});
 			this.sslSocket.setUseClientMode(false);
 
-			this.setSslStreams();
+			this.replaceStreamsWithSslStreams();
 
 			return true;
 		}
@@ -671,10 +654,11 @@ public class ServerCommunicator extends Communicator
 			switch(this.getParameterValueAt(1, "action"))
 			{
 				case "get":
-					String loadForeignKeyStr = this.getParameterValueAt(1, "loadForeignKey");
+					String loadForeignKeyStr = this.getParameterValueAt(1, "loadForeignKeys");
 					boolean loadForeignKey = loadForeignKeyStr != null
-							&& ("1".equals(loadForeignKeyStr) || "true".equals(loadForeignKeyStr) || "yes"
-									.equals(loadForeignKeyStr));
+							&& ("1".equals(loadForeignKeyStr) || "true".equals(loadForeignKeyStr)
+							|| "yes"
+							.equals(loadForeignKeyStr));
 
 					this.getDatasets(id, datasetType, loadForeignKey);
 					break;

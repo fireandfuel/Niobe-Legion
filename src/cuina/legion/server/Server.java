@@ -1,5 +1,13 @@
 package cuina.legion.server;
 
+import cuina.legion.shared.Communicator;
+import cuina.legion.shared.logger.LegionLogger;
+import cuina.legion.shared.logger.Logger;
+import cuina.legion.shared.module.ModuleLoader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+
+import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -13,30 +21,18 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.xml.stream.XMLStreamException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LoggerContext;
-
-import cuina.legion.shared.Communicator;
-import cuina.legion.shared.logger.LegionLogger;
-import cuina.legion.shared.logger.Logger;
-import cuina.legion.shared.module.ModuleLoader;
-
 public class Server
 {
-	private ServerSocket serverSocket;
-	private ExecutorService connectionPool;
-	private ArrayList<Communicator> connectionList;
+	private static ModuleLoader            moduleLoader;
+	private static Database                DATABASE;
+	private        ServerSocket            serverSocket;
+	private        ExecutorService         connectionPool;
+	private        ArrayList<Communicator> connectionList;
+	private        boolean                 closeRequest;
 
-	private static ModuleLoader moduleLoader;
-
-	private static Database DATABASE;
-
-	private boolean closeRequest;
-
-	public Server(int port, final String keyStoreFile, final String keyStorePassword,
-			String authMechanism, String blacklistedClientsRegex) throws XMLStreamException
+	public Server(int port, String authMechanism, String blacklistedClientsRegex,
+			final String keyStoreFile,
+			final String keyStorePassword, final String[] cipherSuites) throws XMLStreamException
 	{
 		try
 		{
@@ -54,8 +50,9 @@ public class Server
 					if(socket != null)
 					{
 						Logger.info(LegionLogger.STDOUT, "Accept new Connection");
-						Communicator communicator = new ServerCommunicator(socket, keyStoreFile,
-								keyStorePassword, authMechanism, blacklistedClientsRegex);
+						Communicator communicator = new ServerCommunicator(socket, authMechanism,
+								blacklistedClientsRegex, keyStoreFile,
+								keyStorePassword, cipherSuites);
 
 						this.connectionList.add(communicator);
 						this.connectionPool.execute(communicator);
@@ -78,6 +75,7 @@ public class Server
 	public static void main(String[] args)
 	{
 		String port = "", keyStoreFile = null, keyStorePassword = null, databaseType = null, maxConnections = null;
+		String[] cipherSuites = null;
 		String authMechanisms = "";
 		String blacklistedClientsRegex = "";
 
@@ -100,6 +98,12 @@ public class Server
 				keyStorePassword = properties.getProperty("keystore_password", null);
 				maxConnections = properties.getProperty("sql_max_connections", "1");
 				blacklistedClientsRegex = properties.getProperty("blacklisted_clients_regex", "");
+
+				String cipherSuitesString = properties.getProperty("cipher_suites");
+				if(cipherSuitesString != null && !cipherSuitesString.isEmpty())
+				{
+					cipherSuites = cipherSuitesString.split(" ");
+				}
 
 				String logPath = properties.getProperty("log_config_file");
 				if(logPath != null && !logPath.isEmpty() && new File(logPath).exists())
@@ -133,14 +137,13 @@ public class Server
 
 					Server.DATABASE = new Database(databaseType, host, sqlPort, database, user,
 							password, encryptionPassword, maxConnections);
-				} else
-
-				if(databaseType.equalsIgnoreCase("sqlite"))
+				} else if(databaseType.equalsIgnoreCase("sqlite"))
 				{
 					String sqliteDatabase = properties.getProperty("sqlite_database_file");
 					String encryptionPassword = properties.getProperty("encryption_key");
 
-					Server.DATABASE = new Database(databaseType, sqliteDatabase, encryptionPassword);
+					Server.DATABASE = new Database(databaseType, sqliteDatabase,
+							encryptionPassword);
 				}
 
 				authMechanisms = properties.getProperty("auth_mechanisms", "PLAIN");
@@ -153,8 +156,8 @@ public class Server
 
 			try
 			{
-				new Server(Integer.parseInt(port), keyStoreFile, keyStorePassword, authMechanisms,
-						blacklistedClientsRegex);
+				new Server(Integer.parseInt(port), authMechanisms,
+						blacklistedClientsRegex, keyStoreFile, keyStorePassword, cipherSuites);
 
 			} catch (NumberFormatException e)
 			{

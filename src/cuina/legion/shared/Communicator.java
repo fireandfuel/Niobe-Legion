@@ -1,60 +1,52 @@
 package cuina.legion.shared;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Security;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.net.ssl.SSLSocket;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-
 import cuina.legion.shared.data.Dataset;
 import cuina.legion.shared.data.XmlStanza;
 import cuina.legion.shared.logger.LegionLogger;
 import cuina.legion.shared.logger.Logger;
 import cuina.legion.shared.sasl.LegionSaslProvider;
 
+import javax.net.ssl.SSLSocket;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.SocketException;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+
 public abstract class Communicator implements XMLStreamConstants, ICommunicator, Runnable
 {
-	private DataInputStream in;
-	private DataOutputStream out;
-	protected Socket socket;
-	protected SSLSocket sslSocket;
-
-	private XMLInputFactory inputFactory;
-	private XMLStreamReader reader;
-
-	private static final String LEGION_NAMESPACE = "legion";
-	private static final String LEGION_NAMESPACE_URI = "ashnurazg.de/cuina/legion";
-
-	protected long localStanzaSequenceId = Math.abs(Utils.random.nextLong());
-
-	private LinkedList<XmlStanza> stanzaStack = new LinkedList<XmlStanza>();
-	private XmlStanza currentStanza;
-	protected boolean isCloseRequested;
-
-	protected final HashMap<Long, List<Dataset>> cachedDatasets = new HashMap<Long, List<Dataset>>();
-
-	private static final LegionSaslProvider SASL_PROVIDER = new LegionSaslProvider();
+	private static final String                         LEGION_NAMESPACE     = "legion";
+	private static final String                         LEGION_NAMESPACE_URI = "ashnurazg.de/cuina/legion";
+	private static final LegionSaslProvider             SASL_PROVIDER        = new LegionSaslProvider();
 	private static final HashMap<String, ICommunicator> MODULE_COMMUNICATORS = new HashMap<String, ICommunicator>();
+
 	static
 	{
 		Security.addProvider(Communicator.SASL_PROVIDER);
 	}
+
+	protected final HashMap<Long, List<Dataset>> cachedDatasets     = new HashMap<Long, List<Dataset>>();
+	protected final HashMap<Long, List<Dataset>> foreignKeyDatasets = new HashMap<Long, List<Dataset>>();
+	protected Socket    socket;
+	protected SSLSocket sslSocket;
+	protected long localStanzaSequenceId = Math.abs(Utils.random.nextLong());
+	protected boolean          isCloseRequested;
+	private   DataInputStream  in;
+	private   DataOutputStream out;
+	private   XMLInputFactory  inputFactory;
+	private   XMLStreamReader  reader;
+	private LinkedList<XmlStanza> stanzaStack = new LinkedList<XmlStanza>();
+	private XmlStanza currentStanza;
 
 	protected Communicator(Socket socket)
 	{
@@ -70,16 +62,43 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 		}
 	}
 
+	public static final void addModuleCommunicator(ICommunicator communicator)
+	{
+		Communicator.MODULE_COMMUNICATORS.put(communicator.getNamespaceURI(), communicator);
+	}
+
+	public static final void removeModuleCommunicator(String namespaceURI)
+	{
+		Communicator.MODULE_COMMUNICATORS.remove(namespaceURI);
+	}
+
 	protected void initInputReader() throws XMLStreamException
 	{
 		this.reader = this.inputFactory.createXMLStreamReader(this.in, "UTF-8");
 	}
 
-	protected abstract boolean setSslSocket(String keyStorePassword, String keyStoreFile)
+	/**
+	 * Sets a TLSv1.2 socket.
+	 *
+	 * @param keyStorePassword
+	 * @param keyStoreFile
+	 * @param cipherSuites     null -> "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256" will be used
+	 * @return
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyManagementException
+	 * @throws CertificateException
+	 * @throws KeyStoreException
+	 * @throws UnrecoverableKeyException
+	 * @throws XMLStreamException
+	 * @link docs.oracle.com/javase/8/docs/technotes/guides/security/SunProviders.html#SunJSSEProvider
+	 */
+	protected abstract boolean setSslSocket(String keyStorePassword, String keyStoreFile,
+			String[] cipherSuites)
 			throws IOException, NoSuchAlgorithmException, KeyManagementException,
 			CertificateException, KeyStoreException, UnrecoverableKeyException, XMLStreamException;
 
-	protected final void setSslStreams() throws IOException
+	protected final void replaceStreamsWithSslStreams() throws IOException
 	{
 		this.in = new DataInputStream(this.sslSocket.getInputStream());
 		this.out = new DataOutputStream(this.sslSocket.getOutputStream());
@@ -107,8 +126,10 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 							// create current stanza from reader
 							this.currentStanza = new XmlStanza();
 							this.currentStanza
-									.setName(((this.reader.getName().getPrefix() != null) ? (this.reader
-											.getName().getPrefix() + ":") : "")
+									.setName(((this.reader.getName().getPrefix() != null) ?
+											(this.reader
+													.getName().getPrefix() + ":") :
+											"")
 											+ this.reader.getName().getLocalPart());
 							this.currentStanza.setLocalName(this.reader.getLocalName());
 							this.currentStanza.setNameSpaceURI(this.reader.getName()
@@ -290,7 +311,8 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 								{
 									attribute = "\"" + attribute + "\"";
 								}
-								this.out.write((" " + attrName + "=" + attribute).getBytes("UTF-8"));
+								this.out.write(
+										(" " + attrName + "=" + attribute).getBytes("UTF-8"));
 							}
 
 						}
@@ -518,16 +540,6 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 			}
 		}
 		return -1;
-	}
-
-	public static final void addModuleCommunicator(ICommunicator communicator)
-	{
-		Communicator.MODULE_COMMUNICATORS.put(communicator.getNamespaceURI(), communicator);
-	}
-
-	public static final void removeModuleCommunicator(String namespaceURI)
-	{
-		Communicator.MODULE_COMMUNICATORS.remove(namespaceURI);
 	}
 
 	@Override

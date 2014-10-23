@@ -1,15 +1,29 @@
 package cuina.legion.client;
 
+import cuina.legion.client.Client.CommunicatorTask;
+import cuina.legion.client.gui.connect.CertificateController;
+import cuina.legion.client.gui.connect.LoginController;
+import cuina.legion.shared.Base64;
+import cuina.legion.shared.Communicator;
+import cuina.legion.shared.data.*;
+import cuina.legion.shared.logger.LegionLogger;
+import cuina.legion.shared.logger.Logger;
+import javafx.application.Platform;
+
+import javax.net.ssl.*;
+import javax.security.auth.callback.*;
+import javax.security.sasl.RealmCallback;
+import javax.security.sasl.Sasl;
+import javax.security.sasl.SaslClient;
+import javax.security.sasl.SaslException;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
@@ -18,39 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
-import javafx.application.Platform;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.sasl.RealmCallback;
-import javax.security.sasl.Sasl;
-import javax.security.sasl.SaslClient;
-import javax.security.sasl.SaslException;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-
-import cuina.legion.client.Client.CommunicatorTask;
-import cuina.legion.client.gui.connect.CertificateController;
-import cuina.legion.client.gui.connect.LoginController;
-import cuina.legion.shared.Base64;
-import cuina.legion.shared.Communicator;
-import cuina.legion.shared.data.Dataset;
-import cuina.legion.shared.data.DatasetType;
-import cuina.legion.shared.data.IDatasetType;
-import cuina.legion.shared.data.XmlStanza;
-import cuina.legion.shared.logger.LegionLogger;
-import cuina.legion.shared.logger.Logger;
 
 /**
  * Bidirectional communicator client to server based on XML stream parsing
@@ -61,50 +42,42 @@ import cuina.legion.shared.logger.Logger;
  * into the JavaFX GUI.<br>
  *
  * @author fireandfuel
- *
  */
 public class ClientCommunicator extends Communicator
 {
-	protected final static String CLIENT_NAME = "legion_client";
-	protected final static String CLIENT_VERSION = "0";
-
-	private final static List<String> CLIENT_FEATURES = Arrays.asList(new String[] { "starttls" });
-
-	public static final int SERVER_AUTH_ERR = 0;
-	public static final int CLIENT_AUTH_ERR = 1;
-
+	public static final    int          SERVER_AUTH_ERR = 0;
+	public static final    int          CLIENT_AUTH_ERR = 1;
+	protected final static String       CLIENT_NAME     = "legion_client";
+	protected final static String       CLIENT_VERSION  = "0";
+	private final static   List<String> CLIENT_FEATURES = Arrays
+			.asList(new String[] { "starttls" });
+	final String   keyStoreFile;
+	final String   keyStorePassword;
+	final String[] cipherSuites;
 	private final String[] authMechanisms;
-
+	private final HashMap<Long, DatasetReceiver> databaseRetrievers = new HashMap<Long, DatasetReceiver>();
+	SaslClient saslClient;
+	boolean    serverSideAuthenficated;
+	String     userName;
+	String     blacklistedServersRegex;
 	private CommunicatorTask connectTask;
-
 	private boolean clientAcceptedFromServer;
 	private boolean tlsEstablished;
-
-	private String serverName;
-	private String serverVersion;
+	private String  serverName;
+	private String  serverVersion;
 	private List<String> serverFeatures = new ArrayList<String>();
 	private List<String> serverAuthMechanisms = new ArrayList<String>();
 
-	final String keyStoreFile;
-	final String keyStorePassword;
-
-	SaslClient saslClient;
-	boolean serverSideAuthenficated;
-
-	String userName;
-	String blacklistedServersRegex;
-
-	private final HashMap<Long, DatasetReceiver> databaseRetrievers = new HashMap<Long, DatasetReceiver>();
-
-	public ClientCommunicator(Socket socket, final String keyStoreFile,
-			final String keyStorePassword, String authMechanisms, String blacklistedServersRegex)
+	public ClientCommunicator(Socket socket, String authMechanisms, String blacklistedServersRegex,
+			final String keyStoreFile,
+			final String keyStorePassword, final String[] cipherSuites)
 	{
 		super(socket);
 		this.authMechanisms = authMechanisms.split(" ");
 		this.blacklistedServersRegex = blacklistedServersRegex;
 		this.keyStoreFile = keyStoreFile;
 		this.keyStorePassword = keyStorePassword;
-		this.connectTask = this.connectTask;
+		this.cipherSuites = cipherSuites;
 		try
 		{
 			this.openStream();
@@ -193,7 +166,7 @@ public class ClientCommunicator extends Communicator
 						try
 						{
 							this.tlsEstablished = this.setSslSocket(this.keyStorePassword,
-									this.keyStoreFile);
+									this.keyStoreFile, this.cipherSuites);
 							if(this.tlsEstablished)
 							{
 								this.openStream();
@@ -225,6 +198,9 @@ public class ClientCommunicator extends Communicator
 						{
 							this.cachedDatasets.put(Long.parseLong(currentStanza.getSequenceId()),
 									new ArrayList<Dataset>());
+							this.foreignKeyDatasets.put(
+									Long.parseLong(currentStanza.getSequenceId()),
+									new ArrayList<Dataset>());
 						}
 					}
 					break;
@@ -235,14 +211,23 @@ public class ClientCommunicator extends Communicator
 						{
 							if(datasetType.getXmlStanzaName().equals(stanzaName))
 							{
-								List<Dataset> datasets = this.cachedDatasets.get(Long
-										.parseLong(currentStanza.getSequenceId()));
+								List<Dataset> datasets = null;
+
+								if(this.isStackAt(1, "legion:column"))
+								{
+									datasets = this.foreignKeyDatasets.get(Long
+											.parseLong(currentStanza.getSequenceId()));
+								} else
+								{
+									datasets = this.cachedDatasets.get(Long.parseLong(currentStanza
+											.getSequenceId()));
+								}
+
 								if(datasets != null)
 								{
-
 									datasets.add(new Dataset(datasetType));
-									break;
 								}
+								break;
 							}
 						}
 					} else
@@ -312,13 +297,39 @@ public class ClientCommunicator extends Communicator
 				if(this.isAuthenficated())
 				{
 					if(this.isStackAt(2, "legion:query")
-							&& "result".equals(this.getParameterValueAt(2, "type")))
+							&& "result".equals(this.getParameterValueAt(2, "type"))
+							&& currentStanza.getAttributes().containsKey("name"))
 					{
+						Dataset dataset = null;
+
 						List<Dataset> datasets = this.cachedDatasets.get(Long
 								.parseLong(currentStanza.getSequenceId()));
+
 						if(datasets != null)
 						{
-							datasets.get(datasets.size() - 1).fromXML(currentStanza);
+							dataset = datasets.get(datasets.size() - 1);
+						}
+
+						if(dataset != null)
+						{
+							dataset.fromXML(currentStanza);
+						}
+					} else if(this.isStackAt(2, "legion:column") && this.isParameterAt(2, "name")
+							&& currentStanza.getAttributes().containsKey("name"))
+					{
+						Dataset dataset = null;
+
+						List<Dataset> datasets = this.foreignKeyDatasets.get(Long
+								.parseLong(currentStanza.getSequenceId()));
+
+						if(datasets != null)
+						{
+							dataset = datasets.get(datasets.size() - 1);
+						}
+
+						if(dataset != null)
+						{
+							dataset.fromXML(currentStanza);
 						}
 					}
 				}
@@ -414,6 +425,7 @@ public class ClientCommunicator extends Communicator
 						DatasetReceiver retriever = this.databaseRetrievers.remove(Long
 								.parseLong(id));
 						List<Dataset> datasets = this.cachedDatasets.remove(Long.parseLong(id));
+						this.foreignKeyDatasets.remove(Long.parseLong(id));
 
 						if(retriever != null && datasets != null)
 						{
@@ -422,6 +434,56 @@ public class ClientCommunicator extends Communicator
 					}
 				}
 				break;
+			default:
+				if(this.isAuthenficated())
+				{
+					for(IDatasetType datasetType : DatasetType.values())
+					{
+						if(datasetType.getXmlStanzaName().equals(stanzaName))
+						{
+							List<Dataset> foreignKeyDatasetList = this.foreignKeyDatasets.get(Long
+									.parseLong(currentStanza.getSequenceId()));
+
+							if(foreignKeyDatasetList != null)
+							{
+								while(!foreignKeyDatasetList.isEmpty())
+								{
+									Dataset foreignKeyDataset = foreignKeyDatasetList.get(0);
+									if(foreignKeyDataset.getClassType() == datasetType
+											&& this.isStackAt(1, "legion:column")
+											&& this.isParameterAt(1, "name"))
+									{
+										Dataset dataset = null;
+
+										List<Dataset> datasets = this.cachedDatasets.get(Long
+												.parseLong(currentStanza.getSequenceId()));
+										if(datasets != null)
+										{
+											dataset = datasets.get(datasets.size() - 1);
+										}
+
+										if(dataset != null)
+										{
+											String columName = this.getParameterValueAt(1, "name");
+
+											for(Column column : dataset.getClassType().getColumns())
+											{
+												if(columName.equals(column.getColumnName())
+														&& column.getForeignKeyReference()
+														== datasetType)
+												{
+													dataset.set(columName, foreignKeyDataset);
+													foreignKeyDatasetList.remove(foreignKeyDataset);
+													break;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 		}
 	}
 
@@ -480,7 +542,8 @@ public class ClientCommunicator extends Communicator
 	}
 
 	@Override
-	protected final boolean setSslSocket(String keyStorePassword, String keyStoreFile)
+	protected final boolean setSslSocket(String keyStorePassword, String keyStoreFile,
+			String[] cipherSuites)
 			throws IOException, NoSuchAlgorithmException, KeyManagementException,
 			CertificateException, KeyStoreException, UnrecoverableKeyException, XMLStreamException,
 			SSLException
@@ -512,12 +575,14 @@ public class ClientCommunicator extends Communicator
 		SSLSocketFactory sslFactory = sslContext.getSocketFactory();
 		this.sslSocket = (SSLSocket) sslFactory.createSocket(this.socket, null,
 				this.socket.getLocalPort(), false);
-		this.sslSocket.setEnabledCipherSuites(new String[] { "TLS_RSA_WITH_AES_128_CBC_SHA256" });
+		this.sslSocket.setEnabledCipherSuites(cipherSuites != null && cipherSuites.length > 0 ?
+				cipherSuites :
+				new String[] { "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256" });
 		this.sslSocket.setUseClientMode(true);
 		try
 		{
 			this.sslSocket.startHandshake();
-			this.setSslStreams();
+			this.replaceStreamsWithSslStreams();
 
 			return true;
 		} catch (SSLException e)
@@ -535,7 +600,8 @@ public class ClientCommunicator extends Communicator
 					Object controller = null;
 
 					// wait for the certificate controller to be loaded
-					while(!((controller = Client.getFxController().getCurrentController()) instanceof CertificateController))
+					while(!((controller = Client.getFxController()
+							.getCurrentController()) instanceof CertificateController))
 					{
 						try
 						{
@@ -553,7 +619,7 @@ public class ClientCommunicator extends Communicator
 						{
 							cert.checkValidity();
 							certController.setCertificateData(this.socket.getInetAddress()
-									.getCanonicalHostName(), cert, keystore, keyStoreFile,
+											.getCanonicalHostName(), cert, keystore, keyStoreFile,
 									passphrase);
 						} catch (CertificateExpiredException | CertificateNotYetValidException e1)
 						{
@@ -571,7 +637,8 @@ public class ClientCommunicator extends Communicator
 
 	public boolean isAuthenficated()
 	{
-		return (this.saslClient != null && this.saslClient.isComplete() && this.serverSideAuthenficated);
+		return (this.saslClient != null && this.saslClient.isComplete()
+				&& this.serverSideAuthenficated);
 	}
 
 	private void doLogin() throws IOException
@@ -579,7 +646,8 @@ public class ClientCommunicator extends Communicator
 		Client.getFxController().loadMask("/cuina/legion/client/fxml/tab/TabView.fxml");
 	}
 
-	public void getDataset(IDatasetType datasetType, DatasetReceiver retriever) throws IOException
+	public void getDataset(IDatasetType datasetType, DatasetReceiver retriever,
+			boolean loadForeignKeys) throws IOException
 	{
 		this.databaseRetrievers.put(this.localStanzaSequenceId, retriever);
 		XmlStanza stanza = new XmlStanza();
@@ -587,6 +655,7 @@ public class ClientCommunicator extends Communicator
 		stanza.setSequenceId(this.localStanzaSequenceId++);
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
 		stanza.getAttributes().put("action", "get");
+		stanza.getAttributes().put("loadForeignKeys", loadForeignKeys ? "true" : "false");
 		this.write(stanza);
 
 		stanza = new XmlStanza();
