@@ -1,11 +1,9 @@
 package cuina.legion.client.gui.admin;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import cuina.legion.client.gui.IMaskType;
+import cuina.legion.client.gui.MainController;
+import cuina.legion.shared.logger.LegionLogger;
+import cuina.legion.shared.logger.Logger;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -14,21 +12,22 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import cuina.legion.client.gui.IMaskType;
-import cuina.legion.client.gui.MainController;
-import cuina.legion.shared.logger.LegionLogger;
-import cuina.legion.shared.logger.Logger;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class AdminTabController
 {
-	private TreeItem<IMaskType> rootItem = new TreeItem<IMaskType>(new AdminType("Administration",
-			null));
-
-	private static final List<IMaskType> children = new ArrayList<IMaskType>(Arrays.asList(
+	private static final List<IMaskType>     children = new ArrayList<IMaskType>(Arrays.asList(
 			new AdminType("Nutzer", "/cuina/legion/client/fxml/admin/UserAdmin.fxml"),
 			new AdminType("Gruppen", "/cuina/legion/client/fxml/admin/GroupAdmin.fxml"),
-			new AdminType("Module", "/cuina/legion/client/fxml/admin/ModuleAdmin.fxml")));
-
+			new AdminType("Server-Module", "/cuina/legion/client/fxml/admin/ModuleAdmin.fxml")));
+	private              TreeItem<IMaskType> rootItem = new TreeItem<IMaskType>(
+			new AdminType("Administration",
+					null));
 	private Object childController;
 
 	@FXML
@@ -73,7 +72,7 @@ public class AdminTabController
 						FXMLLoader loader = new FXMLLoader(location);
 						try
 						{
-							Node node = (Node) loader.load();
+							Node node = loader.load();
 							AnchorPane.setBottomAnchor(node, 0.0d);
 							AnchorPane.setLeftAnchor(node, 0.0d);
 							AnchorPane.setRightAnchor(node, 0.0d);

@@ -19,10 +19,10 @@ import java.util.List;
 
 public class UserAdminController implements DatasetReceiver
 {
-	private static FxDatasetColumn[]                columns = new FxDatasetColumn[] {
+	private static final FxDatasetColumn[]                columns = new FxDatasetColumn[] {
 			new FxDatasetColumn<Long>("id", "Nr."), new FxDatasetColumn<String>("name", "Name"),
 			new FxDatasetColumn<String>("group::name", "Gruppe") };
-	private        ObservableList<FxDatasetWrapper> users   = FXCollections
+	private              ObservableList<FxDatasetWrapper> users   = FXCollections
 			.observableList(new ArrayList<FxDatasetWrapper>());
 	@FXML
 	private TableView<FxDatasetWrapper> userTable;

@@ -23,7 +23,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Properties;
 
 public class Client extends Application
@@ -79,8 +82,6 @@ public class Client extends Application
 				super.start();
 			}
 		}
-
-		;
 	};
 	private static MainController      javaFxController;
 	private static ModuleLoader        moduleLoader;
@@ -94,7 +95,7 @@ public class Client extends Application
 	/**
 	 * Gibt den Kommunikation-Thread zwischen Client und Server zurück
 	 *
-	 * @return
+	 * @return ClientCommunicator
 	 */
 	public static ClientCommunicator getCommunicator()
 	{
@@ -116,7 +117,7 @@ public class Client extends Application
 	/**
 	 * Gibt den Haupt-Controller der JavaFX-GUI zurück
 	 *
-	 * @return
+	 * @return MainController
 	 */
 	public static MainController getFxController()
 	{
@@ -124,7 +125,7 @@ public class Client extends Application
 		return Client.javaFxController;
 	}
 
-	public static void close() throws SocketException, IOException
+	public static void close() throws IOException
 	{
 		if(Client.getCommunicator() != null && !Client.getCommunicator().isClosed())
 		{
@@ -193,7 +194,7 @@ public class Client extends Application
 			URL location = this.getClass().getResource("/cuina/legion/client/fxml/Main.fxml");
 
 			FXMLLoader loader = new FXMLLoader(location);
-			Parent root = (Parent) loader.load();
+			Parent root = loader.load();
 
 			Client.javaFxController = loader.getController();
 
@@ -267,18 +268,16 @@ public class Client extends Application
 
 				if(Client.reconnectController != null)
 				{
-					Platform.runLater(new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							Client.reconnectController.close();
-							Client.reconnectController = null;
-						}
+					Platform.runLater(() -> {
+						Client.reconnectController.close();
+						Client.reconnectController = null;
 					});
 				}
 
-				communicator.run();
+				if(communicator != null)
+				{
+					communicator.run();
+				}
 			}
 			return communicator;
 		}

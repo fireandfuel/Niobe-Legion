@@ -19,11 +19,11 @@ import java.util.List;
 
 public class GroupAdminController implements DatasetReceiver
 {
-	private static FxDatasetColumn[]                columns = new FxDatasetColumn[] {
+	private static final FxDatasetColumn[]                columns = new FxDatasetColumn[] {
 			new FxDatasetColumn<Long>("id", "Nr."), new FxDatasetColumn<String>("name", "Name"),
 			new FxDatasetColumn<String>("active", "aktiviert"),
 			new FxDatasetColumn<String>("can_administrate", "Admin") };
-	private        ObservableList<FxDatasetWrapper> groups  = FXCollections
+	private              ObservableList<FxDatasetWrapper> groups  = FXCollections
 			.observableList(new ArrayList<FxDatasetWrapper>());
 	@FXML
 	private TableView<FxDatasetWrapper> groupTable;

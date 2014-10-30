@@ -1,8 +1,9 @@
 package cuina.legion.client.gui.connect;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-
+import cuina.legion.client.Client;
+import cuina.legion.client.ClientCommunicator;
+import cuina.legion.shared.logger.LegionLogger;
+import cuina.legion.shared.logger.Logger;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -11,11 +12,8 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
 import javax.security.sasl.SaslException;
-
-import cuina.legion.client.Client;
-import cuina.legion.client.ClientCommunicator;
-import cuina.legion.shared.logger.LegionLogger;
-import cuina.legion.shared.logger.Logger;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 public class LoginController
 {
@@ -40,15 +38,7 @@ public class LoginController
 			this.login.setDisable(true);
 		} else
 		{
-			Platform.runLater(new Runnable()
-			{
-
-				@Override
-				public void run()
-				{
-					LoginController.this.username.requestFocus();
-				}
-			});
+			Platform.runLater(() -> LoginController.this.username.requestFocus());
 		}
 	}
 
@@ -90,21 +80,13 @@ public class LoginController
 		{
 			this.status.setText("Authenfizierung ist auf Grund eines\n"
 					+ (sender == ClientCommunicator.CLIENT_AUTH_ERR ? "Clientfehlers"
-							: "Serverfehlers") + " fehlgeschlagen.");
+					: "Serverfehlers") + " fehlgeschlagen.");
 			this.login.setDisable(false);
 			this.username.setEditable(true);
 			this.password.setEditable(true);
 		} else
 		{
-			Platform.runLater(new Runnable()
-			{
-
-				@Override
-				public void run()
-				{
-					LoginController.this.loginFailed(sender);
-				}
-			});
+			Platform.runLater(() -> LoginController.this.loginFailed(sender));
 		}
 
 	}

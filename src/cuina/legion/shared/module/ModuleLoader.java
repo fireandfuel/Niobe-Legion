@@ -1,9 +1,12 @@
 package cuina.legion.shared.module;
 
+import cuina.legion.shared.Communicator;
+import cuina.legion.shared.ICommunicator;
+import cuina.legion.shared.logger.LegionLogger;
+import cuina.legion.shared.logger.Logger;
+
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -12,11 +15,6 @@ import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
-
-import cuina.legion.shared.Communicator;
-import cuina.legion.shared.ICommunicator;
-import cuina.legion.shared.logger.LegionLogger;
-import cuina.legion.shared.logger.Logger;
 
 public class ModuleLoader
 {
@@ -27,21 +25,6 @@ public class ModuleLoader
 	private final String hostModuleName;
 	private final String hostModuleVersion;
 	private final String modulePath;
-
-	public static ModuleLoader getModuleLoader(String hostModuleName, String hostModuleVersion,
-			String modulePath)
-	{
-		if(hostModuleName != null && hostModuleVersion != null)
-		{
-			if(ModuleLoader.moduleLoader == null)
-			{
-				ModuleLoader.moduleLoader = new ModuleLoader(hostModuleName, hostModuleVersion,
-						modulePath);
-			}
-			return ModuleLoader.moduleLoader;
-		}
-		return null;
-	}
 
 	private ModuleLoader(String hostModuleName, String hostModuleVersion, String modulePath)
 	{
@@ -75,6 +58,21 @@ public class ModuleLoader
 				}
 			}
 		}
+	}
+
+	public static ModuleLoader getModuleLoader(String hostModuleName, String hostModuleVersion,
+			String modulePath)
+	{
+		if(hostModuleName != null && hostModuleVersion != null)
+		{
+			if(ModuleLoader.moduleLoader == null)
+			{
+				ModuleLoader.moduleLoader = new ModuleLoader(hostModuleName, hostModuleVersion,
+						modulePath);
+			}
+			return ModuleLoader.moduleLoader;
+		}
+		return null;
 	}
 
 	private void initModule(ModuleInstance instance) throws ClassNotFoundException,
@@ -118,14 +116,7 @@ public class ModuleLoader
 			File root = new File(rootFolder);
 			if(root.exists())
 			{
-				return root.listFiles(new FileFilter()
-				{
-					@Override
-					public boolean accept(File pathname)
-					{
-						return pathname.getName().endsWith(".jar");
-					}
-				});
+				return root.listFiles(pathname -> pathname.getName().endsWith(".jar"));
 			}
 		}
 
@@ -133,7 +124,7 @@ public class ModuleLoader
 		return new File[0];
 	}
 
-	private void loadModule(File jarFile) throws FileNotFoundException, IOException
+	private void loadModule(File jarFile) throws IOException
 	{
 		if(jarFile.exists())
 		{
@@ -165,7 +156,7 @@ public class ModuleLoader
 	/**
 	 * Check all requirements of the plugin interface
 	 *
-	 * @param plugin
+	 * @param module
 	 * @return true, all requirements fulfilled; false else
 	 */
 	private boolean checkRequirements(ModuleInstance module)

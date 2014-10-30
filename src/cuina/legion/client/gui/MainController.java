@@ -1,11 +1,9 @@
 package cuina.legion.client.gui;
 
-import java.io.IOException;
-import java.net.URL;
-
+import cuina.legion.client.Client;
+import cuina.legion.shared.logger.LegionLogger;
+import cuina.legion.shared.logger.Logger;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -15,7 +13,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -25,27 +22,22 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import javax.xml.stream.XMLStreamException;
-
-import cuina.legion.client.Client;
-import cuina.legion.shared.logger.LegionLogger;
-import cuina.legion.shared.logger.Logger;
+import java.io.IOException;
+import java.net.URL;
 
 public class MainController
 {
-	private Stage stage;
-
-	@FXML
-	private Label topLabel;
-
 	protected double initialX;
 	protected double initialY;
-
+	private   Stage  stage;
 	@FXML
-	private Pane draggableTopPane;
+	private   Label  topLabel;
+	@FXML
+	private   Pane   draggableTopPane;
 
 	@FXML
 	private AnchorPane mainPane;
-	private Object currentController;
+	private Object     currentController;
 
 	@FXML
 	private void initialize() throws IOException
@@ -68,29 +60,24 @@ public class MainController
 			return controller;
 		} else
 		{
-			Platform.runLater(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					URL location = MainController.class.getResource(maskURI);
+			Platform.runLater(() -> {
+				URL location = MainController.class.getResource(maskURI);
 
-					if(location != null)
+				if(location != null)
+				{
+					FXMLLoader loader = new FXMLLoader(location);
+					try
 					{
-						FXMLLoader loader = new FXMLLoader(location);
-						try
-						{
-							MainController.this.setCurrentContent((Node) loader.load(),
-									loader.getController());
-						} catch (IOException e)
-						{
-							e.printStackTrace();
-							// Logger.exception(LegionLogger.STDERR, e);
-						}
-					} else
+						MainController.this.setCurrentContent((Node) loader.load(),
+								loader.getController());
+					} catch (IOException e)
 					{
-						Logger.error(LegionLogger.STDERR, "FXML mask " + maskURI + " not found.");
+						e.printStackTrace();
+						// Logger.exception(LegionLogger.STDERR, e);
 					}
+				} else
+				{
+					Logger.error(LegionLogger.STDERR, "FXML mask " + maskURI + " not found.");
 				}
 			});
 			return null;
@@ -110,14 +97,7 @@ public class MainController
 			AnchorPane.setTopAnchor(node, 7.0d);
 		} else
 		{
-			Platform.runLater(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					MainController.this.setCurrentContent(node, controller);
-				}
-			});
+			Platform.runLater(() -> MainController.this.setCurrentContent(node, controller));
 		}
 	}
 
@@ -126,15 +106,15 @@ public class MainController
 		return this.currentController;
 	}
 
+	public Stage getStage()
+	{
+		return this.stage;
+	}
+
 	public void setStage(Stage stage)
 	{
 		this.stage = stage;
 		this.topLabel.setText(stage.getTitle());
-	}
-
-	public Stage getStage()
-	{
-		return this.stage;
 	}
 
 	public Object showFatDialog(final String maskURI, final String title) throws IOException
@@ -151,7 +131,7 @@ public class MainController
 					.getResource("/cuina/legion/client/fxml/DialogScene.fxml");
 
 			FXMLLoader loader = new FXMLLoader(location);
-			Scene scene = (Scene) loader.load();
+			Scene scene = loader.load();
 			DialogController controller = loader.getController();
 			controller.setTitle(title);
 			ICloseableDialogController childrenController = (ICloseableDialogController) controller
@@ -172,18 +152,13 @@ public class MainController
 			return childrenController;
 		} else
 		{
-			Platform.runLater(new Runnable()
-			{
-				@Override
-				public void run()
+			Platform.runLater(() -> {
+				try
 				{
-					try
-					{
-						MainController.this.showFatDialog(maskURI, title);
-					} catch (IOException e)
-					{
-						Logger.exception(LegionLogger.STDERR, e);
-					}
+					MainController.this.showFatDialog(maskURI, title);
+				} catch (IOException e)
+				{
+					Logger.exception(LegionLogger.STDERR, e);
 				}
 			});
 			return null;
@@ -201,16 +176,7 @@ public class MainController
 			dialog.setResizable(false);
 
 			Button okButton = new Button("OK");
-			okButton.setOnAction(new EventHandler<ActionEvent>()
-			{
-
-				@Override
-				public void handle(ActionEvent arg0)
-				{
-					dialog.close();
-				}
-
-			});
+			okButton.setOnAction(arg0 -> dialog.close());
 
 			Label messageLabel = new Label(message);
 			messageLabel.setTextAlignment(TextAlignment.CENTER);
@@ -238,51 +204,34 @@ public class MainController
 			dialog.setY(this.stage.getY() + this.stage.getHeight() / 2 - dialog.getHeight() / 2);
 		} else
 		{
-			Platform.runLater(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					MainController.this.showDialog(message);
-				}
-			});
+			Platform.runLater(() -> MainController.this.showDialog(message));
 		}
 	}
 
 	private void addDraggableNode(final Node node)
 	{
 
-		node.setOnMousePressed(new EventHandler<MouseEvent>()
-		{
-			@Override
-			public void handle(MouseEvent me)
+		node.setOnMousePressed(me -> {
+			if(me.getButton() != MouseButton.MIDDLE)
 			{
-				if(me.getButton() != MouseButton.MIDDLE)
-				{
-					MainController.this.initialX = me.getSceneX();
-					MainController.this.initialY = me.getSceneY();
-				}
+				MainController.this.initialX = me.getSceneX();
+				MainController.this.initialY = me.getSceneY();
+			}
 
-				if(me.getClickCount() == 2)
-				{
-					MainController.this.maximize();
-				}
+			if(me.getClickCount() == 2)
+			{
+				MainController.this.maximize();
 			}
 		});
 
-		node.setOnMouseDragged(new EventHandler<MouseEvent>()
-		{
-			@Override
-			public void handle(MouseEvent me)
+		node.setOnMouseDragged(me -> {
+			if(me.getButton() != MouseButton.MIDDLE
+					&& !MainController.this.stage.isFullScreen())
 			{
-				if(me.getButton() != MouseButton.MIDDLE
-						&& !MainController.this.stage.isFullScreen())
-				{
-					node.getScene().getWindow()
-							.setX(me.getScreenX() - MainController.this.initialX);
-					node.getScene().getWindow()
-							.setY(me.getScreenY() - MainController.this.initialY);
-				}
+				node.getScene().getWindow()
+						.setX(me.getScreenX() - MainController.this.initialX);
+				node.getScene().getWindow()
+						.setY(me.getScreenY() - MainController.this.initialY);
 			}
 		});
 	}

@@ -1,10 +1,10 @@
 package cuina.legion.shared.logger;
 
-
 public enum LegionLogger implements ILogger
 {
-	STDERR("stderr"), STDOUT("stdout"), RECEIVED("recv"), SEND("send"), DATABASE("database"), AUTH(
-			"auth"), MODULE("module");
+	STDERR("stderr"), STDOUT("stdout"), RECEIVED("recv"), SEND("send"), TLS("tls"), DATABASE(
+		"database"), AUTH(
+		"auth"), MODULE("module");
 
 	private String loggerName;
 

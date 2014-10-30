@@ -11,7 +11,9 @@ import cuina.legion.shared.logger.Logger;
 import javafx.application.Platform;
 
 import javax.net.ssl.*;
-import javax.security.auth.callback.*;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslClient;
@@ -51,9 +53,9 @@ public class ClientCommunicator extends Communicator
 	protected final static String       CLIENT_VERSION  = "0";
 	private final static   List<String> CLIENT_FEATURES = Arrays
 			.asList(new String[] { "starttls" });
-	final String   keyStoreFile;
-	final String   keyStorePassword;
-	final String[] cipherSuites;
+	final         String   keyStoreFile;
+	final         String   keyStorePassword;
+	final         String[] cipherSuites;
 	private final String[] authMechanisms;
 	private final HashMap<Long, DatasetReceiver> databaseRetrievers = new HashMap<Long, DatasetReceiver>();
 	SaslClient saslClient;
@@ -61,11 +63,11 @@ public class ClientCommunicator extends Communicator
 	String     userName;
 	String     blacklistedServersRegex;
 	private CommunicatorTask connectTask;
-	private boolean clientAcceptedFromServer;
-	private boolean tlsEstablished;
-	private String  serverName;
-	private String  serverVersion;
-	private List<String> serverFeatures = new ArrayList<String>();
+	private boolean          clientAcceptedFromServer;
+	private boolean          tlsEstablished;
+	private String           serverName;
+	private String           serverVersion;
+	private List<String> serverFeatures       = new ArrayList<String>();
 	private List<String> serverAuthMechanisms = new ArrayList<String>();
 
 	public ClientCommunicator(Socket socket, String authMechanisms, String blacklistedServersRegex,
@@ -92,7 +94,7 @@ public class ClientCommunicator extends Communicator
 		}
 	}
 
-	private final void openStream() throws IOException
+	private void openStream() throws IOException
 	{
 		XmlStanza stanza = new XmlStanza();
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
@@ -104,7 +106,7 @@ public class ClientCommunicator extends Communicator
 		this.write(stanza);
 	}
 
-	private final void sendClient() throws IOException
+	private void sendClient() throws IOException
 	{
 		XmlStanza stanza = new XmlStanza();
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
@@ -211,7 +213,7 @@ public class ClientCommunicator extends Communicator
 						{
 							if(datasetType.getXmlStanzaName().equals(stanzaName))
 							{
-								List<Dataset> datasets = null;
+								List<Dataset> datasets;
 
 								if(this.isStackAt(1, "legion:column"))
 								{
@@ -493,31 +495,24 @@ public class ClientCommunicator extends Communicator
 
 		this.saslClient = Sasl.createSaslClient(this.authMechanisms, user, "legion",
 				this.serverName + "_" + this.serverVersion, new HashMap<String, Object>(),
-				new CallbackHandler()
-				{
-
-					@Override
-					public void handle(Callback[] callbacks) throws IOException,
-							UnsupportedCallbackException
+				callbacks -> {
+					for(Callback callback : callbacks)
 					{
-						for(Callback callback : callbacks)
+						if(callback instanceof NameCallback)
 						{
-							if(callback instanceof NameCallback)
-							{
-								((NameCallback) callback).setName(user);
-							} else if(callback instanceof PasswordCallback)
-							{
-								((PasswordCallback) callback).setPassword(password);
-							} else if(callback instanceof RealmCallback)
-							{
-								((RealmCallback) callback)
-										.setText(ClientCommunicator.this.serverName + "_"
-												+ ClientCommunicator.this.serverVersion);
-							} else
-							{
-								Logger.debug(LegionLogger.AUTH, "Unknown Callback: "
-										+ callback.getClass().toString());
-							}
+							((NameCallback) callback).setName(user);
+						} else if(callback instanceof PasswordCallback)
+						{
+							((PasswordCallback) callback).setPassword(password);
+						} else if(callback instanceof RealmCallback)
+						{
+							((RealmCallback) callback)
+									.setText(ClientCommunicator.this.serverName + "_"
+											+ ClientCommunicator.this.serverVersion);
+						} else
+						{
+							Logger.debug(LegionLogger.AUTH, "Unknown Callback: "
+									+ callback.getClass().toString());
 						}
 					}
 				});
@@ -545,8 +540,7 @@ public class ClientCommunicator extends Communicator
 	protected final boolean setSslSocket(String keyStorePassword, String keyStoreFile,
 			String[] cipherSuites)
 			throws IOException, NoSuchAlgorithmException, KeyManagementException,
-			CertificateException, KeyStoreException, UnrecoverableKeyException, XMLStreamException,
-			SSLException
+			CertificateException, KeyStoreException, UnrecoverableKeyException, XMLStreamException
 	{
 		SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
 
@@ -587,6 +581,8 @@ public class ClientCommunicator extends Communicator
 			return true;
 		} catch (SSLException e)
 		{
+			Logger.exception(LegionLogger.TLS, e);
+
 			// client don't know certificate
 			X509Certificate[] chain = trustManager.getChain();
 
@@ -597,7 +593,7 @@ public class ClientCommunicator extends Communicator
 					// ask user to accept certificate
 					Client.getFxController().loadMask(
 							"/cuina/legion/client/fxml/connect/Certificate.fxml");
-					Object controller = null;
+					Object controller;
 
 					// wait for the certificate controller to be loaded
 					while(!((controller = Client.getFxController()
@@ -608,7 +604,7 @@ public class ClientCommunicator extends Communicator
 							Thread.sleep(20);
 						} catch (InterruptedException e1)
 						{
-							e1.printStackTrace();
+							Logger.exception(LegionLogger.STDERR, e1);
 						}
 					}
 
@@ -623,6 +619,7 @@ public class ClientCommunicator extends Communicator
 									passphrase);
 						} catch (CertificateExpiredException | CertificateNotYetValidException e1)
 						{
+							Logger.exception(LegionLogger.TLS, e1);
 							certController.setCertificateExpired(this.socket.getInetAddress()
 									.getCanonicalHostName(), cert);
 						}
@@ -737,13 +734,6 @@ public class ClientCommunicator extends Communicator
 	@Override
 	protected void socketUnexpectedClosed()
 	{
-		Platform.runLater(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				Client.getCommunicator();
-			}
-		});
+		Platform.runLater(() -> Client.getCommunicator());
 	}
 }

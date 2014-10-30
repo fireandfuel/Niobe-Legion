@@ -10,7 +10,9 @@ import cuina.legion.shared.logger.LegionLogger;
 import cuina.legion.shared.logger.Logger;
 
 import javax.net.ssl.*;
-import javax.security.auth.callback.*;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
 import javax.security.sasl.*;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -71,7 +73,7 @@ public class ServerCommunicator extends Communicator
 		}
 	}
 
-	private final void sendServer() throws IOException
+	private void sendServer() throws IOException
 	{
 		XmlStanza stanza = new XmlStanza();
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
@@ -134,7 +136,7 @@ public class ServerCommunicator extends Communicator
 	@Override
 	public final void consumeStartElement(final XmlStanza currentStanza) throws IOException
 	{
-		XmlStanza stanza = null;
+		XmlStanza stanza;
 
 		String stanzaName = currentStanza.getName();
 
@@ -188,6 +190,7 @@ public class ServerCommunicator extends Communicator
 						}
 					} catch (Exception e)
 					{
+						Logger.exception(LegionLogger.STDERR, e);
 						this.decline("starttls", "there is no valid certificate selected");
 					}
 				}
@@ -222,65 +225,59 @@ public class ServerCommunicator extends Communicator
 							this.saslServer = Sasl.createSaslServer(mechanism, "legion",
 									ServerCommunicator.SERVER_NAME + "_"
 											+ ServerCommunicator.SERVER_VERSION,
-									new HashMap<String, Object>(), new CallbackHandler()
+									new HashMap<String, Object>(), (Callback[] callbacks) ->
 									{
+										NameCallback ncb = null;
+										PasswordCallback pcb = null;
+										RealmCallback rcb = null;
 
-										@Override
-										public void handle(Callback[] callbacks)
-												throws IOException, UnsupportedCallbackException
+										for(Callback callback : callbacks)
 										{
-											NameCallback ncb = null;
-											PasswordCallback pcb = null;
-											RealmCallback rcb = null;
-
-											for(Callback callback : callbacks)
+											if(callback instanceof NameCallback)
 											{
-												if(callback instanceof NameCallback)
-												{
-													ncb = (NameCallback) callback;
-												} else if(callback instanceof PasswordCallback)
-												{
-													pcb = (PasswordCallback) callback;
-												} else if(callback instanceof RealmCallback)
-												{
-													rcb = (RealmCallback) callback;
-												} else if(callback instanceof AuthorizeCallback)
-												{
-													AuthorizeCallback acb = (AuthorizeCallback) callback;
-													acb.setAuthorized(true);
-												}
+												ncb = (NameCallback) callback;
+											} else if(callback instanceof PasswordCallback)
+											{
+												pcb = (PasswordCallback) callback;
+											} else if(callback instanceof RealmCallback)
+											{
+												rcb = (RealmCallback) callback;
+											} else if(callback instanceof AuthorizeCallback)
+											{
+												AuthorizeCallback acb = (AuthorizeCallback) callback;
+												acb.setAuthorized(true);
 											}
+										}
 
-											if(rcb != null)
+										if(rcb != null)
+										{
+											rcb.setText(ServerCommunicator.SERVER_NAME + "_"
+													+ ServerCommunicator.SERVER_VERSION);
+										}
+
+										if(ncb != null && pcb != null)
+										{
+											ServerCommunicator.this.userName = ncb
+													.getDefaultName();
+
+											if(Server.getDatabase().getUsers() != null
+													&& Server
+													.getDatabase()
+													.getUsers()
+													.contains(
+															ServerCommunicator.this.userName))
 											{
-												rcb.setText(ServerCommunicator.SERVER_NAME + "_"
-														+ ServerCommunicator.SERVER_VERSION);
-											}
-
-											if(ncb != null && pcb != null)
-											{
-												ServerCommunicator.this.userName = ncb
-														.getDefaultName();
-
-												if(Server.getDatabase().getUsers() != null
-														&& Server
+												String password = Server
 														.getDatabase()
-														.getUsers()
-														.contains(
-																ServerCommunicator.this.userName))
-												{
-													String password = Server
-															.getDatabase()
-															.getPassword(
-																	ServerCommunicator.this.userName);
+														.getPassword(
+																ServerCommunicator.this.userName);
 
-													pcb.setPassword(password != null
-															&& !password.isEmpty() ? password
-															.toCharArray() : null);
-												} else
-												{
-													pcb.setPassword(null);
-												}
+												pcb.setPassword(password != null
+														&& !password.isEmpty() ? password
+														.toCharArray() : null);
+											} else
+											{
+												pcb.setPassword(null);
 											}
 										}
 									});
@@ -595,8 +592,7 @@ public class ServerCommunicator extends Communicator
 	protected final boolean setSslSocket(String keyStorePassword, String keyStoreFile,
 			String[] cipherSuites)
 			throws IOException, NoSuchAlgorithmException, KeyManagementException,
-			CertificateException, KeyStoreException, UnrecoverableKeyException, XMLStreamException,
-			SSLException
+			CertificateException, KeyStoreException, UnrecoverableKeyException, XMLStreamException
 	{
 		SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
 
@@ -621,15 +617,8 @@ public class ServerCommunicator extends Communicator
 					.setEnabledCipherSuites(cipherSuites != null && cipherSuites.length > 0 ?
 							cipherSuites :
 							new String[] { "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256" });
-			this.sslSocket.addHandshakeCompletedListener(new HandshakeCompletedListener()
-			{
-
-				@Override
-				public void handshakeCompleted(HandshakeCompletedEvent event)
-				{
-					Logger.debug(LegionLogger.AUTH, "Used cipherSuite: " + event.getCipherSuite());
-				}
-			});
+			this.sslSocket.addHandshakeCompletedListener((HandshakeCompletedEvent event) -> Logger
+					.debug(LegionLogger.TLS, "Used cipherSuite: " + event.getCipherSuite()));
 			this.sslSocket.setUseClientMode(false);
 
 			this.replaceStreamsWithSslStreams();

@@ -1,5 +1,13 @@
 package cuina.legion.client.gui.connect;
 
+import cuina.legion.client.Client;
+import cuina.legion.shared.logger.LegionLogger;
+import cuina.legion.shared.logger.Logger;
+import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,21 +22,14 @@ import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javafx.application.Platform;
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import cuina.legion.client.Client;
-import cuina.legion.shared.logger.LegionLogger;
-import cuina.legion.shared.logger.Logger;
-
 public class CertificateController
 {
 
-	private static final char[] HEXDIGITS = "0123456789ABCDEF".toCharArray();
+	private static final char[]           HEXDIGITS   = "0123456789ABCDEF".toCharArray();
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.YYYY");
 
 	private static MessageDigest SHA1;
+
 	static
 	{
 		try
@@ -62,10 +63,27 @@ public class CertificateController
 	@FXML
 	private Button accept;
 
-	private KeyStore keystore;
-	private String keystoreFile;
+	private KeyStore        keystore;
+	private String          keystoreFile;
 	private X509Certificate cert;
-	private char[] passphrase;
+	private char[]          passphrase;
+
+	private static String toHexString(byte[] bytes)
+	{
+		StringBuilder sb = new StringBuilder(bytes.length * 3);
+		for(int i = 0; i < bytes.length; i++)
+		{
+			int b = bytes[i];
+			b &= 0xff;
+			sb.append(CertificateController.HEXDIGITS[b >> 4]);
+			sb.append(CertificateController.HEXDIGITS[b & 15]);
+			if(i < bytes.length - 1)
+			{
+				sb.append(":");
+			}
+		}
+		return sb.toString();
+	}
 
 	public synchronized void setCertificateData(final String serverName,
 			final X509Certificate cert, KeyStore keystore, String keyStoreFile, char[] passphrase)
@@ -75,38 +93,32 @@ public class CertificateController
 		this.keystoreFile = keyStoreFile;
 		this.passphrase = passphrase;
 
-		Platform.runLater(new Runnable()
-		{
-
-			@Override
-			public void run()
+		Platform.runLater(() -> {
+			try
 			{
-				try
-				{
-					CertificateController.this.certificateQuestion
-							.setText(CertificateController.this.certificateQuestion.getText()
-									.replace("%server%", serverName));
-					CertificateController.this.certificateName
-							.setText(CertificateController.this.certificateName.getText().replace(
-									"%server%", serverName));
+				CertificateController.this.certificateQuestion
+						.setText(CertificateController.this.certificateQuestion.getText()
+								.replace("%server%", serverName));
+				CertificateController.this.certificateName
+						.setText(CertificateController.this.certificateName.getText().replace(
+								"%server%", serverName));
 
-					CertificateController.this.subject.setText(cert.getSubjectX500Principal()
-							.toString().replace(", ", "\n"));
+				CertificateController.this.subject.setText(cert.getSubjectX500Principal()
+						.toString().replace(", ", "\n"));
 
-					CertificateController.SHA1.update(cert.getEncoded());
+				CertificateController.SHA1.update(cert.getEncoded());
 
-					CertificateController.this.sha1.setText("Fingerabdruck (SHA1): "
-							+ CertificateController.toHexString(CertificateController.SHA1.digest()));
-					CertificateController.this.validBegin.setText("Ausstellungsdatum: "
-							+ CertificateController.DATE_FORMAT.format(cert.getNotBefore()));
-					CertificateController.this.validEnd.setText("Ablaufdatum: "
-							+ CertificateController.DATE_FORMAT.format(cert.getNotAfter()));
-				} catch (CertificateEncodingException e)
-				{
-					Logger.exception(LegionLogger.STDERR, e);
-				}
-
+				CertificateController.this.sha1.setText("Fingerabdruck (SHA1): "
+						+ CertificateController.toHexString(CertificateController.SHA1.digest()));
+				CertificateController.this.validBegin.setText("Ausstellungsdatum: "
+						+ CertificateController.DATE_FORMAT.format(cert.getNotBefore()));
+				CertificateController.this.validEnd.setText("Ablaufdatum: "
+						+ CertificateController.DATE_FORMAT.format(cert.getNotAfter()));
+			} catch (CertificateEncodingException e)
+			{
+				Logger.exception(LegionLogger.STDERR, e);
 			}
+
 		});
 	}
 
@@ -140,23 +152,6 @@ public class CertificateController
 			Logger.exception(LegionLogger.STDERR, e);
 		}
 
-	}
-
-	private static String toHexString(byte[] bytes)
-	{
-		StringBuilder sb = new StringBuilder(bytes.length * 3);
-		for(int i = 0; i < bytes.length; i++)
-		{
-			int b = bytes[i];
-			b &= 0xff;
-			sb.append(CertificateController.HEXDIGITS[b >> 4]);
-			sb.append(CertificateController.HEXDIGITS[b & 15]);
-			if(i < bytes.length - 1)
-			{
-				sb.append(":");
-			}
-		}
-		return sb.toString();
 	}
 
 	@FXML

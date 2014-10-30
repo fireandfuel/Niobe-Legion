@@ -1,27 +1,23 @@
 package cuina.legion.client.gui;
 
-import java.io.IOException;
-import java.net.URL;
-
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 
+import java.io.IOException;
+import java.net.URL;
+
 public class DialogController
 {
-	@FXML
-	private Label topLabel;
-
 	protected double initialX;
 	protected double initialY;
-
 	@FXML
-	private Pane draggableTopPane;
+	private   Label  topLabel;
+	@FXML
+	private   Pane   draggableTopPane;
 
 	@FXML
 	private AnchorPane mainPane;
@@ -39,24 +35,14 @@ public class DialogController
 
 	private void addDraggableNode(final Node node)
 	{
-		node.setOnMousePressed(new EventHandler<MouseEvent>()
-		{
-			@Override
-			public void handle(MouseEvent me)
-			{
-				DialogController.this.initialX = me.getSceneX();
-				DialogController.this.initialY = me.getSceneY();
-			}
+		node.setOnMousePressed(me -> {
+			DialogController.this.initialX = me.getSceneX();
+			DialogController.this.initialY = me.getSceneY();
 		});
 
-		node.setOnMouseDragged(new EventHandler<MouseEvent>()
-		{
-			@Override
-			public void handle(MouseEvent me)
-			{
-				node.getScene().getWindow().setX(me.getScreenX() - DialogController.this.initialX);
-				node.getScene().getWindow().setY(me.getScreenY() - DialogController.this.initialY);
-			}
+		node.setOnMouseDragged(me -> {
+			node.getScene().getWindow().setX(me.getScreenX() - DialogController.this.initialX);
+			node.getScene().getWindow().setY(me.getScreenY() - DialogController.this.initialY);
 		});
 	}
 
@@ -65,7 +51,7 @@ public class DialogController
 		URL location = DialogController.class.getResource(maskURI);
 
 		FXMLLoader loader = new FXMLLoader(location);
-		Node mask = (Node) loader.load();
+		Node mask = loader.load();
 		Object controller = loader.getController();
 
 		this.mainPane.getChildren().clear();
