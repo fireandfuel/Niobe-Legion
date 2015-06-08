@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="niobe.legion.client.gui.admin.UserEditorController">
+    <center>
+        <GridPane vgap="5.0" hgap="5.0">
+            <children>
+                <Label text="Benutername:" GridPane.rowIndex="0"
+                       GridPane.columnIndex="0"/>
+                <TextField fx:id="userName" GridPane.rowIndex="0"
+                           GridPane.columnIndex="1"/>
+                <Label text="Passwort:" GridPane.rowIndex="1"
+                       GridPane.columnIndex="0"/>
+                <PasswordField fx:id="password" GridPane.rowIndex="1"
+                               GridPane.columnIndex="1"/>
+                <Label text="Gruppe:" GridPane.rowIndex="2"
+                       GridPane.columnIndex="0"/>
+                <ComboBox fx:id="group" GridPane.rowIndex="2"
+                          GridPane.columnIndex="1"/>
+            </children>
+        </GridPane>
+    </center>
+    <bottom>
+        <AnchorPane>
+            <HBox alignment="CENTER_RIGHT" spacing="5.0"
+                  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0">
+                <Button text="Abbrechen" onAction="#cancel" cancelButton="true"/>
+                <Button fx:id="saveButton" text="Speichern" onAction="#save"
+                        defaultButton="true"/>
+            </HBox>
+        </AnchorPane>
+    </bottom>
+</BorderPane>
+
