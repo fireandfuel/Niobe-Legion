@@ -41,19 +41,28 @@ public class CertificateController
 		}
 	}
 
-	@FXML private Label certificateQuestion;
+	@FXML
+	private Label certificateQuestion;
 
-	@FXML private Label certificateName;
+	@FXML
+	private Label certificateName;
 
-	@FXML private Label certificateTrust;
+	@FXML
+	private Label certificateTrust;
 
-	@FXML private Label subject;
-	@FXML private Label sha1;
-	@FXML private Label validBegin;
-	@FXML private Label validEnd;
+	@FXML
+	private Label subject;
+	@FXML
+	private Label sha1;
+	@FXML
+	private Label validBegin;
+	@FXML
+	private Label validEnd;
 
-	@FXML private Button decline;
-	@FXML private Button accept;
+	@FXML
+	private Button decline;
+	@FXML
+	private Button accept;
 
 	private KeyStore        keystore;
 	private String          keystoreFile;
@@ -112,27 +121,29 @@ public class CertificateController
 
 	public synchronized void setCertificateExpired(final String serverName, final X509Certificate cert)
 	{
-		this.accept.setDisable(true);
+		Platform.runLater(() -> {
+			try
+			{
+				this.accept.setDisable(true);
 
-		try
-		{
-			this.certificateQuestion.setText("Zertifikat für " + serverName + " konnte nicht validiert werden.");
-			this.certificateName.setText("Das Zertifikat für " + serverName + " ist nicht gültig!");
-			this.subject.setText(cert.getSubjectX500Principal().toString().replace(", ", "\n"));
-			this.certificateTrust.setText("Das aktuelle Datum (" + DATE_FORMAT.format(new Date()) +
-										  ") liegt außerhalb des Gültigkeitszeitraums des Zertifikats.");
+				this.certificateQuestion.setText("Zertifikat für " + serverName + " konnte nicht validiert werden.");
+				this.certificateName.setText("Das Zertifikat für " + serverName + " ist nicht gültig!");
+				this.subject.setText(cert.getSubjectX500Principal().toString().replace(", ", "\n"));
+				this.certificateTrust.setText("Das aktuelle Datum (" + DATE_FORMAT.format(new Date()) +
+											  ") liegt außerhalb des Gültigkeitszeitraums des Zertifikats.");
 
-			SHA1.update(cert.getEncoded());
+				SHA1.update(cert.getEncoded());
 
-			this.sha1.setText("Fingerabdruck (SHA1): " + toHexString(SHA1.digest()));
-			this.validBegin.setText("Ausstellungsdatum: " + DATE_FORMAT.format(cert.getNotBefore()));
-			this.validEnd.setText("Ablaufdatum: " + DATE_FORMAT.format(cert.getNotAfter()));
-		}
-		catch (CertificateEncodingException e)
-		{
-			Logger.exception(LegionLogger.STDERR, e);
-		}
+				this.sha1.setText("Fingerabdruck (SHA1): " + toHexString(SHA1.digest()));
+				this.validBegin.setText("Ausstellungsdatum: " + DATE_FORMAT.format(cert.getNotBefore()));
+				this.validEnd.setText("Ablaufdatum: " + DATE_FORMAT.format(cert.getNotAfter()));
+			}
+			catch (CertificateEncodingException e)
+			{
+				Logger.exception(LegionLogger.STDERR, e);
+			}
 
+		});
 	}
 
 	@FXML

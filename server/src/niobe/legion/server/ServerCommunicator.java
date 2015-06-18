@@ -5,7 +5,7 @@ import niobe.legion.shared.Communicator;
 import niobe.legion.shared.data.XmlStanza;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
-import niobe.legion.shared.model.AbstractEntity;
+import niobe.legion.shared.model.IEntity;
 import niobe.legion.shared.model.marshal.XmlMarshaller;
 
 import javax.net.ssl.HandshakeCompletedEvent;
@@ -376,7 +376,7 @@ public class ServerCommunicator extends Communicator
 
 						if (this.cachedStanzas.containsKey(id))
 						{
-							this.cachedStanzas.get(id).add(currentStanza);
+							this.cachedStanzas.get(id).add(new XmlStanza(currentStanza));
 						}
 					}
 				}
@@ -552,7 +552,7 @@ public class ServerCommunicator extends Communicator
 
 										for (Object dataset : XmlMarshaller.unmarshall(stanzas))
 										{
-											int setId = ((AbstractEntity) dataset).getId();
+											int setId = ((IEntity) dataset).getId();
 
 											if (setId > 0)
 											{
@@ -625,8 +625,8 @@ public class ServerCommunicator extends Communicator
 							} else if ("delete".equals(currentStanza.getAttributes().get("action")))
 							{
 								XmlMarshaller.unmarshall(stanzas).stream()
-											 .filter(dataset -> dataset instanceof AbstractEntity)
-											 .forEach(dataset -> this.deleteDataset((AbstractEntity) dataset));
+											 .filter(dataset -> dataset instanceof IEntity)
+											 .forEach(dataset -> this.deleteDataset((IEntity) dataset));
 							}
 						}
 					}
@@ -776,7 +776,7 @@ public class ServerCommunicator extends Communicator
 		}.start();
 	}
 
-	private void deleteDataset(AbstractEntity object)
+	private void deleteDataset(IEntity object)
 	{
 		new Thread("DatabaseDeleteThread #" + object.getId())
 		{

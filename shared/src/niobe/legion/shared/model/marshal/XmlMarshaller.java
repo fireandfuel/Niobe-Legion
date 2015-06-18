@@ -123,7 +123,7 @@ public class XmlMarshaller implements XMLStreamConstants
 			// for every non-transient, non-constant (primitive + static + final) and non-native field: marshal it
 			// and add it to result list
 			Stream.of(fields).filter(field -> !Modifier.isTransient(field.getModifiers()) &&
-											  !(field.getDeclaringClass().isPrimitive() &&
+											  !(field.getType().isPrimitive() &&
 												Modifier.isStatic(field.getModifiers()) &&
 												Modifier.isFinal(field.getModifiers())) &&
 											  !Modifier.isNative(field.getModifiers())).map(field -> {
@@ -308,6 +308,63 @@ public class XmlMarshaller implements XMLStreamConstants
 
 							// check if field class is a primitive class, date class, time class, string class,
 							// list class, map class or is an array
+							if (columnClass != null && (Collection.class.isAssignableFrom(columnClass) ||
+														Map.class.isAssignableFrom(columnClass) || isArrayColumn))
+							{
+								// get the field value as a string
+								Object value = stanza.getValue();
+								if (value != null)
+								{
+									if (isArrayColumn)
+									{
+										// instantiate the array
+										int arrayCount = (stanza.getAttributes().get("arrayCount") != null) ?
+														 Integer.parseInt(stanza.getAttributes().get("arrayCount")) : 0;
+										value = Array.newInstance(columnClass, arrayCount);
+									} else if (Collection.class.isAssignableFrom(columnClass))
+									{
+										if (checkCollectionImplementation(columnClass))
+										{
+											// instantiate collection
+											value = columnClass.newInstance();
+										}
+									} else if (Map.class.isAssignableFrom(columnClass))
+									{
+										// instantiate map
+										value = columnClass.newInstance();
+									}
+
+									// set the object's field to the value
+									setField(object.getClass().getDeclaredField(columnName), object, value);
+								}
+							}
+						}
+						catch (Exception e)
+						{
+							e.printStackTrace();
+							columnClass = null;
+							columnName = null;
+						}
+					} else if (stanza.getEventType() == CHARACTERS)
+					{
+						try
+						{
+							// get the class name of a field
+							String className = stanza.getAttributes().get("class");
+							// check if it is an array
+							if (className.endsWith("[]"))
+							{
+								isArrayColumn = true;
+								className = className.replace("[]", "");
+							}
+
+							// get the field's class by its class name
+							columnClass = Class.forName(className);
+							// get the field's name
+							columnName = stanza.getAttributes().get("name");
+
+							// check if field class is a primitive class, date class, time class, string class,
+							// list class, map class or is an array
 							if (columnClass != null && (columnClass.isPrimitive() || columnClass == Integer.class ||
 														columnClass == Double.class || columnClass == Float.class ||
 														columnClass == Boolean.class ||
@@ -315,73 +372,57 @@ public class XmlMarshaller implements XMLStreamConstants
 														columnClass == LocalTime.class ||
 														columnClass == LocalDateTime.class ||
 														columnClass == String.class || columnClass == Byte.class ||
-														columnClass == Short.class ||
-														Collection.class.isAssignableFrom(columnClass) ||
-														Map.class.isAssignableFrom(columnClass) || isArrayColumn))
+														columnClass == Short.class))
 							{
 								// get the field value as a string
 								Object value = stanza.getValue();
-								if (isArrayColumn)
+								if (value != null)
 								{
-									// instantiate the array
-									int arrayCount = (stanza.getAttributes().get("arrayCount") != null) ?
-													 Integer.parseInt(stanza.getAttributes().get("arrayCount")) : 0;
-									value = Array.newInstance(columnClass, arrayCount);
-								} else if (columnClass == Integer.class)
-								{
-									// convert string to int
-									value = Integer.parseInt((String) value);
-								} else if (columnClass == Byte.class)
-								{
-									// convert string to byte
-									value = Byte.parseByte((String) value);
-								} else if (columnClass == Short.class)
-								{
-									// convert string to short
-									value = Short.parseShort((String) value);
-								} else if (columnClass == Long.class)
-								{
-									// convert string to long
-									value = Long.parseLong((String) value);
-								} else if (columnClass == Float.class)
-								{
-									// convert string to float
-									value = Float.parseFloat((String) value);
-								} else if (columnClass == Double.class)
-								{
-									// convert string to double
-									value = Double.parseDouble((String) value);
-								} else if (columnClass == Boolean.class)
-								{
-									// convert string to bool
-									value = Boolean.parseBoolean((String) value);
-								} else if (columnClass == LocalDate.class)
-								{
-									// convert string to date
-									value = LocalDate.parse((String) value);
-								} else if (columnClass == LocalTime.class)
-								{
-									// convert string to time
-									value = LocalTime.parse((String) value);
-								} else if (columnClass == LocalDateTime.class)
-								{
-									// convert string to datetime
-									value = LocalDateTime.parse((String) value);
-								} else if (Collection.class.isAssignableFrom(columnClass))
-								{
-									if (checkCollectionImplementation(columnClass))
+									if (columnClass == Integer.class)
 									{
-										// instantiate collection
-										value = columnClass.newInstance();
+										// convert string to int
+										value = Integer.parseInt((String) value);
+									} else if (columnClass == Byte.class)
+									{
+										// convert string to byte
+										value = Byte.parseByte((String) value);
+									} else if (columnClass == Short.class)
+									{
+										// convert string to short
+										value = Short.parseShort((String) value);
+									} else if (columnClass == Long.class)
+									{
+										// convert string to long
+										value = Long.parseLong((String) value);
+									} else if (columnClass == Float.class)
+									{
+										// convert string to float
+										value = Float.parseFloat((String) value);
+									} else if (columnClass == Double.class)
+									{
+										// convert string to double
+										value = Double.parseDouble((String) value);
+									} else if (columnClass == Boolean.class)
+									{
+										// convert string to bool
+										value = Boolean.parseBoolean((String) value);
+									} else if (columnClass == LocalDate.class)
+									{
+										// convert string to date
+										value = LocalDate.parse((String) value);
+									} else if (columnClass == LocalTime.class)
+									{
+										// convert string to time
+										value = LocalTime.parse((String) value);
+									} else if (columnClass == LocalDateTime.class)
+									{
+										// convert string to datetime
+										value = LocalDateTime.parse((String) value);
 									}
-								} else if (Map.class.isAssignableFrom(columnClass))
-								{
-									// instantiate map
-									value = columnClass.newInstance();
-								}
 
-								// set the object's field to the value
-								setField(object.getClass().getDeclaredField(columnName), object, value);
+									// set the object's field to the value
+									setField(object.getClass().getDeclaredField(columnName), object, value);
+								}
 							}
 						}
 						catch (Exception e)
@@ -418,7 +459,7 @@ public class XmlMarshaller implements XMLStreamConstants
 									xml.removeAll(childrenList);
 
 									// unmarshall the child object
-									Object result = unmarshall(childrenList);
+									Object result = unmarshallDataset(childrenList);
 									if (result != null)
 									{
 										if (isArrayColumn)
@@ -752,8 +793,9 @@ public class XmlMarshaller implements XMLStreamConstants
 					   value instanceof LocalTime || value instanceof LocalDateTime || value instanceof String)
 			{
 				// convert primitive types, date, time and string to string
-				result.setEmptyElement(true);
+				result.setEventType(CHARACTERS);
 				result.setValue(value.toString());
+
 			} else
 			{
 				// otherwise marshal the child object

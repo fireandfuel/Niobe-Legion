@@ -28,16 +28,25 @@ import java.net.URL;
 
 public class MainController
 {
-	protected     double initialX;
-	protected     double initialY;
-	private       Stage  stage;
-	@FXML private Label  topLabel;
-	@FXML private Pane   draggableTopPane;
+	protected double initialX;
+	protected double initialY;
 
-	@FXML private AnchorPane mainPane;
-	private       Object     currentController;
+	private Stage     stage;
 
-	@FXML private ImageView icon;
+	@FXML
+	private Label     topLabel;
+	@FXML
+	private Pane      draggableTopPane;
+	@FXML
+	private ImageView icon;
+	@FXML
+	private Label     userlabel;
+
+	@FXML
+	private AnchorPane mainPane;
+
+	private Object     currentController;
+
 
 	@FXML
 	private void initialize() throws IOException

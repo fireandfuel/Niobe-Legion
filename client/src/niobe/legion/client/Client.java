@@ -188,7 +188,15 @@ public class Client extends Application
 				System.exit(0);
 			}
 
-			URL location = this.getClass().getResource("/niobe/legion/client/fxml/Main.fxml");
+			URL location;
+
+			if(System.getProperty("os.name").toLowerCase().contains("mac")){
+				location = this.getClass().getResource("/niobe/legion/client/fxml/MainOSX.fxml");
+			}
+			else
+			{
+				location = this.getClass().getResource("/niobe/legion/client/fxml/Main.fxml");
+			}
 
 			FXMLLoader loader = new FXMLLoader(location);
 			Parent root = loader.load();

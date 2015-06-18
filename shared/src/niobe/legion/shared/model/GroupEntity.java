@@ -1,8 +1,11 @@
 package niobe.legion.shared.model;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -16,8 +19,13 @@ import java.util.List;
 																					   query = "SELECT c FROM legion_group c WHERE c.id = :id"),
 					  @NamedQuery(name = "group.delete",
 								  query = "DELETE FROM legion_group c WHERE c.id = :id")})
-public class GroupEntity extends AbstractEntity
+public class GroupEntity implements IEntity
 {
+	@Id
+	@Column(name = "id")
+	@GeneratedValue
+	private int id;
+
 	private String name;
 
 	@OneToMany(cascade = CascadeType.ALL,
@@ -56,5 +64,17 @@ public class GroupEntity extends AbstractEntity
 	public void setActive(boolean active)
 	{
 		this.active = active;
+	}
+
+	@Override
+	public int getId()
+	{
+		return id;
+	}
+
+	@Override
+	public void setId(int id)
+	{
+		this.id = id;
 	}
 }

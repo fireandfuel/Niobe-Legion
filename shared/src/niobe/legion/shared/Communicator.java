@@ -214,6 +214,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 							break;
 
 						case END_ELEMENT:
+							this.currentStanza = new XmlStanza(this.currentStanza);
 							this.currentStanza.setEventType(XMLStreamConstants.END_ELEMENT);
 							Logger.debug(LegionLogger.RECEIVED,
 										 "received END_ELEMENT : " + this.currentStanza.getName());

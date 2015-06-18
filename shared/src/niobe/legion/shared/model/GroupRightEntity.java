@@ -5,11 +5,16 @@ import java.util.List;
 
 @Entity(name = "legion_group_right")
 @NamedQueries({
-					  @NamedQuery(name = "groupRight.get",
-								  query = "SELECT c FROM legion_group_right c where ")})
-public class GroupRightEntity extends AbstractEntity
+					  @NamedQuery(name = "group_right.get",
+								  query = "SELECT c FROM legion_group_right c where c.id = :id")})
+public class GroupRightEntity implements IEntity
 {
-	private String name;
+	@Id
+	@Column(name = "id")
+	@GeneratedValue
+	private int id;
+
+	private String  name;
 	private boolean active;
 
 	@OneToMany(cascade = CascadeType.ALL,
@@ -46,5 +51,17 @@ public class GroupRightEntity extends AbstractEntity
 	public void setChildren(List<GroupRightEntity> children)
 	{
 		this.children = children;
+	}
+
+	@Override
+	public int getId()
+	{
+		return id;
+	}
+
+	@Override
+	public void setId(int id)
+	{
+		this.id = id;
 	}
 }

@@ -4,10 +4,15 @@ import javax.persistence.*;
 
 @Entity(name = "legion_module_table_registry")
 @NamedQueries({
-					  @NamedQuery(name = "moduleTableRegistry.get",
+					  @NamedQuery(name = "module_registry.get",
 								  query = "SELECT c FROM legion_module_table_registry c")})
-public class ModuleTableRegistryEntity extends AbstractEntity
+public class ModuleTableRegistryEntity implements IEntity
 {
+	@Id
+	@Column(name = "id")
+	@GeneratedValue
+	private int id;
+
 	private String name;
 	private String version;
 	private String createStatement;
@@ -40,5 +45,17 @@ public class ModuleTableRegistryEntity extends AbstractEntity
 	public void setCreateStatement(String createStatement)
 	{
 		this.createStatement = createStatement;
+	}
+
+	@Override
+	public int getId()
+	{
+		return id;
+	}
+
+	@Override
+	public void setId(int id)
+	{
+		this.id = id;
 	}
 }

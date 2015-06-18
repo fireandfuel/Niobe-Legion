@@ -4,6 +4,7 @@ import niobe.legion.shared.Base64;
 import niobe.legion.shared.Utils;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
+import niobe.legion.shared.model.GroupEntity;
 import niobe.legion.shared.model.UserEntity;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -23,6 +24,8 @@ import javax.persistence.Persistence;
 import javax.persistence.PersistenceUnit;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -32,6 +35,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -54,9 +58,10 @@ public class Database
 {
 	private static Database database;
 
-	@PersistenceUnit protected EntityManagerFactory entityManagerFactory;
-	protected                  EntityManager        entityManager;
-	private                    EntityTransaction    entityTransaction;
+	@PersistenceUnit
+	protected EntityManagerFactory entityManagerFactory;
+	protected EntityManager        entityManager;
+	private   EntityTransaction    entityTransaction;
 
 	Cipher encryptCipher, decryptCipher;
 
@@ -158,9 +163,9 @@ public class Database
 
 			properties.put("hibernate.connection.driver_class", "org.h2.Driver");
 			properties.put("hibernate.connection.url",
-						   "jdbc:h2:file:" + database + ((encryptionPassword != null && encryptionPassword.isEmpty()) ?
-														 ";CIPHER=AES;DATABASE_TO_UPPER=FALSE" :
-														 ";DATABASE_TO_UPPER=FALSE"));
+						   "jdbc:h2:file:./" + database +
+						   ((encryptionPassword != null && encryptionPassword.isEmpty()) ?
+							";CIPHER=AES;DATABASE_TO_UPPER=FALSE" : ";DATABASE_TO_UPPER=FALSE"));
 			properties.put("hibernate.connection.user", user);
 			properties.put("hibernate.connection.password",
 						   (encryptionPassword != null && encryptionPassword.isEmpty()) ?
@@ -198,6 +203,13 @@ public class Database
 		this.entityManagerFactory = Persistence.createEntityManagerFactory("niobe_legion", properties);
 
 		this.entityManager = this.entityManagerFactory.createEntityManager();
+
+		// Check if database have users
+		List<String> users = this.getUsers();
+		if(users == null || users.isEmpty())
+		{
+			this.createInitialUsers();
+		}
 	}
 
 	public final String encrypt(String text)
@@ -356,7 +368,13 @@ public class Database
 
 	public final <T> List<T> getResults(final Class<T> clazz)
 	{
-		return getResults(clazz, null);
+		CriteriaQuery criteriaQuery = this.entityManager.getCriteriaBuilder().createQuery(clazz);
+		criteriaQuery.from(clazz);
+
+		Root<T> rootEntry = criteriaQuery.from(clazz);
+		CriteriaQuery<T> query = criteriaQuery.select(rootEntry);
+
+		return this.getResults(this.entityManager.createQuery(query), null);
 	}
 
 	public final <T> List<T> getResults(final Class<T> clazz, final String parameters)
@@ -498,7 +516,7 @@ public class Database
 
 	public String getPassword(String user)
 	{
-		UserEntity result = this.getResult("getUserByName", UserEntity.class, entry("name", this.encrypt(user)));
+		UserEntity result = this.getResult("user.getByName", UserEntity.class, entry("name", this.encrypt(user)));
 
 		if (result != null)
 		{
@@ -507,67 +525,44 @@ public class Database
 
 		return null;
 	}
-	//
-	//	final void createInitialDatabase()
-	//	{
-	//		try
-	//		{
-	//			MessageDigest md = MessageDigest.getInstance("SHA-256");
-	//
-	//			byte[] entropy = new byte[1024];
-	//			Utils.random.nextBytes(entropy);
-	//			md.update(entropy,
-	//					  0,
-	//					  1024);
-	//			String password = new BigInteger(1,
-	//											 md.digest()).toString(16).substring(0,
-	//																				 12);
-	//
-	//			this.createTable(DatasetType.GROUP);
-	//			this.createTable(DatasetType.GROUP_RIGHT);
-	//			this.createTable(DatasetType.USER);
-	//
-	//			this.createTable(DatasetType.MODULE);
-	//			this.createTable(DatasetType.MODULE_TABLE_REGISTRY);
-	//
-	//			Dataset group = new Dataset(DatasetType.GROUP);
-	//			group.set("id",
-	//					  null);
-	//			group.set("name",
-	//					  this.encrypt("administrators"));
-	//			this.insert(group);
-	//
-	//			group.set("id",
-	//					  null);
-	//			group.set("name",
-	//					  this.encrypt("users"));
-	//			this.insert(group);
-	//
-	//			group.set("id",
-	//					  null);
-	//			group.set("name",
-	//					  this.encrypt("inactive"));
-	//			this.insert(group);
-	//
-	//			Dataset user = new Dataset(DatasetType.USER);
-	//			user.set("id",
-	//					 null);
-	//			user.set("name",
-	//					 "root");
-	//			user.set("password",
-	//					 password);
-	//			user.set("group",
-	//					 1);
-	//			this.insert(user);
-	//
-	//			System.out.println("Root password is: " + password);
-	//			System.out.println("SECURITY WARNING: Please change the root password later");
-	//		} catch (NoSuchAlgorithmException e)
-	//		{
-	//			Logger.exception(LegionLogger.DATABASE,
-	//							 e);
-	//		}
-	//	}
+
+	final void createInitialUsers()
+	{
+		try
+		{
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+
+			byte[] entropy = new byte[1024];
+			Utils.random.nextBytes(entropy);
+			md.update(entropy, 0, 1024);
+			String password = new BigInteger(1, md.digest()).toString(16).substring(0, 12);
+
+			GroupEntity group = new GroupEntity();
+			group = new GroupEntity();
+			group.setName(this.encrypt("users"));
+			this.insert(group);
+
+			group = new GroupEntity();
+			group.setName(this.encrypt("inactive"));
+			this.insert(group);
+
+			GroupEntity admins = new GroupEntity();
+			admins.setName(this.encrypt("administrators"));
+
+			UserEntity user = new UserEntity();
+			user.setName("root");
+			user.setPassword(password);
+			user.setGroup(admins);
+			this.insert(user);
+
+			System.out.println("Root password is: " + password);
+			System.out.println("SECURITY WARNING: Please change the root password later");
+		}
+		catch (NoSuchAlgorithmException e)
+		{
+			Logger.exception(LegionLogger.DATABASE, e);
+		}
+	}
 	//
 	//	public void createTable(IDatasetType dataType)
 	//	{

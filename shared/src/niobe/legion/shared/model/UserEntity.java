@@ -4,6 +4,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
@@ -15,8 +16,13 @@ import javax.persistence.OneToOne;
 					  @NamedQuery(name = "user.get",
 								  query = "SELECT c FROM legion_user c"), @NamedQuery(name = "user.getByName",
 																					  query = "SELECT c FROM legion_user c WHERE c.name = :name")})
-public class UserEntity extends AbstractEntity
+public class UserEntity implements IEntity
 {
+	@Id
+	@Column(name = "id")
+	@GeneratedValue
+	private int id;
+
 	private String name;
 	private String password;
 
@@ -54,5 +60,17 @@ public class UserEntity extends AbstractEntity
 	public void setGroup(GroupEntity group)
 	{
 		this.group = group;
+	}
+
+	@Override
+	public int getId()
+	{
+		return id;
+	}
+
+	@Override
+	public void setId(int id)
+	{
+		this.id = id;
 	}
 }

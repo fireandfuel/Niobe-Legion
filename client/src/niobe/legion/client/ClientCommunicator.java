@@ -215,8 +215,12 @@ public class ClientCommunicator extends Communicator
 						if ("result".equals(currentStanza.getAttributes().get("type")) &&
 							currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
 						{
-							this.cachedStanzas
-									.put(Long.parseLong(currentStanza.getSequenceId()), new ArrayList<XmlStanza>());
+							long id = Long.parseLong(currentStanza.getSequenceId());
+
+							if (!this.cachedStanzas.containsKey(id))
+							{
+								this.cachedStanzas.put(id, new ArrayList<XmlStanza>());
+							}
 						}
 					}
 					break;
@@ -231,10 +235,11 @@ public class ClientCommunicator extends Communicator
 
 							if (this.cachedStanzas.containsKey(id))
 							{
-								this.cachedStanzas.get(id).add(currentStanza);
+								this.cachedStanzas.get(id).add(new XmlStanza(currentStanza));
 							}
 						}
 					}
+					break;
 			}
 		}
 	}
@@ -301,10 +306,11 @@ public class ClientCommunicator extends Communicator
 				{
 					if (currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
 					{
-						List<XmlStanza> stanzas = this.cachedStanzas.get(Long.parseLong(currentStanza.getSequenceId()));
-						if (stanzas != null)
+						long id = Long.parseLong(currentStanza.getSequenceId());
+
+						if (this.cachedStanzas.containsKey(id))
 						{
-							stanzas.add(currentStanza);
+							this.cachedStanzas.get(id).add(currentStanza);
 						}
 					}
 				}
@@ -396,10 +402,11 @@ public class ClientCommunicator extends Communicator
 				{
 					if (currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
 					{
-						List<XmlStanza> stanzas = this.cachedStanzas.get(Long.parseLong(currentStanza.getSequenceId()));
-						if (stanzas != null)
+						long id = Long.parseLong(currentStanza.getSequenceId());
+
+						if (this.cachedStanzas.containsKey(id))
 						{
-							stanzas.add(currentStanza);
+							this.cachedStanzas.get(id).add(currentStanza);
 						}
 					}
 				}
@@ -529,6 +536,8 @@ public class ClientCommunicator extends Communicator
 		}
 		catch (SSLException e)
 		{
+			Logger.exception(LegionLogger.TLS, e);
+
 			// client don't know certificate
 			X509Certificate[] chain = trustManager.getChain();
 

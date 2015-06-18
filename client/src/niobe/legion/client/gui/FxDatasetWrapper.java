@@ -6,10 +6,14 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -36,46 +40,62 @@ public class FxDatasetWrapper<T>
 	{
 		this.dataset = dataset;
 
-		Stream.of(this.dataset.getClass().getDeclaredFields())
-			  .filter(field -> !Modifier.isTransient(field.getModifiers()) &&
-							   !(field.getDeclaringClass().isPrimitive() &&
-								 Modifier.isStatic(field.getModifiers()) &&
-								 Modifier.isFinal(field.getModifiers())) &&
-							   !Modifier.isNative(field.getModifiers())).forEach(field -> {
-			Object value = null;
-			try
+		if (this.dataset.getClass().getDeclaredFields() != null)
+		{
+			Field[] fields = this.dataset.getClass().getDeclaredFields();
+			if (fields != null)
 			{
-				String key = field.getName();
-				value = field.get(this.dataset);
+				List<Field> fieldList = Stream.of(fields).filter(field -> field != null).collect(Collectors.toList());
 
-				if (value instanceof Integer)
-				{
-					this.properties.put(key, new SimpleIntegerProperty((Integer) value));
-				} else if (value instanceof Long)
-				{
-					this.properties.put(key, new SimpleLongProperty((Long) value));
-				} else if (value instanceof Float)
-				{
-					this.properties.put(key, new SimpleFloatProperty((Float) value));
-				} else if (value instanceof Double)
-				{
-					this.properties.put(key, new SimpleDoubleProperty((Double) value));
-				} else if (value instanceof Boolean)
-				{
-					this.properties.put(key, new SimpleBooleanProperty((Boolean) value));
-				} else if (value instanceof String)
-				{
-					this.properties.put(key, new SimpleStringProperty((String) value));
-				} else if (!(value instanceof Map || value instanceof Collection))
-				{
-					this.nestedProperties.put(key, new FxDatasetWrapper(value));
-				}
+				fieldList.stream().filter(field -> !Modifier.isTransient(field.getModifiers()) &&
+												   !(field.getType().isPrimitive() &&
+													 Modifier.isStatic(field.getModifiers()) &&
+													 Modifier.isFinal(field.getModifiers())) &&
+												   !Modifier.isNative(field.getModifiers())).forEach(field -> {
+					Object value = null;
+					try
+					{
+						String key = field.getName();
+						field.setAccessible(true);
+						value = field.get(this.dataset);
+
+						if (value != null)
+						{
+							if (value instanceof Integer)
+							{
+								this.properties.put(key, new SimpleIntegerProperty((Integer) value));
+							} else if (value instanceof Long)
+							{
+								this.properties.put(key, new SimpleLongProperty((Long) value));
+							} else if (value instanceof Float)
+							{
+								this.properties.put(key, new SimpleFloatProperty((Float) value));
+							} else if (value instanceof Double)
+							{
+								this.properties.put(key, new SimpleDoubleProperty((Double) value));
+							} else if (value instanceof Boolean)
+							{
+								this.properties.put(key, new SimpleBooleanProperty((Boolean) value));
+							} else if (value instanceof String)
+							{
+								this.properties.put(key, new SimpleStringProperty((String) value));
+							} else if (value instanceof LocalDate || value instanceof LocalDateTime ||
+									   value instanceof LocalTime)
+							{
+								this.properties.put(key, new SimpleObjectProperty<>(value));
+							} else if (!(value instanceof Map || value instanceof Collection))
+							{
+								this.nestedProperties.put(key, new FxDatasetWrapper<>(value));
+							}
+						}
+					}
+					catch (IllegalAccessException e)
+					{
+						e.printStackTrace();
+					}
+				});
 			}
-			catch (IllegalAccessException e)
-			{
-				e.printStackTrace();
-			}
-		});
+		}
 	}
 
 	public static <T> List<FxDatasetWrapper<T>> asList(List<T> datasets)
@@ -133,6 +153,7 @@ public class FxDatasetWrapper<T>
 	{
 		Class<?> datasetClass = this.dataset.getClass();
 		Field keyField = datasetClass.getField(key);
+		keyField.setAccessible(true);
 		keyField.set(this.dataset, value);
 	}
 

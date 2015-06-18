@@ -16,10 +16,15 @@ import java.util.List;
 @NamedQueries({
 					  @NamedQuery(name = "module.get",
 								  query = "SELECT c FROM legion_module c")})
-public class ModuleEntity extends AbstractEntity
+public class ModuleEntity implements IEntity
 {
-	private String name;
-	private String password;
+	@Id
+	@Column(name = "id")
+	@GeneratedValue
+	private int id;
+
+	private String  name;
+	private String  password;
 	private boolean activated;
 
 	@OneToMany(cascade = CascadeType.ALL,
@@ -66,5 +71,17 @@ public class ModuleEntity extends AbstractEntity
 	public void setModuleTableRegistryList(List<ModuleTableRegistryEntity> moduleTableRegistryList)
 	{
 		this.moduleTableRegistryList = moduleTableRegistryList;
+	}
+
+	@Override
+	public int getId()
+	{
+		return id;
+	}
+
+	@Override
+	public void setId(int id)
+	{
+		this.id = id;
 	}
 }

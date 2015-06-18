@@ -18,6 +18,26 @@ public class XmlStanza
 	private boolean emptyElement;
 	private HashMap<String, String> attributes = new HashMap<String, String>();
 
+	public XmlStanza()
+	{
+
+	}
+
+	public XmlStanza(XmlStanza oldStanza)
+	{
+		if(oldStanza != null)
+		{
+			this.setName(oldStanza.getName());
+			this.setLocalName(oldStanza.getLocalName());
+			this.setNameSpaceURI(oldStanza.getNameSpaceURI());
+			this.setValue(oldStanza.getValue());
+			this.setEmptyElement(oldStanza.isEmptyElement());
+			this.setEventType(oldStanza.getEventType());
+
+			this.getAttributes().putAll(oldStanza.getAttributes());
+		}
+	}
+
 	public int getEventType()
 	{
 		return this.eventType;
