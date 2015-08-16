@@ -1,7 +1,7 @@
 Niobe Legion Framework
 ======================
 
-A versalite server/client framework written in Java Programming Language.
+A versatile server/client framework written in Java Programming Language.
 
 Key features:
 -------------
