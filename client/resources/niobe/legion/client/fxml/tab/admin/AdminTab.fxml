@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<Tab xmlns:fx="http://javafx.com/fxml" fx:controller="niobe.legion.client.gui.admin.AdminTabController" closable="false"
+	 text="Administration">
+	<BorderPane>
+		<left>
+			<TreeView fx:id="selectionTree"/>
+		</left>
+		<center>
+			<AnchorPane fx:id="adminRoot"/>
+		</center>
+	</BorderPane>
+</Tab>
+

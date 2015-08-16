@@ -126,14 +126,6 @@ public class ServerCommunicator extends Communicator
 		{
 			ServerCommunicator.SERVER_FEATURES.add("starttls");
 		}
-		try
-		{
-			this.initInputReader();
-		}
-		catch (XMLStreamException e)
-		{
-			Logger.exception(LegionLogger.STDERR, e);
-		}
 	}
 
 	private void sendServer() throws IOException
@@ -242,16 +234,25 @@ public class ServerCommunicator extends Communicator
 							if (this.tlsEstablished)
 							{
 								this.resetReader();
+							} else
+							{
+								this.decline("starttls", "server don't have a certificate");
 							}
 						} else
 						{
-							this.decline("starttls", "there is no valid certificate selected");
+							if (this.tlsEstablished)
+							{
+								this.decline("starttls", "tls is allready established");
+							} else
+							{
+								this.decline("starttls", "there is no valid server certificate selected");
+							}
 						}
 					}
 					catch (Exception e)
 					{
 						Logger.exception(LegionLogger.STDERR, e);
-						this.decline("starttls", "there is no valid certificate selected");
+						this.decline("starttls", "there is no valid server certificate selected");
 					}
 				}
 				break;
@@ -550,20 +551,19 @@ public class ServerCommunicator extends Communicator
 										Database db = Server.getDatabase();
 										List<Object> datasetsToSend = new ArrayList<Object>();
 
-										for (Object dataset : XmlMarshaller.unmarshall(stanzas))
-										{
-											int setId = ((IEntity) dataset).getId();
+										XmlMarshaller.unmarshall(stanzas).stream().filter(dataset -> dataset != null)
+													 .forEach(dataset -> {
+														 int setId = ((IEntity) dataset).getId();
 
-											if (setId > 0)
-											{
-												db.update(dataset);
-											} else
-											{
-												db.insert(dataset);
-
-												datasetsToSend.add(dataset);
-											}
-										}
+														 if (setId > 0)
+														 {
+															 db.update(dataset);
+														 } else
+														 {
+															 dataset = db.insert(dataset);
+														 }
+														 datasetsToSend.add(dataset);
+													 });
 
 										if (!datasetsToSend.isEmpty())
 										{
@@ -624,8 +624,7 @@ public class ServerCommunicator extends Communicator
 								}.start();
 							} else if ("delete".equals(currentStanza.getAttributes().get("action")))
 							{
-								XmlMarshaller.unmarshall(stanzas).stream()
-											 .filter(dataset -> dataset instanceof IEntity)
+								XmlMarshaller.unmarshall(stanzas).stream().filter(dataset -> dataset instanceof IEntity)
 											 .forEach(dataset -> this.deleteDataset((IEntity) dataset));
 							}
 						}
@@ -655,6 +654,11 @@ public class ServerCommunicator extends Communicator
 			InputStream in = new FileInputStream(keyStoreFile);
 			keystore.load(in, passphrase);
 			in.close();
+
+			if (keystore.size() == 0)
+			{
+				return false;
+			}
 
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
 			kmf.init(keystore, passphrase);

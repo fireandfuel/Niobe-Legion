@@ -13,7 +13,8 @@ public class TabViewController
 {
 	private Object tabController;
 
-	@FXML private TabPane tabPane;
+	@FXML
+	private TabPane tabPane;
 
 	@FXML
 	private void initialize() throws IOException

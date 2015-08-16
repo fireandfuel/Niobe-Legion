@@ -4,10 +4,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableView;
+import javafx.stage.Modality;
 import niobe.legion.client.Client;
 import niobe.legion.client.DatasetReceiver;
-import niobe.legion.client.gui.FxDatasetColumn;
-import niobe.legion.client.gui.FxDatasetWrapper;
+import niobe.legion.client.gui.databinding.FxDatasetColumn;
+import niobe.legion.client.gui.databinding.FxDatasetWrapper;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupEntity;
@@ -19,9 +20,7 @@ import java.util.List;
 public class GroupAdminController implements DatasetReceiver<GroupEntity>
 {
 	private static final FxDatasetColumn[] columns = new FxDatasetColumn[]{
-			new FxDatasetColumn<Long>("id", "Nr."), new FxDatasetColumn<String>("name", "Name"),
-			new FxDatasetColumn<String>("active", "aktiviert"),
-			new FxDatasetColumn<String>("can_administrate", "Admin")};
+			new FxDatasetColumn<Long>("id", "Nr."), new FxDatasetColumn<String>("name", "Name")};
 
 	private ObservableList<FxDatasetWrapper<GroupEntity>> groups =
 			FXCollections.observableList(new ArrayList<FxDatasetWrapper<GroupEntity>>());
@@ -55,9 +54,11 @@ public class GroupAdminController implements DatasetReceiver<GroupEntity>
 	@FXML
 	private void newGroup() throws IOException
 	{
-		GroupEditorController controller = (GroupEditorController) Client.getFxController().showFatDialog(
-				"/niobe/legion/client/fxml/admin/GroupEditor.fxml",
-				"Neue Gruppe");
+		GroupEditorController controller = (GroupEditorController) Client.getFxController().showHeavyheightDialog(
+				"/niobe/legion/client/fxml/tab/admin/GroupEditor.fxml",
+				"Neue Gruppe",
+				Modality.WINDOW_MODAL,
+				true);
 		controller.setDatasetRetriever(this);
 	}
 
@@ -65,9 +66,11 @@ public class GroupAdminController implements DatasetReceiver<GroupEntity>
 	private void editGroup() throws IOException
 	{
 		FxDatasetWrapper wrapper = this.groupTable.getSelectionModel().getSelectedItem();
-		GroupEditorController controller = (GroupEditorController) Client.getFxController().showFatDialog(
-				"/niobe/legion/client/fxml/admin/GroupEditor.fxml",
-				"Gruppe editieren");
+		GroupEditorController controller = (GroupEditorController) Client.getFxController().showHeavyheightDialog(
+				"/niobe/legion/client/fxml/tab/admin/GroupEditor.fxml",
+				"Gruppe editieren",
+				Modality.WINDOW_MODAL,
+				true);
 		controller.setData(wrapper);
 		controller.setDatasetRetriever(this);
 	}
@@ -81,21 +84,18 @@ public class GroupAdminController implements DatasetReceiver<GroupEntity>
 	}
 
 	@Override
-	public void add(GroupEntity dbObject)
+	public void set(GroupEntity dataset)
 	{
-		FxDatasetWrapper wrapper = new FxDatasetWrapper<GroupEntity>(dbObject);
-		this.groups.addAll(wrapper);
-	}
-
-	@Override
-	public void addAll(final List<GroupEntity> dbObjects)
-	{
-		FxDatasetWrapper<GroupEntity>[] wrappers = new FxDatasetWrapper[dbObjects.size()];
-		for (int i = 0; i < wrappers.length; i++)
+		for (FxDatasetWrapper<GroupEntity> groupWrapper : this.groups)
 		{
-			wrappers[i] = new FxDatasetWrapper<GroupEntity>(dbObjects.get(i));
+			if (groupWrapper.getData().getId() == dataset.getId())
+			{
+				groupWrapper.setData(dataset);
+				return;
+			}
 		}
-		this.groups.addAll(wrappers);
+
+		this.groups.add(new FxDatasetWrapper<GroupEntity>(dataset));
 	}
 
 	@Override

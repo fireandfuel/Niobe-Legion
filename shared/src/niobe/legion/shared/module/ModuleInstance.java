@@ -2,6 +2,7 @@ package niobe.legion.shared.module;
 
 import niobe.legion.shared.Communicator;
 import niobe.legion.shared.ICommunicator;
+import niobe.legion.shared.data.IRight;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 
@@ -149,7 +150,7 @@ public class ModuleInstance
 		return this.moduleClass;
 	}
 
-	public void start()
+	public synchronized void start()
 	{
 		if (this.module != null && this.status == ModuleInstance.INITIALIZED && this.module.startModule())
 		{
@@ -157,7 +158,7 @@ public class ModuleInstance
 		}
 	}
 
-	public void stop()
+	public synchronized void stop()
 	{
 		if (this.module != null && this.status == ModuleInstance.RUNNING)
 		{
@@ -171,7 +172,7 @@ public class ModuleInstance
 		}
 	}
 
-	public void unload()
+	public synchronized void unload()
 	{
 		if (this.loader != null)
 		{
@@ -194,12 +195,12 @@ public class ModuleInstance
 		}
 	}
 
-	public int getStatus()
+	public synchronized int getStatus()
 	{
 		return this.status;
 	}
 
-	public void setStatus(int status)
+	public synchronized void setStatus(int status)
 	{
 		if (this.status == ModuleInstance.UNINITIALIZED && status == ModuleInstance.MISSING_DEPENDENCIES &&
 			status == ModuleInstance.IN_CONFLICT)
@@ -237,13 +238,15 @@ public class ModuleInstance
 		return this.module.getCommunicator();
 	}
 
-//	public List<IDatasetType> getDataTypes()
-	//	{
-	//		if (this.module == null || this.status == MISSING_DEPENDENCIES || this.status == IN_CONFLICT
-	//				|| this.status == UNINITIALIZED)
-	//			return null;
-	//		return this.module.getDataTypes();
-	//	}
+	public IRight[] getRights()
+	{
+		if (this.module == null || this.status == MISSING_DEPENDENCIES || this.status == IN_CONFLICT ||
+			this.status == UNINITIALIZED)
+		{
+			return null;
+		}
+		return this.module.getRights();
+	}
 
 	public void setDatabaseManager(IModuleDatabaseManager databaseManager)
 	{

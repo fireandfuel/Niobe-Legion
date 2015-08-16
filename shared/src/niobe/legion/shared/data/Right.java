@@ -1,5 +1,8 @@
 package niobe.legion.shared.data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum Right implements IRight
 {
 	USER_RIGHT("user_right", null),
@@ -30,10 +33,17 @@ public enum Right implements IRight
 	private String name;
 	private IRight parent;
 
-	private Right(String name, IRight parent)
+	private transient List<IRight> children;
+
+	Right(String name, IRight parent)
 	{
 		this.name = name;
 		this.parent = parent;
+
+		if (this.parent != null)
+		{
+			this.parent.addChildren(this);
+		}
 	}
 
 	@Override
@@ -46,5 +56,21 @@ public enum Right implements IRight
 	public IRight getParent()
 	{
 		return this.parent;
+	}
+
+	@Override
+	public List<IRight> getChildren()
+	{
+		return this.children;
+	}
+
+	@Override
+	public void addChildren(IRight right)
+	{
+		if (this.children == null)
+		{
+			this.children = new ArrayList<IRight>();
+		}
+		this.children.add(right);
 	}
 }

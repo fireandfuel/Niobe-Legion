@@ -4,9 +4,12 @@ import java.util.List;
 
 public interface DatasetReceiver<T>
 {
-	public void add(T dataset);
+	public void set(T dataset);
 
-	public void addAll(List<T> datasets);
+	public default void setAll(List<T> datasets)
+	{
+		datasets.forEach(this::set);
+	}
 
 	public void clear();
 

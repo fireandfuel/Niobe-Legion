@@ -8,11 +8,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
@@ -25,34 +25,27 @@ import niobe.legion.shared.logger.Logger;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.stream.Stream;
 
 public class MainController
 {
-	protected double initialX;
-	protected double initialY;
-
-	private Stage     stage;
+	private Stage              stage;
+	private ResizeDragListener resizeDragListener;
 
 	@FXML
-	private Label     topLabel;
+	private Label      topLabel;
 	@FXML
-	private Pane      draggableTopPane;
+	private ImageView  icon;
 	@FXML
-	private ImageView icon;
-	@FXML
-	private Label     userlabel;
-
+	private Button     userButton;
 	@FXML
 	private AnchorPane mainPane;
 
-	private Object     currentController;
-
+	private Object currentController;
 
 	@FXML
 	private void initialize() throws IOException
 	{
-		this.addDraggableNode(this.draggableTopPane);
-
 		this.loadMask("/niobe/legion/client/fxml/connect/Connect.fxml");
 	}
 
@@ -70,6 +63,8 @@ public class MainController
 			return controller;
 		} else
 		{
+			Object[] wrapper = new Object[1];
+
 			Platform.runLater(() -> {
 				URL location = MainController.class.getResource(maskURI);
 
@@ -78,19 +73,41 @@ public class MainController
 					FXMLLoader loader = new FXMLLoader(location);
 					try
 					{
-						MainController.this.setCurrentContent(loader.load(), loader.getController());
+						Node node = loader.load();
+						Object controller = loader.getController();
+						this.setCurrentContent(node, controller);
+
+						wrapper[0] = controller;
+						synchronized (MainController.this)
+						{
+							MainController.this.notify();
+						}
 					}
 					catch (IOException e)
 					{
 						e.printStackTrace();
-						// Logger.exception(LegionLogger.STDERR, e);
 					}
 				} else
 				{
 					Logger.error(LegionLogger.STDERR, "FXML mask " + maskURI + " not found.");
 				}
 			});
-			return null;
+
+			synchronized (MainController.this)
+			{
+				while (wrapper[0] == null)
+				{
+					try
+					{
+						MainController.this.wait();
+					}
+					catch (InterruptedException e)
+					{
+					}
+				}
+			}
+
+			return wrapper[0];
 		}
 	}
 
@@ -124,6 +141,7 @@ public class MainController
 	public void setStage(Stage stage)
 	{
 		this.stage = stage;
+		this.resizeDragListener = ResizeDragListener.addResizeListener(stage);
 		this.topLabel.setText(stage.getTitle());
 
 		if (this.icon != null && this.stage != null && !this.stage.getIcons().isEmpty())
@@ -132,13 +150,20 @@ public class MainController
 		}
 	}
 
-	public Object showFatDialog(final String maskURI, final String title) throws IOException
+	public ICloseableDialogController showHeavyheightDialog(final String maskURI,
+															final String title,
+															Modality modality,
+															boolean closeable) throws IOException
 	{
 		if (Platform.isFxApplicationThread())
 		{
 			final Stage dialog = new Stage();
-			dialog.initOwner(this.stage);
-			dialog.initModality(Modality.WINDOW_MODAL);
+			if (modality != Modality.NONE)
+			{
+				dialog.initOwner(this.stage);
+				dialog.initModality(modality);
+			}
+			dialog.setTitle(title);
 			dialog.initStyle(StageStyle.UNDECORATED);
 			dialog.setResizable(false);
 
@@ -148,7 +173,7 @@ public class MainController
 			Scene scene = loader.load();
 			DialogController controller = loader.getController();
 			controller.setTitle(title);
-			ICloseableDialogController childrenController = (ICloseableDialogController) controller.loadMask(maskURI);
+			ICloseableDialogController childrenController = controller.loadMask(maskURI, closeable);
 
 			childrenController.setStage(dialog);
 
@@ -156,6 +181,7 @@ public class MainController
 				 .add(MainController.class.getResource("/niobe/legion/client/css/theme.css").toExternalForm());
 
 			dialog.setScene(scene);
+			ResizeDragListener.addResizeListener(dialog);
 			dialog.show();
 
 			dialog.setX(this.stage.getX() + this.stage.getWidth() / 2 - dialog.getWidth() / 2);
@@ -164,21 +190,44 @@ public class MainController
 			return childrenController;
 		} else
 		{
+			// array to wrap the result
+			final ICloseableDialogController[] wrapper = new ICloseableDialogController[1];
+
 			Platform.runLater(() -> {
 				try
 				{
-					MainController.this.showFatDialog(maskURI, title);
+					wrapper[0] = MainController.this.showHeavyheightDialog(maskURI, title, modality, closeable);
+					synchronized (MainController.this)
+					{
+						MainController.this.notify();
+					}
 				}
 				catch (IOException e)
 				{
 					Logger.exception(LegionLogger.STDERR, e);
 				}
 			});
-			return null;
+
+			// wait for the dialog to load, we should be notified
+			synchronized (MainController.this)
+			{
+				while (wrapper[0] == null)
+				{
+					try
+					{
+						this.wait();
+					}
+					catch (InterruptedException e)
+					{
+					}
+				}
+			}
+
+			return wrapper[0];
 		}
 	}
 
-	public void showDialog(final String message)
+	public void showDialog(final String message, ButtonType... buttons)
 	{
 		if (Platform.isFxApplicationThread())
 		{
@@ -188,14 +237,25 @@ public class MainController
 			dialog.initStyle(StageStyle.UNDECORATED);
 			dialog.setResizable(false);
 
-			Button okButton = new Button("OK");
-			okButton.setOnAction(arg0 -> dialog.close());
-			okButton.requestFocus();
+			HBox buttonBox = new HBox(5);
+
+			if(buttons != null && buttons.length > 0)
+			{
+				Stream.of(buttons).forEach(button -> {
+
+				});
+			} else
+			{
+				Button okButton = new Button("OK");
+				okButton.setOnAction(arg0 -> dialog.close());
+				okButton.requestFocus();
+				buttonBox.getChildren().add(okButton);
+			}
 
 			Label messageLabel = new Label(message);
 			messageLabel.setTextAlignment(TextAlignment.CENTER);
 
-			VBox content = new VBox(35, messageLabel, okButton);
+			VBox content = new VBox(35, messageLabel, buttonBox);
 			content.setAlignment(Pos.CENTER);
 			content.setPadding(new Insets(10));
 			content.setId("mainPane");
@@ -210,6 +270,7 @@ public class MainController
 				 .add(MainController.class.getResource("/niobe/legion/client/css/theme.css").toExternalForm());
 
 			dialog.setScene(scene);
+			ResizeDragListener.addResizeListener(dialog);
 
 			dialog.show();
 
@@ -221,35 +282,13 @@ public class MainController
 		}
 	}
 
-	private void addDraggableNode(final Node node)
-	{
-
-		node.setOnMousePressed(me -> {
-			if (me.getButton() != MouseButton.MIDDLE)
-			{
-				MainController.this.initialX = me.getSceneX();
-				MainController.this.initialY = me.getSceneY();
-			}
-
-			if (me.getClickCount() == 2)
-			{
-				MainController.this.maximize();
-			}
-		});
-
-		node.setOnMouseDragged(me -> {
-			if (me.getButton() != MouseButton.MIDDLE && !MainController.this.stage.isMaximized())
-			{
-				node.getScene().getWindow().setX(me.getScreenX() - MainController.this.initialX);
-				node.getScene().getWindow().setY(me.getScreenY() - MainController.this.initialY);
-			}
-		});
-	}
-
 	@FXML
 	private void maximize()
 	{
-		this.stage.setMaximized(!this.stage.isMaximized());
+		if (this.resizeDragListener != null)
+		{
+			this.resizeDragListener.toggleMaximized();
+		}
 	}
 
 	@FXML

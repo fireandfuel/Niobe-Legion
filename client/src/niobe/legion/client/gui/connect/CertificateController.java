@@ -69,6 +69,15 @@ public class CertificateController
 	private X509Certificate cert;
 	private char[]          passphrase;
 
+	@FXML
+	private void initialize()
+	{
+		synchronized (Client.getCommunicator())
+		{
+			Client.getCommunicator().notify();
+		}
+	}
+
 	private static String toHexString(byte[] bytes)
 	{
 		StringBuilder sb = new StringBuilder(bytes.length * 3);
@@ -162,17 +171,6 @@ public class CertificateController
 		out.close();
 		Client.getCommunicator().close();
 		Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Connect.fxml");
-		while (!(Client.getFxController().getCurrentController() instanceof ConnectController))
-		{
-			try
-			{
-				Thread.sleep(20);
-			}
-			catch (InterruptedException e1)
-			{
-				Logger.exception(LegionLogger.STDERR, e1);
-			}
-		}
-		Client.getCommunicator(); // reset the communicator
+		Client.getCommunicator();
 	}
 }

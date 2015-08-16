@@ -1,9 +1,12 @@
 package niobe.legion.client;
 
 import javafx.application.Platform;
+import javafx.stage.Modality;
 import niobe.legion.client.Client.CommunicatorTask;
 import niobe.legion.client.gui.connect.CertificateController;
+import niobe.legion.client.gui.connect.ConnectController;
 import niobe.legion.client.gui.connect.LoginController;
+import niobe.legion.client.gui.debug.DebugController;
 import niobe.legion.shared.Base64;
 import niobe.legion.shared.Communicator;
 import niobe.legion.shared.data.XmlStanza;
@@ -42,6 +45,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -63,7 +67,7 @@ public class ClientCommunicator extends Communicator
 	public static final    int          CLIENT_AUTH_ERR = 1;
 	protected final static String       CLIENT_NAME     = "legion_client";
 	protected final static String       CLIENT_VERSION  = "0";
-	private final static   List<String> CLIENT_FEATURES = Arrays.asList(new String[]{"starttls"});
+	private final static   List<String> CLIENT_FEATURES = Arrays.asList("starttls");
 
 	final String   keyStoreFile;
 	final String   keyStorePassword;
@@ -86,6 +90,8 @@ public class ClientCommunicator extends Communicator
 	private List<String> serverFeatures       = new ArrayList<String>();
 	private List<String> serverAuthMechanisms = new ArrayList<String>();
 
+	private static DebugController debugController;
+
 	public ClientCommunicator(Socket socket,
 							  String authMechanisms,
 							  String blacklistedServersRegex,
@@ -99,17 +105,43 @@ public class ClientCommunicator extends Communicator
 		this.keyStoreFile = keyStoreFile;
 		this.keyStorePassword = keyStorePassword;
 		this.cipherSuites = cipherSuites;
+
+		if (Client.isDebug())
+		{
+			try
+			{
+				if (debugController == null || debugController.isClosed())
+				{
+					debugController = (DebugController) Client.getFxController().
+							showHeavyheightDialog("/niobe/legion/client/fxml/debug/Debug.fxml",
+												  "Watchdog",
+												  Modality.NONE,
+												  true);
+
+					Communicator.addModuleCommunicator(debugController);
+				} else
+				{
+					debugController.writeMessage("reconnected " + LocalDateTime.now().toString());
+				}
+			}
+			catch (IOException e)
+			{
+				Logger.exception(LegionLogger.STDERR, e);
+			}
+		}
+
+
+	}
+
+	@Override
+	public void run()
+	{
 		try
 		{
 			this.openStream();
-			this.sendClient();
-			this.initInputReader();
+			super.run();
 		}
 		catch (IOException e)
-		{
-			Logger.exception(LegionLogger.STDERR, e);
-		}
-		catch (XMLStreamException e)
 		{
 			Logger.exception(LegionLogger.STDERR, e);
 		}
@@ -166,81 +198,102 @@ public class ClientCommunicator extends Communicator
 	{
 		String stanzaName = currentStanza.getName();
 
-		if (stanzaName.startsWith("legion:"))
+		switch (stanzaName)
 		{
-			switch (stanzaName)
-			{
-				case "legion:server":
-					this.serverName = currentStanza.getAttributes().get("name");
-					this.serverVersion = currentStanza.getAttributes().get("version");
+			case "legion:stream":
+				this.sendClient();
+			case "legion:server":
+				this.serverName = currentStanza.getAttributes().get("name");
+				this.serverVersion = currentStanza.getAttributes().get("version");
 
-					break;
-				case "legion:proceedtls":
-					if (this.clientAcceptedFromServer && !this.tlsEstablished && this.keyStorePassword != null &&
-						this.keyStoreFile != null && !this.keyStoreFile.isEmpty())
+				break;
+			case "legion:proceedtls":
+				if (this.clientAcceptedFromServer && !this.tlsEstablished && this.keyStorePassword != null &&
+					this.keyStoreFile != null && !this.keyStoreFile.isEmpty())
+				{
+					if (this.keyStorePassword.isEmpty())
 					{
-						if (this.keyStorePassword.isEmpty())
+						Logger.warn(LegionLogger.STDOUT, "WARNING: Your key store password is empty!!!");
+					}
+					try
+					{
+						this.tlsEstablished =
+								this.setSslSocket(this.keyStorePassword, this.keyStoreFile, this.cipherSuites);
+						if (this.tlsEstablished)
 						{
-							Logger.warn(LegionLogger.STDOUT, "WARNING: Your key store password is empty!!!");
-						}
-						try
-						{
-							this.tlsEstablished =
-									this.setSslSocket(this.keyStorePassword, this.keyStoreFile, this.cipherSuites);
-							if (this.tlsEstablished)
+							this.openStream();
+							this.resetReader();
+							this.connectTask = null;
+							if (Client.getFxController().getCurrentController() instanceof ConnectController)
 							{
-								this.openStream();
-								this.resetReader();
-								this.connectTask = null;
 								Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Login.fxml");
-							}
-						}
-						catch (Exception e)
-						{
-							Logger.exception(LegionLogger.STDERR, e);
-						}
-					}
-					break;
-				case "legion:success":
-					this.serverSideAuthenficated = true;
-
-					if (this.isAuthenficated())
-					{
-						this.doLogin();
-					}
-					break;
-				case "legion:query":
-					if (this.isAuthenficated())
-					{
-						if ("result".equals(currentStanza.getAttributes().get("type")) &&
-							currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
-						{
-							long id = Long.parseLong(currentStanza.getSequenceId());
-
-							if (!this.cachedStanzas.containsKey(id))
+							} else if (!(Client.getFxController().getCurrentController() instanceof LoginController))
 							{
-								this.cachedStanzas.put(id, new ArrayList<XmlStanza>());
+								Client.showRelogin();
 							}
-						}
-					}
-					break;
-				case "legion:dataset":
-				case "legion:column":
-				case "legion:entry":
-					if (this.isAuthenficated())
-					{
-						if (currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
+						} else
 						{
-							long id = Long.parseLong(currentStanza.getSequenceId());
-
-							if (this.cachedStanzas.containsKey(id))
-							{
-								this.cachedStanzas.get(id).add(new XmlStanza(currentStanza));
-							}
+							this.decline("proceedtls", "client don't trust server certificate");
 						}
 					}
-					break;
-			}
+					catch (Exception e)
+					{
+						Logger.exception(LegionLogger.STDERR, e);
+						if (!this.tlsEstablished)
+						{
+							this.decline("proceedtls", "tls is not established, see client error log");
+						}
+					}
+				} else
+				{
+					if (this.tlsEstablished)
+					{
+						this.decline("proceedtls", "tls is allready established");
+					} else
+					{
+						this.decline("proceedtls", "there is no valid server certificate selected");
+					}
+				}
+				break;
+			case "legion:success":
+				this.serverSideAuthenficated = true;
+
+				if (this.isAuthenficated())
+				{
+					this.doLogin();
+				}
+				break;
+			case "legion:query":
+				if (this.isAuthenficated())
+				{
+					if ("result".equals(currentStanza.getAttributes().get("type")) &&
+						currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
+					{
+						long id = Long.parseLong(currentStanza.getSequenceId());
+
+						if (!this.cachedStanzas.containsKey(id))
+						{
+							this.cachedStanzas.put(id, new ArrayList<XmlStanza>());
+						}
+					}
+				}
+				break;
+			case "legion:dataset":
+			case "legion:column":
+			case "legion:entry":
+				if (this.isAuthenficated())
+				{
+					if (currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
+					{
+						long id = Long.parseLong(currentStanza.getSequenceId());
+
+						if (this.cachedStanzas.containsKey(id))
+						{
+							this.cachedStanzas.get(id).add(new XmlStanza(currentStanza));
+						}
+					}
+				}
+				break;
 		}
 	}
 
@@ -348,7 +401,7 @@ public class ClientCommunicator extends Communicator
 						String checkValue = this.serverName + ":" + this.serverVersion;
 						if (checkValue.matches(this.blacklistedServersRegex))
 						{
-							this.decline("legion:server", "Server is blacklisted on Client");
+							this.decline("legion:server", "Server is blacklisted on client");
 						}
 					} else
 					{
@@ -360,7 +413,7 @@ public class ClientCommunicator extends Communicator
 						this.accept(stanza);
 
 						if (ClientCommunicator.CLIENT_FEATURES.contains("starttls") &&
-							this.serverFeatures.contains("starttls"))
+							this.serverFeatures.contains("starttls") && !tlsEstablished)
 						{
 							stanza = new XmlStanza();
 							stanza.setEmptyElement(true);
@@ -370,7 +423,13 @@ public class ClientCommunicator extends Communicator
 						} else
 						{
 							this.connectTask = null;
-							Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Login.fxml");
+							if (Client.getFxController().getCurrentController() instanceof ConnectController)
+							{
+								Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Login.fxml");
+							} else if (!(Client.getFxController().getCurrentController() instanceof LoginController))
+							{
+								Client.showRelogin();
+							}
 						}
 					}
 				}
@@ -385,13 +444,6 @@ public class ClientCommunicator extends Communicator
 					stanza.setSequenceId(this.localStanzaSequenceId++);
 					stanza.setEventType(XMLStreamConstants.END_ELEMENT);
 					this.write(stanza);
-					try
-					{
-						Thread.sleep(1000);
-					}
-					catch (InterruptedException e)
-					{
-					}
 				}
 				this.closeSocket();
 				break;
@@ -422,7 +474,7 @@ public class ClientCommunicator extends Communicator
 
 						if (retriever != null && datasets != null)
 						{
-							retriever.addAll(XmlMarshaller.unmarshall(datasets));
+							retriever.setAll(XmlMarshaller.unmarshall(datasets));
 						}
 					}
 				}
@@ -546,41 +598,22 @@ public class ClientCommunicator extends Communicator
 				for (X509Certificate cert : chain)
 				{
 					// ask user to accept certificate
-					Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Certificate.fxml");
-					Object controller;
+					CertificateController certController = (CertificateController) Client.getFxController().
+							loadMask("/niobe/legion/client/fxml/connect/Certificate.fxml");
 
-					// wait for the certificate controller to be loaded
-					while (!((controller =
-							Client.getFxController().getCurrentController()) instanceof CertificateController))
+					try
 					{
-						try
-						{
-							Thread.sleep(20);
-						}
-						catch (InterruptedException e1)
-						{
-							Logger.exception(LegionLogger.STDERR, e1);
-						}
+						cert.checkValidity();
+						certController.setCertificateData(this.socket.getInetAddress().getCanonicalHostName(),
+														  cert,
+														  keystore,
+														  keyStoreFile,
+														  passphrase);
 					}
-
-					if (controller instanceof CertificateController)
+					catch (CertificateExpiredException | CertificateNotYetValidException e1)
 					{
-						CertificateController certController = (CertificateController) controller;
-						try
-						{
-							cert.checkValidity();
-							certController.setCertificateData(this.socket.getInetAddress().getCanonicalHostName(),
-															  cert,
-															  keystore,
-															  keyStoreFile,
-															  passphrase);
-						}
-						catch (CertificateExpiredException | CertificateNotYetValidException e1)
-						{
-							Logger.exception(LegionLogger.TLS, e1);
-							certController
-									.setCertificateExpired(this.socket.getInetAddress().getCanonicalHostName(), cert);
-						}
+						Logger.exception(LegionLogger.TLS, e1);
+						certController.setCertificateExpired(this.socket.getInetAddress().getCanonicalHostName(), cert);
 					}
 				}
 
@@ -597,7 +630,14 @@ public class ClientCommunicator extends Communicator
 
 	private void doLogin() throws IOException
 	{
-		Client.getFxController().loadMask("/niobe/legion/client/fxml/tab/TabView.fxml");
+
+		if (Client.getFxController().getCurrentController() instanceof LoginController)
+		{
+			Client.getFxController().loadMask("/niobe/legion/client/fxml/tab/TabView.fxml");
+		} else
+		{
+			Client.hideRelogin();
+		}
 	}
 
 	public <T> void getDataset(Class<T> datasetType,
@@ -672,6 +712,9 @@ public class ClientCommunicator extends Communicator
 		if (controller instanceof LoginController)
 		{
 			((LoginController) controller).loginFailed(sender);
+		} else
+		{
+			Client.reloginFailed(sender);
 		}
 	}
 

@@ -8,12 +8,14 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import niobe.legion.client.gui.MainController;
 import niobe.legion.client.gui.connect.CertificateController;
 import niobe.legion.client.gui.connect.ConnectController;
 import niobe.legion.client.gui.connect.ReconnectController;
+import niobe.legion.client.gui.connect.ReloginController;
 import niobe.legion.client.module.ClientModuleLoader;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
@@ -42,8 +44,11 @@ public class Client extends Application
 	static String[] cipherSuites            = null;
 	static String   authMechanisms          = "";
 	static String   blacklistedServersRegex = "";
+	static boolean debug;
 
 	private static ClientCommunicator communicator;
+
+	// Service to start a task which creates the connection to the client
 	private static Service<ClientCommunicator> clientCommService = new Service<ClientCommunicator>()
 	{
 		@Override
@@ -55,8 +60,19 @@ public class Client extends Application
 		@Override
 		public void start()
 		{
+			// if communicator is null or closed
 			if (Client.communicator == null || Client.communicator.isClosed())
 			{
+
+				if (Client.reloginController != null)
+				{
+					Platform.runLater(() -> {
+						Client.reloginController.close();
+						Client.reloginController = null;
+					});
+				}
+
+				// get the ConnectionController if loaded
 				final ConnectController connectController =
 						(Client.getFxController().getCurrentController() instanceof ConnectController) ?
 						(ConnectController) Client.getFxController().getCurrentController() : null;
@@ -67,10 +83,13 @@ public class Client extends Application
 
 				} else
 				{
+					// if no ConnectionController is loaded, show the reconnect dialog
 					try
 					{
-						Client.javaFxController.showFatDialog("/niobe/legion/client/fxml/connect/Reconnect.fxml",
-															  "Verbindung verloren");
+						Client.javaFxController.showHeavyheightDialog("/niobe/legion/client/fxml/connect/Reconnect.fxml",
+																	  "Verbindung verloren",
+																	  Modality.APPLICATION_MODAL,
+																	  false);
 					}
 					catch (IOException e)
 					{
@@ -82,12 +101,16 @@ public class Client extends Application
 			}
 		}
 	};
+
 	private static MainController      javaFxController;
 	private static ClientModuleLoader  moduleLoader;
 	private static ReconnectController reconnectController;
+	private static ReloginController   reloginController;
 
 	public static void main(String[] args)
 	{
+
+		// launch Application with JavaFx
 		Application.launch(args);
 	}
 
@@ -112,6 +135,42 @@ public class Client extends Application
 		Client.reconnectController = reconnectController;
 	}
 
+	public static void showRelogin()
+	{
+		if (Client.reloginController == null)
+		{
+			try
+			{
+				Client.reloginController = (ReloginController) Client.getFxController().showHeavyheightDialog(
+						"/niobe/legion/client/fxml/connect/Relogin.fxml",
+						"Authenfizierung",
+						Modality.APPLICATION_MODAL,
+						false);
+			}
+			catch (IOException e)
+			{
+				Logger.exception(LegionLogger.STDERR, e);
+			}
+		}
+	}
+
+	public static void reloginFailed(int sender)
+	{
+		if (Client.reloginController != null)
+		{
+			Client.reloginController.loginFailed(sender);
+		}
+	}
+
+	public static void hideRelogin()
+	{
+		if (Client.reloginController != null)
+		{
+			Client.reloginController.close();
+			Client.reloginController = null;
+		}
+	}
+
 	/**
 	 * Gibt den Haupt-Controller der JavaFX-GUI zurück
 	 *
@@ -123,6 +182,11 @@ public class Client extends Application
 		return Client.javaFxController;
 	}
 
+	/**
+	 * Closes the communicator if not null or closed
+	 *
+	 * @throws IOException
+	 */
 	public static void close() throws IOException
 	{
 		if (Client.getCommunicator() != null && !Client.getCommunicator().isClosed())
@@ -135,12 +199,15 @@ public class Client extends Application
 	@Override
 	public void start(Stage stage) throws Exception
 	{
+		// set client configuration file name
 		String configName = "client.ini";
 		if (this.getParameters().getRaw().size() == 1)
 		{
+			// override client configuration file name
 			configName = this.getParameters().getRaw().get(0);
 		}
 
+		// read client configuration file, if exists
 		Properties properties = new Properties();
 		try
 		{
@@ -178,6 +245,9 @@ public class Client extends Application
 					}
 				}
 
+				String debugProperty = properties.getProperty("debug", "false").toLowerCase();
+				Client.debug = "true".equals(debugProperty) || "yes".equals(debugProperty) || "1".equals(debugProperty);
+
 				String modulePath = properties.getProperty("module_path", null);
 				Client.moduleLoader = ClientModuleLoader
 						.getModuleLoader(ClientCommunicator.CLIENT_NAME, ClientCommunicator.CLIENT_VERSION, modulePath);
@@ -188,12 +258,12 @@ public class Client extends Application
 				System.exit(0);
 			}
 
+			// load Main pane
 			URL location;
-
-			if(System.getProperty("os.name").toLowerCase().contains("mac")){
+			if (System.getProperty("os.name").toLowerCase().contains("mac"))
+			{
 				location = this.getClass().getResource("/niobe/legion/client/fxml/MainOSX.fxml");
-			}
-			else
+			} else
 			{
 				location = this.getClass().getResource("/niobe/legion/client/fxml/Main.fxml");
 			}
@@ -201,19 +271,23 @@ public class Client extends Application
 			FXMLLoader loader = new FXMLLoader(location);
 			Parent root = loader.load();
 
+			// set Main pane controller
 			Client.javaFxController = loader.getController();
 
+			// show main pane
 			Scene scene = new Scene(root, 800, 600);
 			scene.getStylesheets()
 				 .add(this.getClass().getResource("/niobe/legion/client/css/theme.css").toExternalForm());
 			stage.setTitle("Legion Client");
 			stage.initStyle(StageStyle.UNDECORATED);
-			Client.javaFxController.setStage(stage);
 			stage.setScene(scene);
+			Client.javaFxController.setStage(stage);
 			stage.show();
 
+			// try to start communicator
 			Client.getCommunicator();
 
+			// start all client modules
 			List<String> moduleNames = moduleLoader.getModuleNames();
 			if (moduleNames != null)
 			{
@@ -227,19 +301,24 @@ public class Client extends Application
 		}
 	}
 
+	// task to start the communicator
 	public static class CommunicatorTask extends Task<ClientCommunicator>
 	{
-		private CommunicatorTask()
+		CommunicatorTask()
 		{
+			// empty constructor, can not be instantiated from other classes
 		}
 
 		@Override
 		protected ClientCommunicator call() throws Exception
 		{
+			this.updateTitle("CommunicatorTask");
+
 			this.updateMessage("Verbindung mit Server wird hergestellt ...");
 			ClientCommunicator communicator = null;
 			int trials = 1;
 
+			// try to start the communicator
 			while (communicator == null && trials < Client.MAX_CONNECT_TRIALS)
 			{
 				try
@@ -272,14 +351,18 @@ public class Client extends Application
 					}
 				}
 			}
+
+			// Server not reachable after Client.MAX_CONNECT_TRIALS trials
 			if (communicator == null && trials == Client.MAX_CONNECT_TRIALS)
 			{
 				this.updateMessage(
 						"Der Server ist nicht erreichbar.\nBitte beenden Sie die Anwendung und\nversuchen Sie es später erneut.");
+				this.failed();
 			} else
 			{
 				Client.communicator = communicator;
 
+				// hide reconnect controller if visible
 				if (Client.reconnectController != null)
 				{
 					Platform.runLater(() -> {
@@ -288,6 +371,7 @@ public class Client extends Application
 					});
 				}
 
+				// run the communictator if CertificateController is not loaded
 				if (communicator != null)
 				{
 					if ((Client.getFxController().getCurrentController() instanceof CertificateController))
@@ -295,11 +379,18 @@ public class Client extends Application
 						return null;
 					} else
 					{
-						communicator.run();
+						new Thread(communicator, "ClientCommunicator").start();
+						this.succeeded();
 					}
 				}
 			}
+
 			return communicator;
 		}
+	}
+
+	public static boolean isDebug()
+	{
+		return Client.debug;
 	}
 }

@@ -2,9 +2,12 @@ package niobe.legion.server.module;
 
 import niobe.legion.shared.Communicator;
 import niobe.legion.shared.ICommunicator;
+import niobe.legion.shared.logger.LegionLogger;
+import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.module.IModule;
 import niobe.legion.shared.module.ModuleInstance;
 import niobe.legion.shared.module.ModuleLoader;
+import niobe.legion.shared.module.ModuleRightManager;
 
 import java.io.IOException;
 import java.net.URL;
@@ -46,11 +49,9 @@ public class ServerModuleLoader extends ModuleLoader
 
 		Class<?> clazz = loader.loadClass(instance.getModuleClass());
 
-		Object obj = clazz.newInstance();
-
-		if (obj instanceof IModule)
+		if (IModule.class.isAssignableFrom(clazz))
 		{
-			IModule module = (IModule) obj;
+			IModule module = (IModule) clazz.newInstance();
 
 			ICommunicator communicator = module.getCommunicator();
 			if (communicator != null && communicator.getNamespace() != null && !communicator.getNamespace().isEmpty() &&
@@ -59,11 +60,19 @@ public class ServerModuleLoader extends ModuleLoader
 				Communicator.addModuleCommunicator(communicator);
 			}
 
+			if (module.getRights() != null)
+			{
+				ModuleRightManager.addRights(module.getRights());
+			}
+
 			instance.setModule(module);
+
 
 			//			new ModuleDatabaseManager(instance);
 		} else
 		{
+			Logger.warn(LegionLogger.MODULE, instance.getName() + ": module class " + clazz.getCanonicalName() +
+											 " does not implement IModule! Unload module ...");
 			loader.close();
 		}
 	}

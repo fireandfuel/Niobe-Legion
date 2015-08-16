@@ -296,11 +296,24 @@
  *                                                                             *
  ******************************************************************************/
 .progress-indicator {
-	-fx-skin: "niobe.legion.client.gui.skin.MetroProgressIndicatorSkin";
+	-fx-skin: "niobe.metro.skin.MetroProgressIndicatorSkin";
 	-fx-indeterminate-segment-count: 5;
 	-fx-progress-color: BLACK;
 }
 
 .progress-indicator:indeterminate .segment6 {
 	-fx-shape: "M3.01 37.25 a3.5,3.5 0 1,1 0,1 Z";
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * TableView, TreeView, TreeTableView                                          *
+ *                                                                             *
+ ******************************************************************************/
+.table-cell, .tree-cell, .tree-table-cell {
+	-fx-alignment: center-left;
+}
+
+.table-column, .tree-table-column {
+	-fx-alignment: center-left;
 }

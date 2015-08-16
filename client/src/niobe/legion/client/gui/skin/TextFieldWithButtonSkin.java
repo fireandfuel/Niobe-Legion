@@ -13,9 +13,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 
-/**
- * Created by pedro_000 on 12/15/13.
- */
 public class TextFieldWithButtonSkin extends TextFieldSkin
 {
 	private StackPane rightButton;

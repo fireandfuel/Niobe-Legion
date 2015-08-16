@@ -25,7 +25,7 @@ public class XmlStanza
 
 	public XmlStanza(XmlStanza oldStanza)
 	{
-		if(oldStanza != null)
+		if (oldStanza != null)
 		{
 			this.setName(oldStanza.getName());
 			this.setLocalName(oldStanza.getLocalName());

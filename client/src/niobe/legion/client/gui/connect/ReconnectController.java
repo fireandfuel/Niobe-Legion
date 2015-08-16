@@ -1,18 +1,23 @@
 package niobe.legion.client.gui.connect;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.stage.Stage;
 import niobe.legion.client.Client;
 import niobe.legion.client.gui.ICloseableDialogController;
+import niobe.legion.shared.logger.LegionLogger;
+import niobe.legion.shared.logger.Logger;
+
+import java.io.IOException;
 
 public class ReconnectController implements ICloseableDialogController
 {
-	@FXML private ProgressIndicator progress;
+	@FXML
+	private ProgressIndicator progress;
 
-	@FXML private Label progressLabel;
+	@FXML
+	private Label progressLabel;
 
 	private Stage stage;
 
@@ -31,7 +36,14 @@ public class ReconnectController implements ICloseableDialogController
 	@FXML
 	private void cancel()
 	{
-		Platform.exit();
+		try
+		{
+			Client.close();
+		}
+		catch (IOException e)
+		{
+			Logger.exception(LegionLogger.STDERR, e);
+		}
 	}
 
 	@Override

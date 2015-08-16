@@ -2,9 +2,12 @@ package niobe.legion.server;
 
 import niobe.legion.shared.Base64;
 import niobe.legion.shared.Utils;
+import niobe.legion.shared.data.IRight;
+import niobe.legion.shared.data.Right;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupEntity;
+import niobe.legion.shared.model.GroupRightEntity;
 import niobe.legion.shared.model.UserEntity;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -25,7 +28,6 @@ import javax.persistence.PersistenceUnit;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -59,9 +61,9 @@ public class Database
 	private static Database database;
 
 	@PersistenceUnit
-	protected EntityManagerFactory entityManagerFactory;
-	protected EntityManager        entityManager;
-	private   EntityTransaction    entityTransaction;
+	EntityManagerFactory entityManagerFactory;
+	EntityManager     entityManager;
+	EntityTransaction entityTransaction;
 
 	Cipher encryptCipher, decryptCipher;
 
@@ -162,10 +164,10 @@ public class Database
 			String maxConnections = args[5];
 
 			properties.put("hibernate.connection.driver_class", "org.h2.Driver");
-			properties.put("hibernate.connection.url",
-						   "jdbc:h2:file:./" + database +
-						   ((encryptionPassword != null && encryptionPassword.isEmpty()) ?
-							";CIPHER=AES;DATABASE_TO_UPPER=FALSE" : ";DATABASE_TO_UPPER=FALSE"));
+			properties.put("hibernate.connection.url", "jdbc:h2:file:./" + database +
+													   ((encryptionPassword != null && encryptionPassword.isEmpty()) ?
+														";CIPHER=AES;DATABASE_TO_UPPER=FALSE" :
+														";DATABASE_TO_UPPER=FALSE"));
 			properties.put("hibernate.connection.user", user);
 			properties.put("hibernate.connection.password",
 						   (encryptionPassword != null && encryptionPassword.isEmpty()) ?
@@ -206,7 +208,7 @@ public class Database
 
 		// Check if database have users
 		List<String> users = this.getUsers();
-		if(users == null || users.isEmpty())
+		if (users == null || users.isEmpty())
 		{
 			this.createInitialUsers();
 		}
@@ -371,10 +373,7 @@ public class Database
 		CriteriaQuery criteriaQuery = this.entityManager.getCriteriaBuilder().createQuery(clazz);
 		criteriaQuery.from(clazz);
 
-		Root<T> rootEntry = criteriaQuery.from(clazz);
-		CriteriaQuery<T> query = criteriaQuery.select(rootEntry);
-
-		return this.getResults(this.entityManager.createQuery(query), null);
+		return this.getResults(this.entityManager.createQuery(criteriaQuery), null);
 	}
 
 	public final <T> List<T> getResults(final Class<T> clazz, final String parameters)
@@ -435,31 +434,32 @@ public class Database
 		return results;
 	}
 
-	public final void insert(Object object)
+	public final Object insert(Object object)
 	{
 		try
 		{
 			this.beginTransaction();
+			// object may contain a list or array of objects which are already known to entityManager
 			object = this.entityManager.merge(object);
 			this.entityManager.persist(object);
 			this.commitTransaction();
+			return object;
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 			this.rollbackTransaction();
 		}
+		return null;
 	}
 
 	public final <T> T update(T object)
 	{
-
 		T result = object;
 		try
 		{
 			this.beginTransaction();
 			result = this.entityManager.merge(object);
-
 			this.commitTransaction();
 		}
 		catch (Exception e)
@@ -538,8 +538,9 @@ public class Database
 			String password = new BigInteger(1, md.digest()).toString(16).substring(0, 12);
 
 			GroupEntity group = new GroupEntity();
-			group = new GroupEntity();
 			group.setName(this.encrypt("users"));
+			group.setActive(true);
+			group.setRights(groupRightsFor(Right.USER_RIGHT, Right.LOGIN));
 			this.insert(group);
 
 			group = new GroupEntity();
@@ -548,6 +549,26 @@ public class Database
 
 			GroupEntity admins = new GroupEntity();
 			admins.setName(this.encrypt("administrators"));
+			admins.setActive(true);
+			admins.setRights(groupRightsFor(Right.USER_RIGHT,
+											Right.LOGIN,
+											Right.ADMINISTRATION,
+											Right.SERVER_ADMINISTRATION,
+											Right.STOP_SERVER,
+											Right.RESTART_SERVER,
+											Right.USER_ADMINISTRATION,
+											Right.ADD_USER,
+											Right.RENAME_USER,
+											Right.DELETE_USER,
+											Right.SET_USER_PASSWORD,
+											Right.SET_USER_GROUP,
+											Right.GROUP_ADMINISTRATION,
+											Right.ADD_GROUP,
+											Right.RENAME_GROUP,
+											Right.DELETE_GROUP,
+											Right.RIGHT_ADMINISTRATION,
+											Right.SET_RIGHT,
+											Right.UNSET_RIGHT));
 
 			UserEntity user = new UserEntity();
 			user.setName("root");
@@ -563,761 +584,21 @@ public class Database
 			Logger.exception(LegionLogger.DATABASE, e);
 		}
 	}
-	//
-	//	public void createTable(IDatasetType dataType)
-	//	{
-	//		try
-	//		{
-	//			this.semaphore.acquire();
-	//			this.connect();
-	//
-	//			if(dataType != null)
-	//			{
-	//				Column[] columns = dataType.getColumns();
-	//				if(columns != null && columns.length > 0)
-	//				{
-	//					Statement stat = this.conn.createStatement();
-	//
-	//					String sql = "CREATE TABLE IF NOT EXISTS`" + dataType.getTableName() + "` (";
-	//
-	//					LinkedHashMap<String, IDatasetType> foreignKeys = new LinkedHashMap<String, IDatasetType>();
-	//
-	//					for(int columnIndex = 0; columnIndex < columns.length; columnIndex++)
-	//					{
-	//						Column column = columns[columnIndex];
-	//
-	//						String columnName = column.getColumnName();
-	//						String sqlDataType = this.getSqlTypeFromDataType(column.getColumnType());
-	//						String defaultValue = column.getDefaultValue();
-	//						boolean primaryKey = column.isPrimaryKey();
-	//						boolean nullable = column.isNullable();
-	//						IDatasetType foreignKey = (column instanceof SelfReferenceColumn) ?
-	//								dataType :
-	//								column.getForeignKeyReference();
-	//
-	//						sql += "`" + columnName + "` " + sqlDataType;
-	//
-	//						if(!nullable)
-	//						{
-	//							sql += " NOT NULL";
-	//						}
-	//
-	//						if(defaultValue != null)
-	//						{
-	//							sql += " DEFAULT " + defaultValue;
-	//						}
-	//
-	//						if(primaryKey)
-	//						{
-	//							sql += " PRIMARY KEY " + this.sqlDialect.autoIncrementName();
-	//						}
-	//
-	//						if(foreignKey != null)
-	//						{
-	//							foreignKeys.put(columnName,
-	//											foreignKey);
-	//						}
-	//
-	//						if(columnIndex < columns.length - 1 || !foreignKeys.isEmpty())
-	//						{
-	//							sql += ", ";
-	//						}
-	//
-	//					}
-	//
-	//					if(!foreignKeys.isEmpty())
-	//					{
-	//						ArrayList<String> keys = new ArrayList<String>(foreignKeys.keySet());
-	//
-	//						for(int keyIndex = 0; keyIndex < keys.size(); keyIndex++)
-	//						{
-	//							sql += "FOREIGN KEY (`" + keys.get(keyIndex) + "`) REFERENCES `"
-	//									+ foreignKeys.get(keys.get(keyIndex)).getTableName()
-	//									+ "`(`id`)";
-	//
-	//							if(keyIndex < keys.size() - 1)
-	//							{
-	//								sql += ", ";
-	//							}
-	//						}
-	//					}
-	//
-	//					sql += ");";
-	//
-	//					stat.execute(sql);
-	//				}
-	//			}
-	//		} catch (SQLException e)
-	//		{
-	//			Logger.exception(LegionLogger.DATABASE,
-	//							 e);
-	//		} catch (InterruptedException e)
-	//		{
-	//			Logger.exception(LegionLogger.DATABASE,
-	//							 e);
-	//		} finally
-	//		{
-	//			this.disconnect();
-	//			this.semaphore.release();
-	//		}
-	//	}
-	//
-	//	public
-	//
-	//	public void insertColumns(IDatasetType datasetType,
-	//							  String condition,
-	//							  Column... columns)
-	//	{
-	//		if(datasetType != null && columns != null && columns.length > 0)
-	//		{
-	//			Statement stat;
-	//			try
-	//			{
-	//				this.semaphore.acquire();
-	//				this.connect();
-	//
-	//				stat = this.conn.createStatement();
-	//
-	//				String table = datasetType.getTableName();
-	//
-	//				LinkedHashMap<String, IDatasetType> foreignKeys = new LinkedHashMap<String, IDatasetType>();
-	//
-	//				String sql = "ALTER TABLE `" + table + "` ADD ";
-	//
-	//				for(int columnIndex = 0; columnIndex < columns.length; columnIndex++)
-	//				{
-	//					Column column = columns[columnIndex];
-	//
-	//					String columnName = column.getColumnName();
-	//					String sqlDataType = this.getSqlTypeFromDataType(column.getColumnType());
-	//					String defaultValue = column.getDefaultValue();
-	//					boolean primaryKey = column.isPrimaryKey();
-	//					boolean nullable = column.isNullable();
-	//					IDatasetType foreignKey = (column instanceof SelfReferenceColumn) ?
-	//							datasetType :
-	//							column.getForeignKeyReference();
-	//
-	//					sql += "`" + columnName + "` " + sqlDataType;
-	//
-	//					if(!nullable)
-	//					{
-	//						sql += " NOT NULL";
-	//					}
-	//
-	//					if(defaultValue != null)
-	//					{
-	//						sql += " DEFAULT " + defaultValue;
-	//					}
-	//
-	//					if(primaryKey)
-	//					{
-	//						sql += " PRIMARY KEY " + this.sqlDialect.autoIncrementName();
-	//					}
-	//
-	//					if(foreignKey != null)
-	//					{
-	//						foreignKeys.put(columnName,
-	//										foreignKey);
-	//					}
-	//
-	//					if(columnIndex < columns.length - 1 || !foreignKeys.isEmpty())
-	//					{
-	//						sql += ", ";
-	//					}
-	//				}
-	//				if(!foreignKeys.isEmpty())
-	//				{
-	//					ArrayList<String> keys = new ArrayList<String>(foreignKeys.keySet());
-	//
-	//					for(int keyIndex = 0; keyIndex < keys.size(); keyIndex++)
-	//					{
-	//						sql += "FOREIGN KEY (`" + keys.get(keyIndex) + "`) REFERENCES `"
-	//								+ foreignKeys.get(keys.get(keyIndex)).getTableName()
-	//								+ "`(`id`)";
-	//
-	//						if(keyIndex < keys.size() - 1)
-	//						{
-	//							sql += ", ";
-	//						}
-	//					}
-	//				}
-	//
-	//				if(condition != null && !condition.isEmpty())
-	//				{
-	//					sql += " " + condition + ";";
-	//				} else
-	//				{
-	//					sql += ";";
-	//				}
-	//
-	//				stat.execute(sql);
-	//
-	//			} catch (SQLException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} catch (InterruptedException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} finally
-	//			{
-	//				this.disconnect();
-	//				this.semaphore.release();
-	//			}
-	//		}
-	//	}
-	//
-	//	public void changeColumn(IDatasetType datasetType,
-	//							 Column oldColumn,
-	//							 Column newColumn)
-	//	{
-	//		if(datasetType != null && oldColumn != null && newColumn != null)
-	//		{
-	//			Statement stat;
-	//			try
-	//			{
-	//				this.semaphore.acquire();
-	//				this.connect();
-	//
-	//				stat = this.conn.createStatement();
-	//
-	//				LinkedHashMap<String, IDatasetType> foreignKeys = new LinkedHashMap<String, IDatasetType>();
-	//
-	//				String table = datasetType.getTableName();
-	//
-	//				String sql = "ALTER TABLE `" + table + "` MODIFY ";
-	//				sql += "`" + oldColumn.getColumnName() + "` ";
-	//
-	//				String columnName = newColumn.getColumnName();
-	//				String sqlDataType = this.getSqlTypeFromDataType(newColumn.getColumnType());
-	//				String defaultValue = newColumn.getDefaultValue();
-	//				boolean primaryKey = newColumn.isPrimaryKey();
-	//				boolean nullable = newColumn.isNullable();
-	//				IDatasetType foreignKey = (newColumn instanceof SelfReferenceColumn) ?
-	//						datasetType :
-	//						newColumn.getForeignKeyReference();
-	//
-	//				sql += "`" + columnName + "` " + sqlDataType;
-	//
-	//				if(!nullable)
-	//				{
-	//					sql += " NOT NULL";
-	//				}
-	//
-	//				if(defaultValue != null)
-	//				{
-	//					sql += " DEFAULT " + defaultValue;
-	//				}
-	//
-	//				if(primaryKey)
-	//				{
-	//					sql += " PRIMARY KEY " + this.sqlDialect.autoIncrementName();
-	//				}
-	//
-	//				if(foreignKey != null)
-	//				{
-	//					foreignKeys.put(columnName,
-	//									foreignKey);
-	//				}
-	//
-	//				if(!foreignKeys.isEmpty())
-	//				{
-	//					ArrayList<String> keys = new ArrayList<String>(foreignKeys.keySet());
-	//
-	//					for(int keyIndex = 0; keyIndex < keys.size(); keyIndex++)
-	//					{
-	//						sql += "FOREIGN KEY (`" + keys.get(keyIndex) + "`) REFERENCES `"
-	//								+ foreignKeys.get(keys.get(keyIndex)).getTableName()
-	//								+ "`(`id`)";
-	//
-	//						if(keyIndex < keys.size() - 1)
-	//						{
-	//							sql += ", ";
-	//						}
-	//					}
-	//				}
-	//
-	//				sql += ";";
-	//
-	//				stat.execute(sql);
-	//			} catch (SQLException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} catch (InterruptedException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} finally
-	//			{
-	//				this.disconnect();
-	//				this.semaphore.release();
-	//			}
-	//		}
-	//	}
-	//
-	//	public void dropColumns(IDatasetType datasetType,
-	//							Column... columns)
-	//	{
-	//		if(datasetType != null && columns != null && columns.length > 0)
-	//		{
-	//			Statement stat;
-	//			try
-	//			{
-	//				this.semaphore.acquire();
-	//				this.connect();
-	//
-	//				stat = this.conn.createStatement();
-	//
-	//				String table = datasetType.getTableName();
-	//
-	//				String sql = "ALTER TABLE `" + table + "` DROP ";
-	//
-	//				for(int columnIndex = 0; columnIndex < columns.length; columnIndex++)
-	//				{
-	//					sql += "`" + columns[columnIndex].getColumnName() + "`";
-	//					if(columnIndex < columns.length - 1)
-	//					{
-	//						sql += ", ";
-	//					}
-	//				}
-	//				sql += ";";
-	//				stat.execute(sql);
-	//			} catch (SQLException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} catch (InterruptedException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} finally
-	//			{
-	//				this.disconnect();
-	//				this.semaphore.release();
-	//			}
-	//		}
-	//	}
-	//
-	//	public void dropTable(IDatasetType datasetType)
-	//	{
-	//		if(datasetType != null)
-	//		{
-	//			Statement stat;
-	//			try
-	//			{
-	//				this.semaphore.acquire();
-	//				this.connect();
-	//
-	//				stat = this.conn.createStatement();
-	//
-	//				String table = datasetType.getTableName();
-	//
-	//				String sql = "DROP TABLE `" + table + "`;";
-	//
-	//				stat.execute(sql);
-	//			} catch (SQLException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} catch (InterruptedException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} finally
-	//			{
-	//				this.disconnect();
-	//				this.semaphore.release();
-	//			}
-	//		}
-	//	}
-	//
-	//	public int insert(Dataset dataset)
-	//	{
-	//		if(dataset != null && dataset.getDatasetContentSize() > 0)
-	//		{
-	//			Statement stat;
-	//			try
-	//			{
-	//				this.semaphore.acquire();
-	//				this.connect();
-	//
-	//				stat = this.conn.createStatement();
-	//
-	//				String table = dataset.getClassType().getTableName();
-	//
-	//				int id = 0;
-	//
-	//				Map<String, Object> values = dataset.getDatabaseValues();
-	//				if(values.get("id") != null && values.get("id") instanceof Integer
-	//						&& (Integer) values.get("id") <= 0)
-	//				{
-	//					// id is 0 or below 0, get the last inserted id and increase
-	//					// it by 1
-	//					id = this.getLastInserted(table) + 1;
-	//
-	//					values.put("id",
-	//							   id);
-	//				}
-	//				List<String> keys = new ArrayList<String>(values.keySet());
-	//
-	//				if(!keys.isEmpty())
-	//				{
-	//
-	//					String sql = "INSERT INTO `" + table + "` (";
-	//
-	//					for(int index = 0; index < keys.size(); index++)
-	//					{
-	//						sql += "`" + keys.get(index) + "`"
-	//								+ ((index < keys.size() - 1) ? ", " : "");
-	//					}
-	//					sql += ") VALUES (";
-	//					for(int index = 0; index < keys.size(); index++)
-	//					{
-	//						String value = null;
-	//						Object obj = values.get(keys.get(index));
-	//
-	//						if(obj instanceof String)
-	//						{
-	//							value = "'" + this.encrypt((String) obj) + "'";
-	//						} else if(obj instanceof LocalDate)
-	//						{
-	//							value = ((LocalDate) obj).format(DateTimeFormatter.ISO_LOCAL_DATE);
-	//						} else if(obj instanceof LocalTime)
-	//						{
-	//							value = ((LocalTime) obj).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-	//						} else if(obj instanceof LocalDateTime)
-	//						{
-	//							value = ((LocalDateTime) obj).format(DATE_TIME_FORMATTER);
-	//						} else if(obj instanceof Integer)
-	//						{
-	//							value = Integer.toString((Integer) obj);
-	//						} else if(obj instanceof Long)
-	//						{
-	//							value = Long.toString((Long) obj);
-	//						} else if(obj instanceof Boolean)
-	//						{
-	//							value = Boolean.toString((Boolean) obj);
-	//						} else if(obj instanceof Float)
-	//						{
-	//							value = Float.toString((Float) obj);
-	//						} else if(obj instanceof Double)
-	//						{
-	//							value = Double.toString((Double) obj);
-	//						}
-	//						if(value == null)
-	//						{
-	//							value = "NULL";
-	//						}
-	//
-	//						sql += value + ((index < keys.size() - 1) ? ", " : "");
-	//					}
-	//
-	//					sql += ");";
-	//
-	//					stat.executeUpdate(sql);
-	//
-	//					return (id <= 0) ? this.getLastInserted(table) : id;
-	//
-	//				}
-	//			} catch (SQLException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} catch (InterruptedException e)
-	//			{
-	//				Logger.exception(LegionLogger.DATABASE,
-	//								 e);
-	//			} finally
-	//			{
-	//				this.disconnect();
-	//				this.semaphore.release();
-	//			}
-	//		}
-	//
-	//		return 0;
-	//	}
-	//
-	//	private int getLastInserted(String table)
-	//	{
-	//		Statement query;
-	//
-	//		try
-	//		{
-	//			query = this.conn.createStatement();
-	//
-	//			String sql = "SELECT MAX(ID) FROM " + table + ";";
-	//
-	//			ResultSet result = query.executeQuery(sql);
-	//
-	//			if(result.next())
-	//			{
-	//				return result.getInt(1);
-	//			}
-	//		} catch (SQLException e)
-	//		{
-	//			Logger.exception(LegionLogger.DATABASE,
-	//							 e);
-	//		}
-	//		return 0;
-	//	}
-	//
-	//	public <T> List<T> select(Class<T> clazz,
-	//							  String rows,
-	//							  String where,
-	//							  String extra)
-	//	{
-	//		String hql = "SELECT " + rows + " FROM " + clazz.getSimpleName();
-	//
-	//		if(where != null && !where.isEmpty())
-	//		{
-	//			hql += " WHERE " + where;
-	//		}
-	//
-	//		if(extra != null && !extra.isEmpty())
-	//		{
-	//			hql += " " + extra + ";";
-	//		} else
-	//		{
-	//			hql += ";";
-	//		}
-	//
-	//		EntityManager entityManager = connect();
-	//		TypedQuery<T> query = entityManager.createQuery(hql,
-	//														clazz);
-	//
-	//		List<T> results = query.getResultList();
-	//
-	//		entityManager.getTransaction().commit();
-	//
-	//		this.disconnect(entityManager);
-	//
-	//		return results;
-	//	}
-	//
-	//	public void update(Dataset dataset,
-	//					   String where)
-	//	{
-	//		Statement stat;
-	//
-	//		if(dataset.getInteger("id") == null || dataset.getInteger("id") <= 0)
-	//		{
-	//			throw new NullPointerException("Dataset ID is not set correctly.");
-	//		}
-	//
-	//		try
-	//		{
-	//			this.semaphore.acquire();
-	//			this.connect();
-	//
-	//			Map<String, Object> values = dataset.getDatabaseValues();
-	//
-	//			List<String> keys = new ArrayList<String>(values.keySet());
-	//
-	//			if(!keys.isEmpty())
-	//			{
-	//				String table = dataset.getClassType().getTableName();
-	//
-	//				stat = this.conn.createStatement();
-	//				String sql = "UPDATE `" + table + "` SET ";
-	//
-	//				for(int index = 0; index < keys.size(); index++)
-	//				{
-	//					String key = keys.get(index);
-	//					String value = null;
-	//					Object obj = values.get(key);
-	//
-	//					if(obj instanceof String)
-	//					{
-	//						value = "'" + this.encrypt((String) obj) + "'";
-	//					} else if(obj instanceof LocalDate)
-	//					{
-	//						value = ((LocalDate) obj).format(DateTimeFormatter.ISO_LOCAL_DATE);
-	//					} else if(obj instanceof LocalTime)
-	//					{
-	//						value = ((LocalTime) obj).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-	//					} else if(obj instanceof LocalDateTime)
-	//					{
-	//						value = ((LocalDateTime) obj).format(DATE_TIME_FORMATTER);
-	//					} else if(obj instanceof Integer)
-	//					{
-	//						value = Integer.toString((Integer) obj);
-	//					} else if(obj instanceof Long)
-	//					{
-	//						value = Long.toString((Long) obj);
-	//					} else if(obj instanceof Boolean)
-	//					{
-	//						value = Integer.toString((boolean) obj ? 1 : 0);
-	//					} else if(obj instanceof Float)
-	//					{
-	//						value = Float.toString((Float) obj);
-	//					} else if(obj instanceof Double)
-	//					{
-	//						value = Double.toString((Double) obj);
-	//					}
-	//					if(value == null)
-	//					{
-	//						value = "NULL";
-	//					}
-	//
-	//					sql += key + " = " + value + ((index < keys.size() - 1) ? ", " : "");
-	//				}
-	//
-	//				if(where != null && !where.isEmpty())
-	//				{
-	//					sql += " WHERE " + where;
-	//				} else
-	//				{
-	//					sql += " WHERE id = " + dataset.getInteger("id");
-	//				}
-	//
-	//				stat.executeUpdate(sql);
-	//			}
-	//		} catch (SQLException e)
-	//		{
-	//			Logger.exception(LegionLogger.DATABASE,
-	//							 e);
-	//		} catch (InterruptedException e)
-	//		{
-	//			Logger.exception(LegionLogger.DATABASE,
-	//							 e);
-	//		} finally
-	//		{
-	//			this.disconnect();
-	//			this.semaphore.release();
-	//		}
-	//	}
-	//
-	//	public void delete(IDatasetType type,
-	//					   String where)
-	//	{
-	//		Statement stat;
-	//
-	//		try
-	//		{
-	//			this.semaphore.acquire();
-	//			this.connect();
-	//
-	//			stat = this.conn.createStatement();
-	//
-	//			stat.executeUpdate("DELETE FROM `" + type.getTableName() + "` WHERE " + where);
-	//
-	//		} catch (SQLException e)
-	//		{
-	//			Logger.exception(LegionLogger.DATABASE,
-	//							 e);
-	//		} catch (InterruptedException e)
-	//		{
-	//			Logger.exception(LegionLogger.DATABASE,
-	//							 e);
-	//		} finally
-	//		{
-	//			this.disconnect();
-	//			this.semaphore.release();
-	//		}
-	//	}
-	//
-	//	public void delete(Dataset dataset)
-	//	{
-	//		if(dataset != null)
-	//		{
-	//			this.delete(dataset.getClassType(),
-	//						"id = " + dataset.getInteger("id"));
-	//		}
-	//	}
-	//
-	//	public String getSqlTypeFromDataType(DataType dataType)
-	//	{
-	//		if(this.sqlDialect != null)
-	//		{
-	//			switch(dataType)
-	//			{
-	//				case BLOB:
-	//					return this.sqlDialect.blobName();
-	//				case BOOL:
-	//					return this.sqlDialect.boolName();
-	//				case DATE:
-	//					return this.sqlDialect.dateName();
-	//				case TIME:
-	//					return this.sqlDialect.timeName();
-	//				case DATE_TIME:
-	//					return this.sqlDialect.dateTimeName();
-	//				case DOUBLE:
-	//					return this.sqlDialect.doubleName();
-	//				case FLOAT:
-	//					return this.sqlDialect.floatName();
-	//				case INTEGER:
-	//					return this.sqlDialect.integerName();
-	//				case STRING:
-	//					return this.sqlDialect.stringName();
-	//			}
-	//		}
-	//		return null;
-	//	}
-	//
-	//	DataType getDataTypeFromOfColumnName(IDatasetType datasetType,
-	//										 String columnName)
-	//	{
-	//		if(datasetType != null && columnName != null)
-	//		{
-	//			Column[] columns = datasetType.getColumns();
-	//
-	//			if(columns != null)
-	//			{
-	//				for(Column column : columns)
-	//				{
-	//					if(columnName.equals(column.getColumnName()))
-	//					{
-	//						return column.getColumnType();
-	//					}
-	//				}
-	//			}
-	//		}
-	//		return null;
-	//	}
-	//
-	//	public ISqlDialect getSqlDialect()
-	//	{
-	//		return this.sqlDialect;
-	//	}
-	//
-	//	public void setGroupRight(int groupId,
-	//							  IRight right,
-	//							  boolean active)
-	//	{
-	//		Dataset rightDataset;
-	//		List<Dataset> rightDatasets = this
-	//				.select(DatasetType.GROUP_RIGHT,
-	//						"*",
-	//						"name ='" + right.getName() + "'",
-	//						null,
-	//						false);
-	//
-	//		if(rightDatasets != null)
-	//		{
-	//			if(rightDatasets.size() > 1)
-	//			{
-	//				rightDatasets.forEach(this::delete);
-	//			} else if(rightDatasets.size() == 1)
-	//			{
-	//				rightDataset = rightDatasets.get(0);
-	//				rightDataset.set("active",
-	//								 active);
-	//				this.update(rightDataset,
-	//							null);
-	//				return;
-	//			}
-	//		}
-	//		rightDataset = new Dataset(DatasetType.GROUP_RIGHT);
-	//		rightDataset.set("id",
-	//						 null);
-	//		rightDataset.set("name",
-	//						 right.getName());
-	//		rightDataset.set("active",
-	//						 true);
-	//		rightDataset.set("group_id",
-	//						 groupId);
-	//		this.insert(rightDataset);
-	//	}
+
+	private List<GroupRightEntity> groupRightsFor(IRight... rights)
+	{
+		if (rights != null && rights.length > 0)
+		{
+			return Stream.of(rights).map(this::createRight).collect(Collectors.toList());
+		}
+		return null;
+	}
+
+	private GroupRightEntity createRight(IRight right)
+	{
+		GroupRightEntity entity = new GroupRightEntity();
+		entity.setName(right.getName());
+		entity.setActive(true);
+		return entity;
+	}
 }

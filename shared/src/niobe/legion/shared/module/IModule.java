@@ -1,14 +1,15 @@
 package niobe.legion.shared.module;
 
 import niobe.legion.shared.ICommunicator;
+import niobe.legion.shared.data.IRight;
 
 public interface IModule
 {
-	boolean startModule();
+	public boolean startModule();
 
 	public void stopModule();
 
 	public ICommunicator getCommunicator();
 
-	//	public List<IDatasetType> getDataTypes();
+	public IRight[] getRights();
 }

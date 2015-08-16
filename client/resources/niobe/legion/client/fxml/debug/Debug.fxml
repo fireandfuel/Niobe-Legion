@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+			fx:controller="niobe.legion.client.gui.debug.DebugController">
+	<center>
+		<TextArea fx:id="messages" editable="false"/>
+	</center>
+	<bottom>
+		<HBox alignment="CENTER_RIGHT" spacing="5">
+			<Button onAction="#ping" text="Ping"/>
+			<Button onAction="#closeConnection" text="Verbindung unterbrechen"/>
+			<Button onAction="#exit" text="Client abwürgen"/>
+		</HBox>
+	</bottom>
+</BorderPane>

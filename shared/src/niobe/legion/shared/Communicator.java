@@ -1,8 +1,10 @@
 package niobe.legion.shared;
 
+import niobe.legion.shared.data.Right;
 import niobe.legion.shared.data.XmlStanza;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
+import niobe.legion.shared.module.ModuleRightManager;
 import niobe.legion.shared.sasl.LegionSaslProvider;
 
 import javax.net.ssl.SSLSocket;
@@ -13,6 +15,7 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.KeyManagementException;
@@ -30,8 +33,12 @@ import java.util.stream.Collectors;
 
 public abstract class Communicator implements XMLStreamConstants, ICommunicator, Runnable
 {
-	private static final String                         LEGION_NAMESPACE     = "legion";
-	private static final String                         LEGION_NAMESPACE_URI = "ashnurazg.de/niobe/legion";
+	private static final String LEGION_NAMESPACE     = "legion";
+	private static final String LEGION_NAMESPACE_URI = "ashnurazg.de/niobe/legion";
+
+	public static final String DEBUG_NAMESPACE     = "debug";
+	public static final String DEBUG_NAMESPACE_URI = "ashnurazg.de/niobe/legion_debug";
+
 	private static final LegionSaslProvider             SASL_PROVIDER        = new LegionSaslProvider();
 	private static final HashMap<String, ICommunicator> MODULE_COMMUNICATORS = new HashMap<String, ICommunicator>();
 
@@ -55,9 +62,14 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 	private LinkedList<XmlStanza> stanzaStack = new LinkedList<XmlStanza>();
 	private XmlStanza currentStanza;
 
+	protected static ICommunicator DEBUG_COMMUNICATOR;
+
 	protected Communicator(Socket socket)
 	{
 		this.socket = socket;
+
+		Logger.debug(LegionLogger.STDOUT, "connected to " + this.getAddress().getHostAddress() + ":" + this.getPort());
+
 		try
 		{
 			this.in = new DataInputStream(socket.getInputStream());
@@ -68,16 +80,37 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 		{
 			Logger.exception(LegionLogger.STDERR, e);
 		}
+
+		ModuleRightManager.addRights(Right.values());
 	}
 
-	public static final void addModuleCommunicator(ICommunicator communicator)
+	public static void addModuleCommunicator(ICommunicator communicator)
 	{
-		Communicator.MODULE_COMMUNICATORS.put(communicator.getNamespaceURI(), communicator);
+
+		if (communicator != null)
+		{
+			if (DEBUG_NAMESPACE_URI.equals(communicator.getNamespaceURI()))
+			{
+				DEBUG_COMMUNICATOR = communicator;
+			} else
+			{
+				Communicator.MODULE_COMMUNICATORS.put(communicator.getNamespaceURI(), communicator);
+			}
+		}
 	}
 
-	public static final void removeModuleCommunicator(String namespaceURI)
+	public static void removeModuleCommunicator(String namespaceURI)
 	{
-		Communicator.MODULE_COMMUNICATORS.remove(namespaceURI);
+		if (namespaceURI != null)
+		{
+			if (DEBUG_NAMESPACE_URI.equals(namespaceURI))
+			{
+				DEBUG_COMMUNICATOR = null;
+			} else
+			{
+				Communicator.MODULE_COMMUNICATORS.remove(namespaceURI);
+			}
+		}
 	}
 
 	protected void initInputReader() throws XMLStreamException
@@ -122,10 +155,12 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 	}
 
 	@Override
-	public final void run()
+	public void run()
 	{
 		try
 		{
+			this.initInputReader();
+
 			while ((this.reader == null || this.reader.hasNext()) && !this.isClosed())
 			{
 				if (this.reader != null)
@@ -166,6 +201,11 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 								// ping successful
 							} else
 							{
+								if (DEBUG_COMMUNICATOR != null)
+								{
+									DEBUG_COMMUNICATOR.consumeStartElement(this.currentStanza);
+								}
+
 								if (Communicator.LEGION_NAMESPACE_URI.equals(this.currentStanza.getNameSpaceURI()))
 								{
 									this.consumeStartElement(this.currentStanza);
@@ -194,6 +234,11 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 										 this.reader.getText());
 							this.currentStanza.setEventType(XMLStreamConstants.CHARACTERS);
 
+							if (DEBUG_COMMUNICATOR != null)
+							{
+								DEBUG_COMMUNICATOR.consumeCharacters(this.currentStanza);
+							}
+
 							if (Communicator.LEGION_NAMESPACE_URI.equals(this.currentStanza.getNameSpaceURI()))
 							{
 								this.consumeCharacters(this.currentStanza);
@@ -218,6 +263,11 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 							this.currentStanza.setEventType(XMLStreamConstants.END_ELEMENT);
 							Logger.debug(LegionLogger.RECEIVED,
 										 "received END_ELEMENT : " + this.currentStanza.getName());
+
+							if (DEBUG_COMMUNICATOR != null)
+							{
+								DEBUG_COMMUNICATOR.consumeEndElement(this.currentStanza);
+							}
 
 							if (Communicator.LEGION_NAMESPACE_URI.equals(this.currentStanza.getNameSpaceURI()))
 							{
@@ -281,11 +331,17 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 
 	protected abstract void socketUnexpectedClosed();
 
+	@Override
 	public final void write(XmlStanza message) throws IOException, SocketException
 	{
 		if (this.socket != null && !this.socket.isClosed() && message != null)
 		{
 			Logger.debug(LegionLogger.SEND, "send: " + message);
+
+			if (DEBUG_COMMUNICATOR != null)
+			{
+				DEBUG_COMMUNICATOR.write(message);
+			}
 
 			switch (message.getEventType())
 			{
@@ -303,10 +359,8 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 						}
 					} else
 					{
-						for (String attrName : message.getAttributes().keySet())
-						{
-							String attribute = message.getAttributes().get(attrName);
 
+						message.getAttributes().forEach((attrName, attribute) -> {
 							if (attribute != null)
 							{
 								if (!attribute.startsWith("\"") && !attribute.endsWith("\"") &&
@@ -314,10 +368,17 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 								{
 									attribute = "\"" + attribute + "\"";
 								}
-								this.out.write((" " + attrName + "=" + attribute).getBytes("UTF-8"));
+								try
+								{
+									this.out.write((" " + attrName + "=" + attribute).getBytes("UTF-8"));
+								}
+								catch (IOException e)
+								{
+									e.printStackTrace();
+								}
 							}
+						});
 
-						}
 						if (message.isEmptyElement())
 						{
 							this.out.write("/>".getBytes("UTF-8"));
@@ -587,5 +648,17 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 					  .collect(Collectors.joining("###"));
 		}
 		return null;
+	}
+
+	@Override
+	public InetAddress getAddress()
+	{
+		return this.socket.getInetAddress();
+	}
+
+	@Override
+	public int getPort()
+	{
+		return this.socket.getPort();
 	}
 }

@@ -22,18 +22,20 @@ import java.util.List;
 public class AdminTabController
 {
 	private static final List<IMaskType>     children = new ArrayList<IMaskType>(Arrays.asList(new AdminType("Nutzer",
-																											 "/niobe/legion/client/fxml/admin/UserAdmin.fxml"),
+																											 "/niobe/legion/client/fxml/tab/admin/UserAdmin.fxml"),
 																							   new AdminType("Gruppen",
-																											 "/niobe/legion/client/fxml/admin/GroupAdmin.fxml"),
+																											 "/niobe/legion/client/fxml/tab/admin/GroupAdmin.fxml"),
 																							   new AdminType(
 																									   "Server-Module",
-																									   "/niobe/legion/client/fxml/admin/ModuleAdmin.fxml")));
+																									   "/niobe/legion/client/fxml/tab/admin/ModuleAdmin.fxml")));
 	private              TreeItem<IMaskType> rootItem = new TreeItem<IMaskType>(new AdminType("Administration", null));
 	private Object childController;
 
-	@FXML private TreeView<IMaskType> selectionTree;
+	@FXML
+	private TreeView<IMaskType> selectionTree;
 
-	@FXML private AnchorPane adminRoot;
+	@FXML
+	private AnchorPane adminRoot;
 
 	@FXML
 	private void initialize()

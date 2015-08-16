@@ -1,4 +1,4 @@
-package niobe.legion.client.gui;
+package niobe.legion.client.gui.databinding;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -107,10 +107,8 @@ public class FxDatasetWrapper<T>
 	{
 		if (datasets != null)
 		{
-			List<FxDatasetWrapper<T>> wrappers =
-					datasets.stream().map(dataset -> new FxDatasetWrapper<T>(dataset, toStringProperty))
-							.collect(Collectors.toList());
-			return wrappers;
+			return datasets.stream().map(dataset -> new FxDatasetWrapper<T>(dataset, toStringProperty))
+						   .collect(Collectors.toList());
 		}
 
 		return null;
@@ -126,7 +124,7 @@ public class FxDatasetWrapper<T>
 		return this.nestedProperties.keySet();
 	}
 
-	public Property<?> getProperty(String key)
+	public Property getProperty(String key)
 	{
 		if (key.contains("::"))
 		{
@@ -208,5 +206,74 @@ public class FxDatasetWrapper<T>
 			return true;
 		}
 		return super.equals(obj);
+	}
+
+	public void setData(T dataset)
+	{
+		this.dataset = dataset;
+
+		if (this.dataset.getClass().getDeclaredFields() != null)
+		{
+			Field[] fields = this.dataset.getClass().getDeclaredFields();
+			if (fields != null)
+			{
+				List<Field> fieldList = Stream.of(fields).filter(field -> field != null).collect(Collectors.toList());
+
+				fieldList.stream().filter(field -> !Modifier.isTransient(field.getModifiers()) &&
+												   !(field.getType().isPrimitive() &&
+													 Modifier.isStatic(field.getModifiers()) &&
+													 Modifier.isFinal(field.getModifiers())) &&
+												   !Modifier.isNative(field.getModifiers())).forEach(field -> {
+					Object value = null;
+					try
+					{
+						String key = field.getName();
+						field.setAccessible(true);
+						value = field.get(this.dataset);
+
+						if (value != null)
+						{
+							if (value instanceof Integer)
+							{
+								SimpleIntegerProperty property = (SimpleIntegerProperty) this.properties.get(key);
+								property.setValue((Integer) value);
+							} else if (value instanceof Long)
+							{
+								SimpleLongProperty property = (SimpleLongProperty) this.properties.get(key);
+								property.setValue((Long) value);
+							} else if (value instanceof Float)
+							{
+								SimpleFloatProperty property = (SimpleFloatProperty) this.properties.get(key);
+								property.setValue((Float) value);
+							} else if (value instanceof Double)
+							{
+								SimpleDoubleProperty property = (SimpleDoubleProperty) this.properties.get(key);
+								property.setValue((Double) value);
+							} else if (value instanceof Boolean)
+							{
+								SimpleBooleanProperty property = (SimpleBooleanProperty) this.properties.get(key);
+								property.setValue((Boolean) value);
+							} else if (value instanceof String)
+							{
+								SimpleStringProperty property = (SimpleStringProperty) this.properties.get(key);
+								property.setValue((String) value);
+							} else if (value instanceof LocalDate || value instanceof LocalDateTime ||
+									   value instanceof LocalTime)
+							{
+								SimpleObjectProperty property = (SimpleObjectProperty) this.properties.get(key);
+								property.setValue(value);
+							} else if (!(value instanceof Map || value instanceof Collection))
+							{
+								this.nestedProperties.get(key).setData(value);
+							}
+						}
+					}
+					catch (IllegalAccessException e)
+					{
+						e.printStackTrace();
+					}
+				});
+			}
+		}
 	}
 }

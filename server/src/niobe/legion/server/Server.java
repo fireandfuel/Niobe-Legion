@@ -16,7 +16,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -24,12 +23,16 @@ import java.util.concurrent.Executors;
 
 public class Server
 {
-	private static ServerModuleLoader      moduleLoader;
-	private static Database                DATABASE;
-	private        ServerSocket            serverSocket;
-	private        ExecutorService         connectionPool;
-	private        ArrayList<Communicator> connectionList;
-	private        boolean                 closeRequest;
+	private static ServerModuleLoader moduleLoader;
+	private static Database           DATABASE;
+	private static final ServerCommunicatorThreadFactory COMMUNICATOR_THREAD_FACTORY =
+			new ServerCommunicatorThreadFactory();
+	private static final ExecutorService                 CONNECTION_POOL             =
+			Executors.newCachedThreadPool(COMMUNICATOR_THREAD_FACTORY);
+
+	private ServerSocket serverSocket;
+
+	private boolean closeRequest;
 
 	public Server(int port,
 				  String authMechanism,
@@ -41,8 +44,6 @@ public class Server
 		try
 		{
 			this.serverSocket = new ServerSocket(port);
-			this.connectionPool = Executors.newCachedThreadPool();
-			this.connectionList = new ArrayList<Communicator>();
 
 			List<String> moduleNames = Server.moduleLoader.getModuleNames();
 			if (moduleNames != null)
@@ -56,7 +57,6 @@ public class Server
 			{
 				if (this.serverSocket != null)
 				{
-
 					Socket socket = this.serverSocket.accept();
 					if (socket != null)
 					{
@@ -68,8 +68,7 @@ public class Server
 																		   keyStorePassword,
 																		   cipherSuites);
 
-						this.connectionList.add(communicator);
-						this.connectionPool.execute(communicator);
+						CONNECTION_POOL.execute(communicator);
 					} else
 					{
 						break;

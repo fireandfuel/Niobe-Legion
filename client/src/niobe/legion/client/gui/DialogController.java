@@ -3,21 +3,23 @@ package niobe.legion.client.gui;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 
 import java.io.IOException;
 import java.net.URL;
 
 public class DialogController
 {
-	protected     double initialX;
-	protected     double initialY;
-	@FXML private Label  topLabel;
-	@FXML private Pane   draggableTopPane;
+	@FXML
+	private Label      topLabel;
+	@FXML
+	private AnchorPane mainPane;
+	@FXML
+	private Button     close;
 
-	@FXML private AnchorPane mainPane;
+	private ICloseableDialogController controller;
 
 	public void setTitle(String title)
 	{
@@ -27,29 +29,30 @@ public class DialogController
 	@FXML
 	public void initialize()
 	{
-		this.addDraggableNode(this.draggableTopPane);
+
 	}
 
-	private void addDraggableNode(final Node node)
+	@FXML
+	public void close()
 	{
-		node.setOnMousePressed(me -> {
-			DialogController.this.initialX = me.getSceneX();
-			DialogController.this.initialY = me.getSceneY();
-		});
-
-		node.setOnMouseDragged(me -> {
-			node.getScene().getWindow().setX(me.getScreenX() - DialogController.this.initialX);
-			node.getScene().getWindow().setY(me.getScreenY() - DialogController.this.initialY);
-		});
+		if (controller != null)
+		{
+			this.controller.close();
+		}
 	}
 
-	public Object loadMask(final String maskURI) throws IOException
+	public ICloseableDialogController loadMask(final String maskURI, boolean closeable) throws IOException
 	{
 		URL location = DialogController.class.getResource(maskURI);
 
 		FXMLLoader loader = new FXMLLoader(location);
 		Node mask = loader.load();
-		Object controller = loader.getController();
+		this.controller = loader.getController();
+
+		if (!closeable)
+		{
+			close.setVisible(false);
+		}
 
 		this.mainPane.getChildren().clear();
 		this.mainPane.getChildren().add(mask);
@@ -58,7 +61,7 @@ public class DialogController
 		AnchorPane.setRightAnchor(mask, 7.0d);
 		AnchorPane.setTopAnchor(mask, 7.0d);
 
-		return controller;
+		return this.controller;
 	}
 
 }

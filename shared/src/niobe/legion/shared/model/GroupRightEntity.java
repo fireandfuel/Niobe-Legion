@@ -1,6 +1,16 @@
 package niobe.legion.shared.model;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 import java.util.List;
 
 @Entity(name = "legion_group_right")
@@ -15,6 +25,8 @@ public class GroupRightEntity implements IEntity
 	private int id;
 
 	private String  name;
+	@Transient
+	private String  displayName;
 	private boolean active;
 
 	@OneToMany(cascade = CascadeType.ALL,
@@ -31,6 +43,11 @@ public class GroupRightEntity implements IEntity
 	public void setName(String name)
 	{
 		this.name = name;
+		if (name != null)
+		{
+			String[] splittedName = name.split("\\.");
+			this.displayName = splittedName[splittedName.length - 1];
+		}
 	}
 
 	public boolean isActive()
@@ -63,5 +80,10 @@ public class GroupRightEntity implements IEntity
 	public void setId(int id)
 	{
 		this.id = id;
+	}
+
+	public String getDisplayName()
+	{
+		return this.displayName;
 	}
 }

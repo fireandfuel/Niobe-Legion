@@ -16,13 +16,17 @@ import java.io.UnsupportedEncodingException;
 
 public class LoginController
 {
-	@FXML private TextField username;
+	@FXML
+	private TextField username;
 
-	@FXML private PasswordField password;
+	@FXML
+	private PasswordField password;
 
-	@FXML private Button login;
+	@FXML
+	private Button login;
 
-	@FXML private Label status;
+	@FXML
+	private Label status;
 
 	@FXML
 	private void initialize()
@@ -49,7 +53,7 @@ public class LoginController
 				this.password.setEditable(false);
 				try
 				{
-					this.status.setText("Authenfiziere ...");
+					this.status.setText("Authentifiziere ...");
 					Client.getCommunicator().login(this.username.getText(), this.password.getText().toCharArray());
 				}
 				catch (IOException e)
@@ -71,7 +75,7 @@ public class LoginController
 		if (Platform.isFxApplicationThread())
 		{
 			this.status
-					.setText("Authenfizierung ist fehlgeschlagen.\nÜberprüfen Sie ihren Benutzernamen und Passwort.");
+					.setText("Authentifizierung ist fehlgeschlagen.\nÜberprüfen Sie ihren Benutzernamen und Passwort.");
 			this.login.setDisable(false);
 			this.username.setEditable(true);
 			this.password.setEditable(true);

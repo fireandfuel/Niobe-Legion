@@ -24,7 +24,6 @@ public class ModuleEntity implements IEntity
 	private int id;
 
 	private String  name;
-	private String  password;
 	private boolean activated;
 
 	@OneToMany(cascade = CascadeType.ALL,
@@ -41,16 +40,6 @@ public class ModuleEntity implements IEntity
 	public void setName(String name)
 	{
 		this.name = name;
-	}
-
-	public String getPassword()
-	{
-		return password;
-	}
-
-	public void setPassword(String password)
-	{
-		this.password = password;
 	}
 
 	public boolean isActivated()

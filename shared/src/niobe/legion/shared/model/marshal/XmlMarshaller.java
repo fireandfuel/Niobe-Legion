@@ -9,13 +9,17 @@ import java.lang.reflect.Modifier;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -23,25 +27,34 @@ import java.util.stream.Stream;
  */
 public class XmlMarshaller implements XMLStreamConstants
 {
-	private final static List<Class> WORKING_COLLECTIONS = new ArrayList<Class>();
+	private final static List<Class> ALLOWED_COLLECTION_CLASSES = Arrays.asList(java.util.ArrayDeque.class,
+																				java.util.ArrayList.class,
+																				java.util.HashSet.class,
+																				java.util.LinkedHashSet.class,
+																				java.util.LinkedList.class,
+																				java.util.PriorityQueue.class,
+																				java.util.Stack.class,
+																				java.util.TreeSet.class,
+																				java.util.Vector.class,
+																				java.util.concurrent.ArrayBlockingQueue.class,
+																				java.util.concurrent.ConcurrentLinkedDeque.class,
+																				java.util.concurrent.LinkedBlockingDeque.class,
+																				java.util.concurrent.LinkedBlockingQueue.class,
+																				java.util.concurrent.LinkedTransferQueue.class,
+																				java.util.concurrent.PriorityBlockingQueue.class,
+																				java.util.concurrent.SynchronousQueue.class);
 
-	static
-	{
-		WORKING_COLLECTIONS.addAll(Arrays.asList(java.util.ArrayDeque.class,
-												 java.util.ArrayList.class,
-												 java.util.LinkedList.class,
-												 java.util.PriorityQueue.class,
-												 java.util.Stack.class,
-												 java.util.Vector.class,
-												 java.util.HashSet.class,
-												 java.util.TreeSet.class,
-												 java.util.concurrent.ArrayBlockingQueue.class,
-												 java.util.concurrent.ConcurrentLinkedDeque.class,
-												 java.util.concurrent.LinkedBlockingDeque.class,
-												 java.util.concurrent.LinkedBlockingQueue.class,
-												 java.util.concurrent.LinkedTransferQueue.class,
-												 java.util.concurrent.PriorityBlockingQueue.class));
-	}
+	private final static List<Class> ALLOWED_MAP_CLASSES = Arrays.asList(java.util.HashMap.class,
+																		 java.util.Hashtable.class,
+																		 java.util.LinkedHashMap.class,
+																		 java.util.EnumMap.class,
+																		 java.util.IdentityHashMap.class,
+																		 java.util.Properties.class,
+																		 java.util.TreeMap.class,
+																		 java.util.WeakHashMap.class,
+																		 java.util.concurrent.ConcurrentHashMap.class,
+																		 java.util.concurrent.ConcurrentSkipListMap.class,
+																		 java.util.jar.Attributes.class);
 
 	/**
 	 * Marshall an object to a list of xml stanzas
@@ -83,16 +96,21 @@ public class XmlMarshaller implements XMLStreamConstants
 		{
 			try
 			{
-				if (checkCollectionImplementation(object.getClass()))
-				{
-					// marshal the children of list
-					results.addAll(getStreamEntry(((Collection) object).stream(), sequenceId));
+				Collection collection = (Collection) object;
 
-					result = new XmlStanza();
-					result.setName("legion:dataset");
-					result.setEventType(END_ELEMENT);
-					results.add(result);
+				if (!checkCollectionClass(collection.getClass()))
+				{
+					collection = convertCollection(collection);
+					result.getAttributes().put("class", collection.getClass().getCanonicalName());
 				}
+
+				// marshal the children of list
+				results.addAll(getStreamEntry(collection.stream(), sequenceId));
+
+				result = new XmlStanza();
+				result.setName("legion:dataset");
+				result.setEventType(END_ELEMENT);
+				results.add(result);
 			}
 			catch (Exception e)
 			{
@@ -100,8 +118,16 @@ public class XmlMarshaller implements XMLStreamConstants
 			}
 		} else if (object instanceof Map) // Check if object is a map
 		{
+			Map map = (Map) object;
+
+			if (!checkMapClass(map.getClass()))
+			{
+				map = convertMap(map);
+				result.getAttributes().put("class", map.getClass().getCanonicalName());
+			}
+
 			// marshal the children of map
-			results.addAll(getMapEntry((Map) object, sequenceId));
+			results.addAll(getMapEntry(map, sequenceId));
 
 			result = new XmlStanza();
 			result.setName("legion:dataset");
@@ -115,7 +141,7 @@ public class XmlMarshaller implements XMLStreamConstants
 			// object is a primitive type like int, OR date, time or string
 			result.setEmptyElement(true);
 			result.setValue(object.toString());
-		} else // object is not an array, list map or primitive
+		} else // object is not an array, collection, map or primitive
 		{
 			// get all declared fields (includes private fields, too) of the object
 			Field[] fields = object.getClass().getDeclaredFields();
@@ -156,18 +182,20 @@ public class XmlMarshaller implements XMLStreamConstants
 	{
 		List<Object> results = new ArrayList<Object>();
 
-		int index = 0;
-		while (index < xml.size())
+		if (xml == null)
 		{
-			if (index + 1 < xml.size())
+			return results;
+		}
+		while (xml.size() > 0)
+		{
+			int closeIndex = searchCloseEntryIndexInStack(0, xml);
+			List<XmlStanza> subList = new ArrayList<XmlStanza>(xml.subList(0, closeIndex));
+			xml.removeAll(subList);
+			Object result = unmarshallDataset(subList);
+
+			if (result != null)
 			{
-				int closeIndex = searchCloseEntryIndexInStack(index + 1, xml);
-				Object result = unmarshallDataset(xml.subList(index, closeIndex));
-				if (result != null)
-				{
-					results.add(result);
-				}
-				index = closeIndex + 1;
+				results.add(result);
 			}
 		}
 
@@ -267,7 +295,14 @@ public class XmlMarshaller implements XMLStreamConstants
 								{
 									if (Collection.class.isAssignableFrom(objectClass))
 									{
-										if (checkCollectionImplementation(objectClass))
+										if (checkCollectionClass(objectClass))
+										{
+											// instantiate collection
+											object = objectClass.newInstance();
+										}
+									} else if (Map.class.isAssignableFrom(objectClass))
+									{
+										if (checkMapClass(objectClass))
 										{
 											// instantiate collection
 											object = objectClass.newInstance();
@@ -323,15 +358,18 @@ public class XmlMarshaller implements XMLStreamConstants
 										value = Array.newInstance(columnClass, arrayCount);
 									} else if (Collection.class.isAssignableFrom(columnClass))
 									{
-										if (checkCollectionImplementation(columnClass))
+										if (checkCollectionClass(columnClass))
 										{
 											// instantiate collection
 											value = columnClass.newInstance();
 										}
 									} else if (Map.class.isAssignableFrom(columnClass))
 									{
-										// instantiate map
-										value = columnClass.newInstance();
+										if (checkMapClass(columnClass))
+										{
+											// instantiate map
+											value = columnClass.newInstance();
+										}
 									}
 
 									// set the object's field to the value
@@ -448,13 +486,13 @@ public class XmlMarshaller implements XMLStreamConstants
 							if (columnClass != null && columnName != null)
 							{
 								// get the index of next close xml stanza (end stanza of this opening stanza)
-								int closeEntryIndex = searchCloseEntryIndexInStack(index + 1, xml);
+								int closeEntryIndex = searchCloseEntryIndexInStack(index, xml);
 
 								try
 								{
 									// get the child object xml stanzas
 									List<XmlStanza> childrenList =
-											new ArrayList<XmlStanza>(xml.subList(index + 1, closeEntryIndex));
+											new ArrayList<XmlStanza>(xml.subList(index, closeEntryIndex));
 									// remove add child object xml stanzas from the object xml stanza list
 									xml.removeAll(childrenList);
 
@@ -474,7 +512,7 @@ public class XmlMarshaller implements XMLStreamConstants
 											}
 										} else if (Collection.class.isAssignableFrom(columnClass))
 										{
-											if (checkCollectionImplementation(columnClass))
+											if (checkCollectionClass(columnClass))
 											{
 												// get object's field as list
 												Collection collection = get(object.getClass(), columnName, object);
@@ -482,62 +520,60 @@ public class XmlMarshaller implements XMLStreamConstants
 												// add child object to the list
 												if (collection != null)
 												{
-													// ATTENTION: Not all subclasses of Collection support adding elements,
-													// e.g. some sets, like HashMap's KeySet
-													// please use ArrayList or LinkedList to wrap the sets
-													// (put the set as parameter of the List constructor)
 													collection.add(result);
 												}
 											}
 										} else if (Map.class.isAssignableFrom(columnClass))
 										{
-											// get object's field as map
-											Map map = get(object.getClass(), columnName, object);
+											if (checkMapClass(columnClass))
+											{
+												// get object's field as map
+												Map map = get(object.getClass(), columnName, object);
 
-											// instantiate the key object
-											Object key = stanza.getAttributes().get("key");
-											String keyClassName = stanza.getAttributes().get("keyClass");
-											Class<?> keyClass =
-													(keyClassName != null) ? Class.forName(keyClassName) : null;
+												// instantiate the key object
+												Object key = stanza.getAttributes().get("key");
+												String keyClassName = stanza.getAttributes().get("keyClass");
+												Class<?> keyClass =
+														(keyClassName != null) ? Class.forName(keyClassName) : null;
 
-											if (keyClass == Integer.class)
-											{
-												key = Integer.parseInt((String) key);
-											} else if (keyClass == Byte.class)
-											{
-												key = Byte.parseByte((String) key);
-											} else if (keyClass == Short.class)
-											{
-												key = Short.parseShort((String) key);
-											} else if (keyClass == Long.class)
-											{
-												key = Long.parseLong((String) key);
-											} else if (keyClass == Float.class)
-											{
-												key = Float.parseFloat((String) key);
-											} else if (keyClass == Double.class)
-											{
-												key = Double.parseDouble((String) key);
-											} else if (keyClass == Boolean.class)
-											{
-												key = Boolean.parseBoolean((String) key);
-											} else if (keyClass == LocalDate.class)
-											{
-												key = LocalDate.parse((String) key);
-											} else if (keyClass == LocalTime.class)
-											{
-												key = LocalTime.parse((String) key);
-											} else if (keyClass == LocalDateTime.class)
-											{
-												key = LocalDateTime.parse((String) key);
+												if (keyClass == Integer.class)
+												{
+													key = Integer.parseInt((String) key);
+												} else if (keyClass == Byte.class)
+												{
+													key = Byte.parseByte((String) key);
+												} else if (keyClass == Short.class)
+												{
+													key = Short.parseShort((String) key);
+												} else if (keyClass == Long.class)
+												{
+													key = Long.parseLong((String) key);
+												} else if (keyClass == Float.class)
+												{
+													key = Float.parseFloat((String) key);
+												} else if (keyClass == Double.class)
+												{
+													key = Double.parseDouble((String) key);
+												} else if (keyClass == Boolean.class)
+												{
+													key = Boolean.parseBoolean((String) key);
+												} else if (keyClass == LocalDate.class)
+												{
+													key = LocalDate.parse((String) key);
+												} else if (keyClass == LocalTime.class)
+												{
+													key = LocalTime.parse((String) key);
+												} else if (keyClass == LocalDateTime.class)
+												{
+													key = LocalDateTime.parse((String) key);
+												}
+
+												// put child object with key to map
+												if (map != null && key != null && keyClass != null)
+												{
+													map.put(key, result);
+												}
 											}
-
-											// put child object with key to map
-											if (map != null && key != null && keyClass != null)
-											{
-												map.put(key, result);
-											}
-
 										} else
 										{
 											// set the object's field with its child
@@ -556,13 +592,13 @@ public class XmlMarshaller implements XMLStreamConstants
 							} else
 							{
 								// get the index of next close xml stanza (end stanza of this opening stanza)
-								int closeEntryIndex = searchCloseEntryIndexInStack(index + 1, xml);
+								int closeEntryIndex = searchCloseEntryIndexInStack(index, xml);
 
 								try
 								{
 									// get the child object xml stanzas
 									List<XmlStanza> childrenList =
-											new ArrayList<XmlStanza>(xml.subList(index + 1, closeEntryIndex));
+											new ArrayList<XmlStanza>(xml.subList(index, closeEntryIndex));
 									// remove add child object xml stanzas from the object xml stanza list
 									xml.removeAll(childrenList);
 
@@ -584,60 +620,59 @@ public class XmlMarshaller implements XMLStreamConstants
 											Collection collection = (Collection) object;
 
 											// add child object to the list
-											if (collection != null && checkCollectionImplementation(object.getClass()))
+											if (collection != null && checkCollectionClass(collection.getClass()))
 											{
-												// ATTENTION: Not all subclasses of Collection support adding elements,
-												// e.g. some sets, like HashMap's KeySet
-												// please use ArrayList or LinkedList to wrap the sets
-												// (put the set as parameter of the List constructor)
 												collection.add(result);
 											}
 										} else if (object instanceof Map)
 										{
 											Map map = (Map) object;
 
-											// instantiate the key object
-											Object key = stanza.getAttributes().get("key");
-											String keyClassName = stanza.getAttributes().get("keyClass");
-											Class<?> keyClass =
-													(keyClassName != null) ? Class.forName(keyClassName) : null;
+											if (map != null && checkMapClass(map.getClass()))
+											{
+												// instantiate the key object
+												Object key = stanza.getAttributes().get("key");
+												String keyClassName = stanza.getAttributes().get("keyClass");
+												Class<?> keyClass =
+														(keyClassName != null) ? Class.forName(keyClassName) : null;
 
-											if (keyClass == Integer.class)
-											{
-												key = Integer.parseInt((String) key);
-											} else if (keyClass == Byte.class)
-											{
-												key = Byte.parseByte((String) key);
-											} else if (keyClass == Short.class)
-											{
-												key = Short.parseShort((String) key);
-											} else if (keyClass == Long.class)
-											{
-												key = Long.parseLong((String) key);
-											} else if (keyClass == Float.class)
-											{
-												key = Float.parseFloat((String) key);
-											} else if (keyClass == Double.class)
-											{
-												key = Double.parseDouble((String) key);
-											} else if (keyClass == Boolean.class)
-											{
-												key = Boolean.parseBoolean((String) key);
-											} else if (keyClass == LocalDate.class)
-											{
-												key = LocalDate.parse((String) key);
-											} else if (keyClass == LocalTime.class)
-											{
-												key = LocalTime.parse((String) key);
-											} else if (keyClass == LocalDateTime.class)
-											{
-												key = LocalDateTime.parse((String) key);
-											}
+												if (keyClass == Integer.class)
+												{
+													key = Integer.parseInt((String) key);
+												} else if (keyClass == Byte.class)
+												{
+													key = Byte.parseByte((String) key);
+												} else if (keyClass == Short.class)
+												{
+													key = Short.parseShort((String) key);
+												} else if (keyClass == Long.class)
+												{
+													key = Long.parseLong((String) key);
+												} else if (keyClass == Float.class)
+												{
+													key = Float.parseFloat((String) key);
+												} else if (keyClass == Double.class)
+												{
+													key = Double.parseDouble((String) key);
+												} else if (keyClass == Boolean.class)
+												{
+													key = Boolean.parseBoolean((String) key);
+												} else if (keyClass == LocalDate.class)
+												{
+													key = LocalDate.parse((String) key);
+												} else if (keyClass == LocalTime.class)
+												{
+													key = LocalTime.parse((String) key);
+												} else if (keyClass == LocalDateTime.class)
+												{
+													key = LocalDateTime.parse((String) key);
+												}
 
-											// put child object with key to map
-											if (map != null && key != null && keyClass != null)
-											{
-												map.put(key, result);
+												// put child object with key to map
+												if (map != null && key != null && keyClass != null)
+												{
+													map.put(key, result);
+												}
 											}
 										}
 									}
@@ -684,15 +719,18 @@ public class XmlMarshaller implements XMLStreamConstants
 	/**
 	 * Search the closest end stanza index without an opening stanza
 	 *
-	 * @param index start index where the search should start
-	 * @param list  the list on which the search runs
+	 * @param startIndex start index where the search should start
+	 * @param list       the list on which the search runs
 	 * @return index of the closest end stanza without opening stanza
 	 */
-	private static int searchCloseEntryIndexInStack(int index, List<XmlStanza> list)
+	private static int searchCloseEntryIndexInStack(int startIndex, List<XmlStanza> list)
 	{
 		// initialize a stack for the stanzas
 		LinkedList<XmlStanza> stack = new LinkedList<XmlStanza>();
-		for (; index < list.size(); index++)
+
+		XmlStanza start = list.get(startIndex);
+
+		for (int index = startIndex + 1; index < list.size(); index++)
 		{
 			XmlStanza stanza = list.get(index);
 			// if start stanza and not empty element
@@ -700,13 +738,16 @@ public class XmlMarshaller implements XMLStreamConstants
 			{
 				// push the stanza on the top of the stack
 				stack.push(stanza);
-			}
-			if (stanza.getEventType() == END_ELEMENT)
+			} else if (stanza.getEventType() == END_ELEMENT)
 			{
 				// if stack is empty, the end stanza's index is found, return the index
 				if (stack.isEmpty())
 				{
-					return index;
+					if (stanza.getName().equals(start.getName()))
+					{
+						return index + 1;
+					}
+					return startIndex;
 				}
 
 				// get the stanza on the top of the stack
@@ -771,8 +812,15 @@ public class XmlMarshaller implements XMLStreamConstants
 				results.add(result);
 			} else if (value instanceof Collection) // value is a list
 			{
+				Collection collection = (Collection) value;
+				if (!checkCollectionClass(collection.getClass()) && field.getType().isInterface())
+				{
+					collection = convertCollection(collection);
+					result.getAttributes().put("class", collection.getClass().getCanonicalName());
+				}
+
 				// marshal items of the list
-				results.addAll(getStreamEntry(((Collection) value).stream(), sequenceId));
+				results.addAll(getStreamEntry(collection.stream(), sequenceId));
 
 				result = new XmlStanza();
 				result.setName("legion:column");
@@ -780,8 +828,15 @@ public class XmlMarshaller implements XMLStreamConstants
 				results.add(result);
 			} else if (value instanceof Map) // value is a map
 			{
+				Map map = (Map) value;
+
+				if (!checkMapClass(map.getClass()) && field.getType().isInterface())
+				{
+					map = convertMap(map);
+					result.getAttributes().put("class", map.getClass().getCanonicalName());
+				}
 				// marshal keys and items of the map
-				results.addAll(getMapEntry((Map) value, sequenceId));
+				results.addAll(getMapEntry(map, sequenceId));
 
 				result = new XmlStanza();
 				result.setName("legion:column");
@@ -907,50 +962,46 @@ public class XmlMarshaller implements XMLStreamConstants
 	private static void setField(Field field, Object object, Object value) throws IllegalAccessException
 	{
 		// set the field accessible (e.g. if it have the modifier private)
-		field.setAccessible(true);
-		field.set(object, value);
+		if (object.getClass().isAssignableFrom(field.getType()))
+		{
+			field.setAccessible(true);
+			field.set(object, value);
+		}
 	}
 
-	private static boolean checkCollectionImplementation(Class<?> clazz) throws Exception
+	private static boolean checkCollectionClass(Class<?> clazz)
 	{
-		// look up the known working collection classes
-		if (!WORKING_COLLECTIONS.contains(clazz))
+		return !ALLOWED_COLLECTION_CLASSES.contains(clazz);
+	}
+
+	private static boolean checkMapClass(Class<?> clazz)
+	{
+		return !ALLOWED_MAP_CLASSES.contains(clazz);
+	}
+
+	private static Collection convertCollection(Collection collection)
+	{
+		if (collection instanceof Queue)
 		{
-			// try to instantiate the collection
-			Collection collection = (Collection) clazz.newInstance();
-			if (collection != null)
-			{
-				// test data to insert in the collection
-				String stringTest = "TestMe";
-				Integer integerTest = new Integer(42);
-
-				// test if collection supports adding
-				collection.add(stringTest);
-				collection.add(integerTest);
-
-				// test if collection's iterator works
-				Iterator iterator = collection.iterator();
-				if (iterator.hasNext())
-				{
-					if (iterator.next() == stringTest && iterator.hasNext())
-					{
-						if (iterator.next() == integerTest)
-						{
-							WORKING_COLLECTIONS.add(clazz);
-						} else
-						{
-							return false;
-						}
-					} else
-					{
-						return false;
-					}
-				} else
-				{
-					return false;
-				}
-			}
+			Queue queue = new ArrayDeque<>();
+			queue.addAll(collection);
+			return queue;
+		} else if (collection instanceof List)
+		{
+			return new ArrayList<>((List) collection);
+		} else if (collection instanceof Set)
+		{
+			HashSet set = new HashSet();
+			set.addAll(collection);
+			return set;
 		}
-		return true;
+		return collection;
+	}
+
+	private static Map convertMap(Map map)
+	{
+		Map newMap = new HashMap<>();
+		newMap.putAll(map);
+		return newMap;
 	}
 }

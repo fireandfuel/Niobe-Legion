@@ -119,7 +119,7 @@ public class ScramBase
 	protected static String generateNonce() throws NoSuchAlgorithmException
 	{
 		byte[] nonce = new byte[16];
-		Random rand = SecureRandom.getInstance("SHA1PRNG");
+		Random rand = SecureRandom.getInstanceStrong();
 		rand.nextBytes(nonce);
 		return DatatypeConverter.printBase64Binary(nonce);
 	}

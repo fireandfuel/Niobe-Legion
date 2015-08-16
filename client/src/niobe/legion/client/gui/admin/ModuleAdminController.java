@@ -6,8 +6,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TableView;
 import niobe.legion.client.Client;
 import niobe.legion.client.DatasetReceiver;
-import niobe.legion.client.gui.FxDatasetColumn;
-import niobe.legion.client.gui.FxDatasetWrapper;
+import niobe.legion.client.gui.databinding.FxDatasetColumn;
+import niobe.legion.client.gui.databinding.FxDatasetWrapper;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.ModuleEntity;
@@ -53,21 +53,18 @@ public class ModuleAdminController implements DatasetReceiver<ModuleEntity>
 	}
 
 	@Override
-	public void add(ModuleEntity dbObject)
+	public void set(ModuleEntity dataset)
 	{
-		FxDatasetWrapper<ModuleEntity> wrapper = new FxDatasetWrapper<ModuleEntity>(dbObject);
-		this.modules.addAll(wrapper);
-	}
-
-	@Override
-	public void addAll(final List<ModuleEntity> dbObjects)
-	{
-		FxDatasetWrapper<ModuleEntity>[] wrappers = new FxDatasetWrapper[dbObjects.size()];
-		for (int i = 0; i < wrappers.length; i++)
+		for (FxDatasetWrapper<ModuleEntity> moduleWrapper : this.modules)
 		{
-			wrappers[i] = new FxDatasetWrapper<ModuleEntity>(dbObjects.get(i));
+			if (moduleWrapper.getData().getId() == dataset.getId())
+			{
+				moduleWrapper.setData(dataset);
+				return;
+			}
 		}
-		this.modules.addAll(wrappers);
+
+		this.modules.add(new FxDatasetWrapper<ModuleEntity>(dataset));
 	}
 
 	@Override

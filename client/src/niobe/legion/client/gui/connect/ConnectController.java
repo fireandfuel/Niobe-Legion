@@ -8,9 +8,11 @@ import javafx.scene.control.ProgressIndicator;
 
 public class ConnectController
 {
-	@FXML private ProgressIndicator progress;
+	@FXML
+	private ProgressIndicator progress;
 
-	@FXML private Label progressLabel;
+	@FXML
+	private Label progressLabel;
 
 	@FXML
 	private void initialize()

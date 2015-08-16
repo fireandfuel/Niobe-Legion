@@ -1,6 +1,11 @@
 package niobe.legion.shared.model;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 
 @Entity(name = "legion_module_table_registry")
 @NamedQueries({
