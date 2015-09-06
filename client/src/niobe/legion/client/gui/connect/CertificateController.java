@@ -20,7 +20,6 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class CertificateController
 {
@@ -109,16 +108,19 @@ public class CertificateController
 		Platform.runLater(() -> {
 			try
 			{
-				this.certificateQuestion.setText(this.certificateQuestion.getText().replace("%server%", serverName));
-				this.certificateName.setText(this.certificateName.getText().replace("%server%", serverName));
+				this.certificateQuestion.setText(this.certificateQuestion.getText().replace("%s", serverName));
+				this.certificateName.setText(this.certificateName.getText().replace("%s", serverName));
 
 				this.subject.setText(cert.getSubjectX500Principal().toString().replace(", ", "\n"));
 
 				SHA1.update(cert.getEncoded());
 
-				this.sha1.setText("Fingerabdruck (SHA1): " + toHexString(SHA1.digest()));
-				this.validBegin.setText("Ausstellungsdatum: " + DATE_FORMAT.format(cert.getNotBefore()));
-				this.validEnd.setText("Ablaufdatum: " + DATE_FORMAT.format(cert.getNotAfter()));
+				this.sha1.setText(
+						Client.getLocalisation("certificateFingerprintSha1") + ": " + toHexString(SHA1.digest()));
+				this.validBegin.setText(Client.getLocalisation("certificateCreationDate") + ": " +
+										DATE_FORMAT.format(cert.getNotBefore()));
+				this.validEnd.setText(Client.getLocalisation("certificateExpireDate") + ": " +
+									  DATE_FORMAT.format(cert.getNotAfter()));
 			}
 			catch (CertificateEncodingException e)
 			{
@@ -135,17 +137,20 @@ public class CertificateController
 			{
 				this.accept.setDisable(true);
 
-				this.certificateQuestion.setText("Zertifikat für " + serverName + " konnte nicht validiert werden.");
-				this.certificateName.setText("Das Zertifikat für " + serverName + " ist nicht gültig!");
+				this.certificateQuestion
+						.setText(String.format(Client.getLocalisation("certificateNotValidatedName"), serverName));
+				this.certificateName.setText(String.format(Client.getLocalisation("certificateExpiredValidation")));
 				this.subject.setText(cert.getSubjectX500Principal().toString().replace(", ", "\n"));
-				this.certificateTrust.setText("Das aktuelle Datum (" + DATE_FORMAT.format(new Date()) +
-											  ") liegt außerhalb des Gültigkeitszeitraums des Zertifikats.");
+				this.certificateTrust.setText(Client.getLocalisation("certificateExpiredExplaination"));
 
 				SHA1.update(cert.getEncoded());
 
-				this.sha1.setText("Fingerabdruck (SHA1): " + toHexString(SHA1.digest()));
-				this.validBegin.setText("Ausstellungsdatum: " + DATE_FORMAT.format(cert.getNotBefore()));
-				this.validEnd.setText("Ablaufdatum: " + DATE_FORMAT.format(cert.getNotAfter()));
+				this.sha1.setText(
+						Client.getLocalisation("certificateFingerprintSha1") + ": " + toHexString(SHA1.digest()));
+				this.validBegin.setText(Client.getLocalisation("certificateCreationDate") + ": " +
+										DATE_FORMAT.format(cert.getNotBefore()));
+				this.validEnd.setText(Client.getLocalisation("certificateExpireDate") + ": " +
+									  DATE_FORMAT.format(cert.getNotAfter()));
 			}
 			catch (CertificateEncodingException e)
 			{

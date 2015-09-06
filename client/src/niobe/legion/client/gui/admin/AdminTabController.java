@@ -8,6 +8,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import niobe.legion.client.Client;
 import niobe.legion.client.gui.IMaskType;
 import niobe.legion.client.gui.MainController;
 import niobe.legion.shared.logger.LegionLogger;
@@ -21,14 +22,15 @@ import java.util.List;
 
 public class AdminTabController
 {
-	private static final List<IMaskType>     children = new ArrayList<IMaskType>(Arrays.asList(new AdminType("Nutzer",
-																											 "/niobe/legion/client/fxml/tab/admin/UserAdmin.fxml"),
-																							   new AdminType("Gruppen",
-																											 "/niobe/legion/client/fxml/tab/admin/GroupAdmin.fxml"),
-																							   new AdminType(
-																									   "Server-Module",
-																									   "/niobe/legion/client/fxml/tab/admin/ModuleAdmin.fxml")));
-	private              TreeItem<IMaskType> rootItem = new TreeItem<IMaskType>(new AdminType("Administration", null));
+	private static final List<IMaskType>     children =
+			new ArrayList<IMaskType>(Arrays.asList(new AdminType(Client.getLocalisation("userAdministration"),
+																 "/niobe/legion/client/fxml/tab/admin/UserAdmin.fxml"),
+												   new AdminType(Client.getLocalisation("groupAdministration"),
+																 "/niobe/legion/client/fxml/tab/admin/GroupAdmin.fxml"),
+												   new AdminType(Client.getLocalisation("moduleAdministration"),
+																 "/niobe/legion/client/fxml/tab/admin/ModuleAdmin.fxml")));
+	private              TreeItem<IMaskType> rootItem =
+			new TreeItem<IMaskType>(new AdminType(Client.getLocalisation("administration"), null));
 	private Object childController;
 
 	@FXML
@@ -69,7 +71,7 @@ public class AdminTabController
 					if (location != null)
 					{
 
-						FXMLLoader loader = new FXMLLoader(location);
+						FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
 						try
 						{
 							Node node = loader.load();

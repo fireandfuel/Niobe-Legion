@@ -17,7 +17,7 @@ import java.io.UnsupportedEncodingException;
 public class LoginController
 {
 	@FXML
-	private TextField username;
+	private TextField userName;
 
 	@FXML
 	private PasswordField password;
@@ -31,30 +31,30 @@ public class LoginController
 	@FXML
 	private void initialize()
 	{
-		this.status.setText("Geben Sie ihren Benutzernamen\n und Passwort ein.");
-		if (this.username == null || this.password == null)
+		this.status.setText(Client.getLocalisation("loginEnterUserNameAndPassword"));
+		if (this.userName == null || this.password == null)
 		{
 			this.login.setDisable(true);
 		} else
 		{
-			Platform.runLater(() -> LoginController.this.username.requestFocus());
+			Platform.runLater(() -> LoginController.this.userName.requestFocus());
 		}
 	}
 
 	@FXML
 	private void login() throws UnsupportedEncodingException, SaslException
 	{
-		if (this.username != null && this.username.getText() != null && !this.username.getText().isEmpty())
+		if (this.userName != null && this.userName.getText() != null && !this.userName.getText().isEmpty())
 		{
 			if (this.password != null && this.password.getText() != null && !this.password.getText().isEmpty())
 			{
 				this.login.setDisable(true);
-				this.username.setEditable(false);
+				this.userName.setEditable(false);
 				this.password.setEditable(false);
 				try
 				{
-					this.status.setText("Authentifiziere ...");
-					Client.getCommunicator().login(this.username.getText(), this.password.getText().toCharArray());
+					this.status.setText(Client.getLocalisation("loginAuthenticate"));
+					Client.getCommunicator().login(this.userName.getText(), this.password.getText().toCharArray());
 				}
 				catch (IOException e)
 				{
@@ -62,11 +62,11 @@ public class LoginController
 				}
 			} else
 			{
-				Client.getFxController().showDialog("Geben Sie ihr Passwort ein.");
+				Client.getFxController().showLightweightDialog(Client.getLocalisation("loginEnterPassword"));
 			}
 		} else
 		{
-			Client.getFxController().showDialog("Geben Sie ihren Benutzernamen und Passwort ein.");
+			Client.getFxController().showLightweightDialog(Client.getLocalisation("loginEnterUserNameAndPassword"));
 		}
 	}
 
@@ -74,10 +74,9 @@ public class LoginController
 	{
 		if (Platform.isFxApplicationThread())
 		{
-			this.status
-					.setText("Authentifizierung ist fehlgeschlagen.\nÜberprüfen Sie ihren Benutzernamen und Passwort.");
+			this.status.setText(Client.getLocalisation("loginAuthenticateFailed"));
 			this.login.setDisable(false);
-			this.username.setEditable(true);
+			this.userName.setEditable(true);
 			this.password.setEditable(true);
 		} else
 		{

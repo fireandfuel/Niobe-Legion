@@ -19,9 +19,11 @@ import java.util.List;
 public class ModuleAdminController implements DatasetReceiver<ModuleEntity>
 {
 	private static final FxDatasetColumn[] columns = new FxDatasetColumn[]{
-			new FxDatasetColumn<Long>("id", "Nr."), new FxDatasetColumn<String>("name", "Name"),
-			new FxDatasetColumn<Long>("qualified_name", "vollständige Bezeichnung"),
-			new FxDatasetColumn<String>("version", "Version"), new FxDatasetColumn<String>("activated", "aktiviert")};
+			new FxDatasetColumn<Long>("id", Client.getLocalisation("id")),
+			new FxDatasetColumn<String>("name", Client.getLocalisation("name")),
+			new FxDatasetColumn<Long>("qualified_name", Client.getLocalisation("qualifiedName")),
+			new FxDatasetColumn<String>("version", Client.getLocalisation("version")),
+			new FxDatasetColumn<String>("activated", Client.getLocalisation("activated"))};
 
 	private ObservableList<FxDatasetWrapper<ModuleEntity>> modules =
 			FXCollections.observableList(new ArrayList<FxDatasetWrapper<ModuleEntity>>());

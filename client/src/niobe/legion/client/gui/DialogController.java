@@ -6,6 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+import niobe.legion.client.Client;
 
 import java.io.IOException;
 import java.net.URL;
@@ -45,7 +46,7 @@ public class DialogController
 	{
 		URL location = DialogController.class.getResource(maskURI);
 
-		FXMLLoader loader = new FXMLLoader(location);
+		FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
 		Node mask = loader.load();
 		this.controller = loader.getController();
 

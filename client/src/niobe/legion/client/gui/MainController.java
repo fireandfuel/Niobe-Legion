@@ -55,7 +55,7 @@ public class MainController
 		{
 			URL location = MainController.class.getResource(maskURI);
 
-			FXMLLoader loader = new FXMLLoader(location);
+			FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
 			Node node = loader.load();
 			Object controller = loader.getController();
 			this.setCurrentContent(node, controller);
@@ -70,7 +70,7 @@ public class MainController
 
 				if (location != null)
 				{
-					FXMLLoader loader = new FXMLLoader(location);
+					FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
 					try
 					{
 						Node node = loader.load();
@@ -150,7 +150,7 @@ public class MainController
 		}
 	}
 
-	public ICloseableDialogController showHeavyheightDialog(final String maskURI,
+	public ICloseableDialogController showHeavyWeightDialog(final String maskURI,
 															final String title,
 															Modality modality,
 															boolean closeable) throws IOException
@@ -169,7 +169,7 @@ public class MainController
 
 			URL location = MainController.class.getResource("/niobe/legion/client/fxml/DialogScene.fxml");
 
-			FXMLLoader loader = new FXMLLoader(location);
+			FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
 			Scene scene = loader.load();
 			DialogController controller = loader.getController();
 			controller.setTitle(title);
@@ -196,7 +196,7 @@ public class MainController
 			Platform.runLater(() -> {
 				try
 				{
-					wrapper[0] = MainController.this.showHeavyheightDialog(maskURI, title, modality, closeable);
+					wrapper[0] = MainController.this.showHeavyWeightDialog(maskURI, title, modality, closeable);
 					synchronized (MainController.this)
 					{
 						MainController.this.notify();
@@ -227,7 +227,7 @@ public class MainController
 		}
 	}
 
-	public void showDialog(final String message, ButtonType... buttons)
+	public void showLightweightDialog(final String message, ButtonType... buttons)
 	{
 		if (Platform.isFxApplicationThread())
 		{
@@ -239,7 +239,7 @@ public class MainController
 
 			HBox buttonBox = new HBox(5);
 
-			if(buttons != null && buttons.length > 0)
+			if (buttons != null && buttons.length > 0)
 			{
 				Stream.of(buttons).forEach(button -> {
 
@@ -278,7 +278,7 @@ public class MainController
 			dialog.setY(this.stage.getY() + this.stage.getHeight() / 2 - dialog.getHeight() / 2);
 		} else
 		{
-			Platform.runLater(() -> MainController.this.showDialog(message));
+			Platform.runLater(() -> MainController.this.showLightweightDialog(message));
 		}
 	}
 

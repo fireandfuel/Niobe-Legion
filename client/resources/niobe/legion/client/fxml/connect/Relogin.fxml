@@ -18,18 +18,18 @@
 			</HBox>
 			<GridPane alignment="CENTER" vgap="5" hgap="5">
 				<children>
-					<Label text="Benutzername:" GridPane.columnIndex="0"
+					<Label text="%userName" GridPane.columnIndex="0"
 						   GridPane.rowIndex="0"/>
-					<TextField fx:id="username" GridPane.columnIndex="1"
+					<TextField fx:id="userName" GridPane.columnIndex="1"
 							   GridPane.rowIndex="0"/>
-					<Label text="Passwort:" GridPane.columnIndex="0"
+					<Label text="%password" GridPane.columnIndex="0"
 						   GridPane.rowIndex="1"/>
 					<PasswordField fx:id="password" GridPane.columnIndex="1"
 								   GridPane.rowIndex="1"/>
 					<HBox alignment="BOTTOM_RIGHT" GridPane.columnIndex="0"
 						  GridPane.rowIndex="3" GridPane.columnSpan="2">
-						<Button onAction="#cancel" text="Abbrechen"/>
-						<Button fx:id="login" text="Authentifizieren" onAction="#login"
+						<Button onAction="#cancel" text="%cancel"/>
+						<Button fx:id="login" text="%login" onAction="#login"
 								defaultButton="true"/>
 					</HBox>
 				</children>

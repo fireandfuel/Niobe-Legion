@@ -11,12 +11,12 @@
 	<center>
 		<VBox fillWidth="false" alignment="CENTER" spacing="15.0">
 			<ProgressIndicator fx:id="progress" progress="-1.0"/>
-			<Label fx:id="progressLabel" text="Verbindung mit Server wird hergestellt ..."/>
+			<Label fx:id="progressLabel" text="%connectionProgress"/>
 		</VBox>
 	</center>
 	<bottom>
 		<HBox alignment="BOTTOM_RIGHT" spacing="15.0">
-			<Button onAction="#cancel" text="Abbrechen"/>
+			<Button onAction="#cancel" text="%cancel"/>
 		</HBox>
 	</bottom>
 </BorderPane>

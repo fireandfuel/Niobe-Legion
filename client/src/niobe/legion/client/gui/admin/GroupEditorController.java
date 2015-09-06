@@ -29,8 +29,8 @@ import java.util.stream.Stream;
 public class GroupEditorController implements ICloseableDialogController, DatasetReceiver<GroupRightEntity>
 {
 	private final static FxDatasetTreeColumn[] columns = new FxDatasetTreeColumn[]{
-			new FxDatasetTreeColumn<String>("displayName", "Name"),
-			new FxDatasetTreeColumn<Boolean>("active", "aktiviert", true)};
+			new FxDatasetTreeColumn<String>("displayName", Client.getLocalisation("name")),
+			new FxDatasetTreeColumn<Boolean>("active", Client.getLocalisation("activated"), true)};
 
 	@FXML
 	private TextField groupName;

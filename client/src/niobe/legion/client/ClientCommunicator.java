@@ -113,7 +113,7 @@ public class ClientCommunicator extends Communicator
 				if (debugController == null || debugController.isClosed())
 				{
 					debugController = (DebugController) Client.getFxController().
-							showHeavyheightDialog("/niobe/legion/client/fxml/debug/Debug.fxml",
+							showHeavyWeightDialog("/niobe/legion/client/fxml/debug/Debug.fxml",
 												  "Watchdog",
 												  Modality.NONE,
 												  true);

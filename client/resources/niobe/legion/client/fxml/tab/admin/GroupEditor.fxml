@@ -18,15 +18,15 @@
 				<GridPane vgap="5.0" hgap="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
 						  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 					<children>
-						<Label text="Gruppenname:" GridPane.rowIndex="0"
+						<Label text="%groupName" GridPane.rowIndex="0"
 							   GridPane.columnIndex="0"/>
 						<TextField fx:id="groupName" GridPane.rowIndex="0"
 								   GridPane.columnIndex="1"/>
-						<Label text="Gruppe aktiv:" GridPane.rowIndex="1"
+						<Label text="%groupActive" GridPane.rowIndex="1"
 							   GridPane.columnIndex="0"/>
 						<CheckBox fx:id="active" GridPane.rowIndex="1"
 								  GridPane.columnIndex="1"/>
-						<Label text="Rechte:" GridPane.rowIndex="2"
+						<Label text="%groupRights" GridPane.rowIndex="2"
 							   GridPane.columnIndex="0"/>
 						<TreeTableView fx:id="groupRights" GridPane.rowIndex="3" GridPane.columnIndex="0"
 									   GridPane.columnSpan="2"/>
@@ -44,8 +44,8 @@
 			<HBox alignment="CENTER_RIGHT" spacing="5.0"
 				  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
 				  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0">
-				<Button text="Abbrechen" onAction="#cancel" cancelButton="true"/>
-				<Button fx:id="saveButton" text="Speichern" onAction="#save"
+				<Button text="%cancel" onAction="#cancel" cancelButton="true"/>
+				<Button fx:id="saveButton" text="%save" onAction="#save"
 						defaultButton="true"/>
 			</HBox>
 		</AnchorPane>

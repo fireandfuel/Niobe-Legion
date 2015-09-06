@@ -14,7 +14,7 @@
 				minWidth="48.0" maxHeight="48.0" maxWidth="48.0" prefHeight="48.0"
 				prefWidth="48.0">
 			<tooltip>
-				<Tooltip text="Neu laden"/>
+				<Tooltip text="%reloadModules"/>
 			</tooltip>
 		</Button>
 	</HBox>

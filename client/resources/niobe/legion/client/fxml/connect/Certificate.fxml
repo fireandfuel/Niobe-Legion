@@ -9,12 +9,12 @@
 			fx:controller="niobe.legion.client.gui.connect.CertificateController">
 	<center>
 		<VBox spacing="7.0">
-			<Label text="Akzeptieren Sie das Zertifikat für %server%?"
+			<Label text="%certificateAcceptQuestion"
 				   fx:id="certificateQuestion"/>
-			<Label text="Das Zertifikat für %server% konnte nicht validiert werden."
+			<Label text="%certificateNotValidatedName"
 				   fx:id="certificateName"/>
 			<Label
-					text="Diesem Zertifikat wird nicht vertraut, da kein Zertifikat bestätigen kann, dass ihm vertraut wird."
+					text="%certificateNoTrust"
 					fx:id="certificateTrust"/>
 			<Label text=""/>
 			<Label text="Details:"/>
@@ -26,8 +26,8 @@
 	</center>
 	<bottom>
 		<HBox alignment="CENTER_RIGHT" spacing="7.0">
-			<Button fx:id="decline" text="Ablehnen" onAction="#decline" cancelButton="true"/>
-			<Button fx:id="accept" text="Akzeptieren" onAction="#accept" defaultButton="true"/>
+			<Button fx:id="decline" text="%decline" onAction="#decline" cancelButton="true"/>
+			<Button fx:id="accept" text="%accept" onAction="#accept" defaultButton="true"/>
 		</HBox>
 	</bottom>
 </BorderPane>

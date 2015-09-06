@@ -14,28 +14,28 @@
 				minWidth="48.0" maxHeight="48.0" maxWidth="48.0" prefHeight="48.0"
 				prefWidth="48.0">
 			<tooltip>
-				<Tooltip text="Neu laden"/>
+				<Tooltip text="%reload"/>
 			</tooltip>
 		</Button>
 		<Button fx:id="newButton" text="n" onAction="#newGroup" minHeight="48.0"
 				minWidth="48.0" maxHeight="48.0" maxWidth="48.0" prefHeight="48.0"
 				prefWidth="48.0">
 			<tooltip>
-				<Tooltip text="Neue Gruppe"/>
+				<Tooltip text="%newGroup"/>
 			</tooltip>
 		</Button>
 		<Button fx:id="editButton" text="e" onAction="#editGroup" minHeight="48.0"
 				minWidth="48.0" maxHeight="48.0" maxWidth="48.0" prefHeight="48.0"
 				prefWidth="48.0">
 			<tooltip>
-				<Tooltip text="Gruppe editieren"/>
+				<Tooltip text="%editGroup"/>
 			</tooltip>
 		</Button>
 		<Button fx:id="deleteButton" text="d" onAction="#deleteGroup" minHeight="48.0"
 				minWidth="48.0" maxHeight="48.0" maxWidth="48.0" prefHeight="48.0"
 				prefWidth="48.0">
 			<tooltip>
-				<Tooltip text="Gruppe löschen"/>
+				<Tooltip text="%deleteGroup"/>
 			</tooltip>
 		</Button>
 	</HBox>

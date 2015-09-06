@@ -18,15 +18,15 @@
 				<GridPane vgap="5.0" hgap="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
 						  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 					<children>
-						<Label text="Benutername:" GridPane.rowIndex="0"
+						<Label text="%userName" GridPane.rowIndex="0"
 							   GridPane.columnIndex="0"/>
 						<TextField fx:id="userName" GridPane.rowIndex="0"
 								   GridPane.columnIndex="1"/>
-						<Label text="Passwort:" GridPane.rowIndex="1"
+						<Label text="%password" GridPane.rowIndex="1"
 							   GridPane.columnIndex="0"/>
 						<PasswordField fx:id="password" GridPane.rowIndex="1"
 									   GridPane.columnIndex="1"/>
-						<Label text="Gruppe:" GridPane.rowIndex="2"
+						<Label text="%group" GridPane.rowIndex="2"
 							   GridPane.columnIndex="0"/>
 						<ComboBox fx:id="group" GridPane.rowIndex="2"
 								  GridPane.columnIndex="1"/>
@@ -44,8 +44,8 @@
 			<HBox alignment="CENTER_RIGHT" spacing="5.0"
 				  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
 				  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0">
-				<Button text="Abbrechen" onAction="#cancel" cancelButton="true"/>
-				<Button fx:id="saveButton" text="Speichern" onAction="#save"
+				<Button text="%cancel" onAction="#cancel" cancelButton="true"/>
+				<Button fx:id="saveButton" text="%save" onAction="#save"
 						defaultButton="true"/>
 			</HBox>
 		</AnchorPane>

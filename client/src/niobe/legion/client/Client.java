@@ -16,6 +16,7 @@ import niobe.legion.client.gui.connect.CertificateController;
 import niobe.legion.client.gui.connect.ConnectController;
 import niobe.legion.client.gui.connect.ReconnectController;
 import niobe.legion.client.gui.connect.ReloginController;
+import niobe.legion.client.gui.locale.EncodedControl;
 import niobe.legion.client.module.ClientModuleLoader;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
@@ -31,7 +32,9 @@ import java.net.Socket;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.ResourceBundle;
 
 public class Client extends Application
 {
@@ -44,7 +47,10 @@ public class Client extends Application
 	static String[] cipherSuites            = null;
 	static String   authMechanisms          = "";
 	static String   blacklistedServersRegex = "";
-	static boolean debug;
+
+	static boolean        debug;
+	static Locale         locale;
+	static ResourceBundle localeBundle;
 
 	private static ClientCommunicator communicator;
 
@@ -86,10 +92,11 @@ public class Client extends Application
 					// if no ConnectionController is loaded, show the reconnect dialog
 					try
 					{
-						Client.javaFxController.showHeavyheightDialog("/niobe/legion/client/fxml/connect/Reconnect.fxml",
-																	  "Verbindung verloren",
-																	  Modality.APPLICATION_MODAL,
-																	  false);
+						Client.javaFxController
+								.showHeavyWeightDialog("/niobe/legion/client/fxml/connect/Reconnect.fxml",
+													   Client.getLocalisation("connectionLost"),
+													   Modality.APPLICATION_MODAL,
+													   false);
 					}
 					catch (IOException e)
 					{
@@ -141,9 +148,9 @@ public class Client extends Application
 		{
 			try
 			{
-				Client.reloginController = (ReloginController) Client.getFxController().showHeavyheightDialog(
+				Client.reloginController = (ReloginController) Client.getFxController().showHeavyWeightDialog(
 						"/niobe/legion/client/fxml/connect/Relogin.fxml",
-						"Authenfizierung",
+						Client.getLocalisation("loginAuthentication"),
 						Modality.APPLICATION_MODAL,
 						false);
 			}
@@ -194,6 +201,11 @@ public class Client extends Application
 			Client.getCommunicator().close();
 		}
 		Platform.exit();
+	}
+
+	public static ResourceBundle getLocalBundle()
+	{
+		return Client.localeBundle;
 	}
 
 	@Override
@@ -248,6 +260,9 @@ public class Client extends Application
 				String debugProperty = properties.getProperty("debug", "false").toLowerCase();
 				Client.debug = "true".equals(debugProperty) || "yes".equals(debugProperty) || "1".equals(debugProperty);
 
+				String localeProperty = properties.getProperty("locale", "en_US").replace("_", "-");
+				Client.locale = Locale.forLanguageTag(localeProperty);
+
 				String modulePath = properties.getProperty("module_path", null);
 				Client.moduleLoader = ClientModuleLoader
 						.getModuleLoader(ClientCommunicator.CLIENT_NAME, ClientCommunicator.CLIENT_VERSION, modulePath);
@@ -268,7 +283,11 @@ public class Client extends Application
 				location = this.getClass().getResource("/niobe/legion/client/fxml/Main.fxml");
 			}
 
-			FXMLLoader loader = new FXMLLoader(location);
+			Client.localeBundle = ResourceBundle.getBundle("niobe.legion.client.locale.Locale",
+														   Client.locale,
+														   new EncodedControl("UTF-8"));
+
+			FXMLLoader loader = new FXMLLoader(location, Client.localeBundle);
 			Parent root = loader.load();
 
 			// set Main pane controller
@@ -314,7 +333,7 @@ public class Client extends Application
 		{
 			this.updateTitle("CommunicatorTask");
 
-			this.updateMessage("Verbindung mit Server wird hergestellt ...");
+			this.updateMessage(Client.getLocalisation("connect"));
 			ClientCommunicator communicator = null;
 			int trials = 1;
 
@@ -337,10 +356,11 @@ public class Client extends Application
 				}
 				catch (IOException | NumberFormatException e)
 				{
-					Logger.error(LegionLogger.STDERR, "Verbindung konnte nicht hergestellt werden.");
+					Logger.error(LegionLogger.STDERR, "Can not connect to server.");
 
-					this.updateMessage("Verbindung mit Server wird hergestellt (Versuch " + ++trials + " von " +
-									   Client.MAX_CONNECT_TRIALS + ") ...");
+					this.updateMessage(String.format(Client.getLocalisation("connectionTrialXofY"),
+													 trials++,
+													 Client.MAX_CONNECT_TRIALS));
 
 					try
 					{
@@ -355,8 +375,7 @@ public class Client extends Application
 			// Server not reachable after Client.MAX_CONNECT_TRIALS trials
 			if (communicator == null && trials == Client.MAX_CONNECT_TRIALS)
 			{
-				this.updateMessage(
-						"Der Server ist nicht erreichbar.\nBitte beenden Sie die Anwendung und\nversuchen Sie es später erneut.");
+				this.updateMessage(Client.getLocalisation("connectionTimeout"));
 				this.failed();
 			} else
 			{
@@ -393,4 +412,15 @@ public class Client extends Application
 	{
 		return Client.debug;
 	}
+
+	public static Locale getLocale()
+	{
+		return Client.locale;
+	}
+
+	public static String getLocalisation(String key)
+	{
+		return Client.localeBundle.getString(key);
+	}
+
 }

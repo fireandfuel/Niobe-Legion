@@ -20,8 +20,9 @@ import java.util.List;
 public class UserAdminController implements DatasetReceiver<UserEntity>
 {
 	private static final FxDatasetColumn[] columns = new FxDatasetColumn[]{
-			new FxDatasetColumn<Long>("id", "Nr."), new FxDatasetColumn<String>("name", "Name"),
-			new FxDatasetColumn<String>("group::name", "Gruppe")};
+			new FxDatasetColumn<Long>("id", Client.getLocalisation("id")),
+			new FxDatasetColumn<String>("name", Client.getLocalisation("name")),
+			new FxDatasetColumn<String>("group::name", Client.getLocalisation("group"))};
 
 	private ObservableList<FxDatasetWrapper<UserEntity>> users =
 			FXCollections.observableList(new ArrayList<FxDatasetWrapper<UserEntity>>());
@@ -55,9 +56,9 @@ public class UserAdminController implements DatasetReceiver<UserEntity>
 	@FXML
 	private void newUser() throws IOException
 	{
-		UserEditorController controller = (UserEditorController) Client.getFxController().showHeavyheightDialog(
+		UserEditorController controller = (UserEditorController) Client.getFxController().showHeavyWeightDialog(
 				"/niobe/legion/client/fxml/tab/admin/UserEditor.fxml",
-				"Neuer Benutzer",
+				Client.getLocalisation("newUser"),
 				Modality.WINDOW_MODAL,
 				true);
 		controller.setDatasetRetriever(this);
@@ -67,9 +68,9 @@ public class UserAdminController implements DatasetReceiver<UserEntity>
 	private void editUser() throws IOException
 	{
 		FxDatasetWrapper<UserEntity> wrapper = this.userTable.getSelectionModel().getSelectedItem();
-		UserEditorController controller = (UserEditorController) Client.getFxController().showHeavyheightDialog(
+		UserEditorController controller = (UserEditorController) Client.getFxController().showHeavyWeightDialog(
 				"/niobe/legion/client/fxml/tab/admin/UserEditor.fxml",
-				"Benutzer editieren",
+				Client.getLocalisation("editUser"),
 				Modality.WINDOW_MODAL,
 				true);
 		controller.setData(wrapper);

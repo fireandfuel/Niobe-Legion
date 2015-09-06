@@ -11,9 +11,9 @@
 	</center>
 	<bottom>
 		<HBox alignment="CENTER_RIGHT" spacing="5">
-			<Button onAction="#ping" text="Ping"/>
-			<Button onAction="#closeConnection" text="Verbindung unterbrechen"/>
-			<Button onAction="#exit" text="Client abwürgen"/>
+			<Button onAction="#ping" text="%ping"/>
+			<Button onAction="#closeConnection" text="%closeConnection"/>
+			<Button onAction="#exit" text="%exit"/>
 		</HBox>
 	</bottom>
 </BorderPane>

@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import niobe.legion.client.Client;
 import niobe.legion.client.gui.MainController;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class TabViewController
 	private Tab loadTab(ITab tab) throws IOException
 	{
 		URL location = MainController.class.getResource(tab.getTabURI());
-		FXMLLoader loader = new FXMLLoader(location);
+		FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
 		this.tabController = loader.getController();
 		Object tabObject = loader.load();
 		return (tabObject instanceof Tab) ? (Tab) tabObject : null;

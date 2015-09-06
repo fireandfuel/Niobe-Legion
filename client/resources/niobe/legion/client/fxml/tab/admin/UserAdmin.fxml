@@ -14,28 +14,28 @@
 				minWidth="48.0" maxHeight="48.0" maxWidth="48.0" prefHeight="48.0"
 				prefWidth="48.0">
 			<tooltip>
-				<Tooltip text="Neu laden"/>
+				<Tooltip text="%reload"/>
 			</tooltip>
 		</Button>
 		<Button fx:id="newButton" text="n" onAction="#newUser" minHeight="48.0"
 				minWidth="48.0" maxHeight="48.0" maxWidth="48.0" prefHeight="48.0"
 				prefWidth="48.0">
 			<tooltip>
-				<Tooltip text="Neuer Benutzer"/>
+				<Tooltip text="%newUser"/>
 			</tooltip>
 		</Button>
 		<Button fx:id="editButton" text="e" onAction="#editUser" minHeight="48.0"
 				minWidth="48.0" maxHeight="48.0" maxWidth="48.0" prefHeight="48.0"
 				prefWidth="48.0">
 			<tooltip>
-				<Tooltip text="Benutzer editieren"/>
+				<Tooltip text="%editUser"/>
 			</tooltip>
 		</Button>
 		<Button fx:id="deleteButton" text="d" onAction="#deleteUser" minHeight="48.0"
 				minWidth="48.0" maxHeight="48.0" maxWidth="48.0" prefHeight="48.0"
 				prefWidth="48.0">
 			<tooltip>
-				<Tooltip text="Benutzer löschen"/>
+				<Tooltip text="%deleteUser"/>
 			</tooltip>
 		</Button>
 	</HBox>

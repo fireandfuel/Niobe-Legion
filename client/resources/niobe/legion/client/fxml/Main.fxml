@@ -25,7 +25,7 @@
 						</HBox>
 					</left>
 					<center>
-						<Label fx:id="topLabel" text="FensterTitel" alignment="CENTER"/>
+						<Label fx:id="topLabel" text="%windowTitle" alignment="CENTER"/>
 					</center>
 					<right>
 						<HBox alignment="CENTER_RIGHT" spacing="2">
@@ -33,7 +33,7 @@
 									prefWidth="24" minHeight="24" minWidth="24" maxHeight="24"
 									maxWidth="24" focusTraversable="false">
 								<tooltip>
-									<Tooltip text="Minimieren"/>
+									<Tooltip text="%iconfy"/>
 								</tooltip>
 								<graphic>
 									<SVGPath content="M0 14, H16V16H0V14" stroke="WHITE" fill="WHITE"
@@ -44,7 +44,7 @@
 									prefWidth="24" minHeight="24" minWidth="24" maxHeight="24"
 									maxWidth="24" focusTraversable="false">
 								<tooltip>
-									<Tooltip text="Maximieren/Verkleinern"/>
+									<Tooltip text="%maximize"/>
 								</tooltip>
 								<graphic>
 									<SVGPath content="M0 0, H15V15H0V0 M0 2 H15" stroke="WHITE"
@@ -55,7 +55,7 @@
 									prefWidth="24" minHeight="24" minWidth="24" maxHeight="24"
 									maxWidth="24" focusTraversable="false">
 								<tooltip>
-									<Tooltip text="Schließen"/>
+									<Tooltip text="%close"/>
 								</tooltip>
 								<graphic>
 									<SVGPath
