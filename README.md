@@ -5,24 +5,20 @@ A versatile server/client framework written in Java Programming Language.
 
 Key features:
 -------------
-- Communication via XML over network (inspired by XMPP/Jabber), uses StAX API
-- Uses SSLv3 for transparent communication encryption
-- Simple user / group management
+- Server Client Framework with communication via XML over network (inspired by XMPP/Jabber), uses StAX API
+- Uses TLS1.2 for transparent communication encryption
 - Uses SASL (implementation like SCRAM-SHA1) for user authentification
 - Uses Hibernate for entity management and persistence
-- JavaFx 8 Client (currently in development)
-- Simple hierachical group rights (currently in development)
-- Extendable with plugins (planned, partly implemented)
 
-TODO:
------
+TODO and in development:
+------------------------
+- JavaFx 8 Client (look and feel, some functions missing)
+- Simple user / group management
+- Simple hierachical user group rights
+- Extendable with plugins
 - Communication protocol specification and documentation
 - Plugin API implementation and documentation
 - General documentation (javadoc)
-
-Planned:
--------
-- Server administration via Client
 
 Requirements:
 -------------
