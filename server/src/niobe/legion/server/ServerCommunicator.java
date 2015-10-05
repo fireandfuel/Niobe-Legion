@@ -551,7 +551,7 @@ public class ServerCommunicator extends Communicator
 										Database db = Server.getDatabase();
 										List<Object> datasetsToSend = new ArrayList<Object>();
 
-										XmlMarshaller.unmarshall(stanzas).stream().filter(dataset -> dataset != null)
+										XmlMarshaller.unmarshal(stanzas).stream().filter(dataset -> dataset != null)
 													 .forEach(dataset -> {
 														 int setId = ((IEntity) dataset).getId();
 
@@ -577,7 +577,7 @@ public class ServerCommunicator extends Communicator
 
 											for (Object dataset : datasetsToSend)
 											{
-												list.addAll(XmlMarshaller.marshall(dataset, Long.parseLong(id)));
+												list.addAll(XmlMarshaller.marshal(dataset, Long.parseLong(id)));
 											}
 
 											XmlStanza endStanza = new XmlStanza();
@@ -624,7 +624,7 @@ public class ServerCommunicator extends Communicator
 								}.start();
 							} else if ("delete".equals(currentStanza.getAttributes().get("action")))
 							{
-								XmlMarshaller.unmarshall(stanzas).stream().filter(dataset -> dataset instanceof IEntity)
+								XmlMarshaller.unmarshal(stanzas).stream().filter(dataset -> dataset instanceof IEntity)
 											 .forEach(dataset -> this.deleteDataset((IEntity) dataset));
 							}
 						}
@@ -752,7 +752,7 @@ public class ServerCommunicator extends Communicator
 
 					for (Object object : result)
 					{
-						list.addAll(XmlMarshaller.marshall(object, id));
+						list.addAll(XmlMarshaller.marshal(object, id));
 					}
 
 					XmlStanza endStanza = new XmlStanza();

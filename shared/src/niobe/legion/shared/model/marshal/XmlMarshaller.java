@@ -27,6 +27,7 @@ import java.util.stream.Stream;
  */
 public class XmlMarshaller implements XMLStreamConstants
 {
+
 	private static final class StanzaColumn
 	{
 		final String   columnName;
@@ -71,12 +72,12 @@ public class XmlMarshaller implements XMLStreamConstants
 																		 java.util.jar.Attributes.class);
 
 	/**
-	 * Marshall an object to a list of xml stanzas
+	 * Marshal an object to a list of xml stanzas
 	 *
 	 * @param object
 	 * @return
 	 */
-	public static List<XmlStanza> marshall(Object object, long sequenceId)
+	public static List<XmlStanza> marshal(Object object, long sequenceId)
 	{
 		if (object == null)
 		{
@@ -187,12 +188,12 @@ public class XmlMarshaller implements XMLStreamConstants
 	}
 
 	/**
-	 * Unmarshall a list of xml stanzas to list of objects
+	 * Unmarshal a list of xml stanzas to list of objects
 	 *
 	 * @param xml
 	 * @return
 	 */
-	public static List<Object> unmarshall(List<XmlStanza> xml)
+	public static List<Object> unmarshal(List<XmlStanza> xml)
 	{
 		List<Object> results = new ArrayList<Object>();
 
@@ -205,7 +206,7 @@ public class XmlMarshaller implements XMLStreamConstants
 			int closeIndex = searchCloseEntryIndexInStack(0, xml);
 			List<XmlStanza> subList = new ArrayList<XmlStanza>(xml.subList(0, closeIndex));
 			xml.removeAll(subList);
-			Object result = unmarshallStanzas(subList);
+			Object result = unmarshalStanzas(subList);
 
 			if (result != null)
 			{
@@ -217,12 +218,12 @@ public class XmlMarshaller implements XMLStreamConstants
 	}
 
 	/**
-	 * Unmarshall a list of xml stanzas to object
+	 * Unmarshal a list of xml stanzas to object
 	 *
 	 * @param xml
 	 * @return
 	 */
-	private static Object unmarshallStanzas(List<XmlStanza> xml)
+	private static Object unmarshalStanzas(List<XmlStanza> xml)
 	{
 		if (xml == null)
 		{
@@ -242,11 +243,11 @@ public class XmlMarshaller implements XMLStreamConstants
 				case "legion:dataset":
 					if (stanza.getEventType() == START_ELEMENT)
 					{
-						object = unmarshallDataset(stanza);
+						object = unmarshalDataset(stanza);
 					}
 					break;
 				case "legion:column":
-					stanzaColumnn = unmarshallColumn(object, stanza);
+					stanzaColumnn = unmarshalColumn(object, stanza);
 					break;
 				case "legion:entry":
 					if (stanza.getEventType() == START_ELEMENT)
@@ -260,7 +261,7 @@ public class XmlMarshaller implements XMLStreamConstants
 						// remove add child object xml stanzas from the object xml stanza list
 						xml.removeAll(childrenList);
 
-						unmarshallEntry(object, stanza, childrenList, stanzaColumnn);
+						unmarshalEntry(object, stanza, childrenList, stanzaColumnn);
 					}
 					break;
 			}
@@ -269,7 +270,7 @@ public class XmlMarshaller implements XMLStreamConstants
 		return object;
 	}
 
-	private static Object unmarshallDataset(XmlStanza stanza)
+	private static Object unmarshalDataset(XmlStanza stanza)
 	{
 		Object object = null;
 		try
@@ -364,7 +365,7 @@ public class XmlMarshaller implements XMLStreamConstants
 		return object;
 	}
 
-	private static StanzaColumn unmarshallColumn(Object object, XmlStanza stanza)
+	private static StanzaColumn unmarshalColumn(Object object, XmlStanza stanza)
 	{
 		String columnName = null;
 		Class<?> columnClass = null;
@@ -518,10 +519,10 @@ public class XmlMarshaller implements XMLStreamConstants
 		return new StanzaColumn(columnName, columnClass, isArrayColumn);
 	}
 
-	private static void unmarshallEntry(Object object,
-										XmlStanza entryStanza,
-										List<XmlStanza> stanzas,
-										StanzaColumn stanzaColumn)
+	private static void unmarshalEntry(Object object,
+									   XmlStanza entryStanza,
+									   List<XmlStanza> stanzas,
+									   StanzaColumn stanzaColumn)
 	{
 		Class<?> columnClass = stanzaColumn != null ? stanzaColumn.columnClass : null;
 		String columnName = stanzaColumn != null ? stanzaColumn.columnName : null;
@@ -531,8 +532,8 @@ public class XmlMarshaller implements XMLStreamConstants
 		// if a column is selected
 		if (columnClass != null && columnName != null)
 		{
-			// unmarshall the child object
-			Object result = unmarshallStanzas(stanzas);
+			// unmarshal the child object
+			Object result = unmarshalStanzas(stanzas);
 			if (result != null)
 			{
 				try
@@ -874,7 +875,7 @@ public class XmlMarshaller implements XMLStreamConstants
 				result.setSequenceId(sequenceId);
 				results.add(result);
 
-				results.addAll(marshall(value, sequenceId));
+				results.addAll(marshal(value, sequenceId));
 
 				result = new XmlStanza();
 				result.setName("legion:entry");
@@ -911,7 +912,7 @@ public class XmlMarshaller implements XMLStreamConstants
 			results.add(result);
 
 			// marshal the value
-			List<XmlStanza> stanzas = XmlMarshaller.marshall(value, sequenceId);
+			List<XmlStanza> stanzas = XmlMarshaller.marshal(value, sequenceId);
 
 			if (stanzas != null)
 			{
@@ -949,7 +950,7 @@ public class XmlMarshaller implements XMLStreamConstants
 			results.add(result);
 
 			// marshal the value
-			List<XmlStanza> stanzas = XmlMarshaller.marshall(value, sequenceId);
+			List<XmlStanza> stanzas = XmlMarshaller.marshal(value, sequenceId);
 
 			if (stanzas != null)
 			{

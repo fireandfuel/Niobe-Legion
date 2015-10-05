@@ -474,7 +474,7 @@ public class ClientCommunicator extends Communicator
 
 						if (retriever != null && datasets != null)
 						{
-							retriever.setAll(XmlMarshaller.unmarshall(datasets));
+							retriever.setAll(XmlMarshaller.unmarshal(datasets));
 						}
 					}
 				}
@@ -672,7 +672,7 @@ public class ClientCommunicator extends Communicator
 		stanza.getAttributes().put("action", "set");
 		this.write(stanza);
 
-		List<XmlStanza> stanzas = XmlMarshaller.marshall(dataset, this.localStanzaSequenceId++);
+		List<XmlStanza> stanzas = XmlMarshaller.marshal(dataset, this.localStanzaSequenceId++);
 		for (XmlStanza datasetStanza : stanzas)
 		{
 			this.write(datasetStanza);
@@ -694,7 +694,7 @@ public class ClientCommunicator extends Communicator
 		stanza.getAttributes().put("action", "delete");
 		this.write(stanza);
 
-		List<XmlStanza> stanzas = XmlMarshaller.marshall(dataset, this.localStanzaSequenceId++);
+		List<XmlStanza> stanzas = XmlMarshaller.marshal(dataset, this.localStanzaSequenceId++);
 		for (XmlStanza datasetStanza : stanzas)
 		{
 			this.write(datasetStanza);
