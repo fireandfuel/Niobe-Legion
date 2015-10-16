@@ -1,6 +1,7 @@
 package niobe.legion.client;
 
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.stage.Modality;
 import niobe.legion.client.Client.CommunicatorTask;
 import niobe.legion.client.gui.connect.CertificateController;
@@ -9,9 +10,12 @@ import niobe.legion.client.gui.connect.LoginController;
 import niobe.legion.client.gui.debug.DebugController;
 import niobe.legion.shared.Base64;
 import niobe.legion.shared.Communicator;
+import niobe.legion.shared.data.IRight;
+import niobe.legion.shared.data.LegionRight;
 import niobe.legion.shared.data.XmlStanza;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
+import niobe.legion.shared.model.GroupRightEntity;
 import niobe.legion.shared.model.marshal.XmlMarshaller;
 
 import javax.net.ssl.SSLContext;
@@ -25,6 +29,7 @@ import javax.net.ssl.X509TrustManager;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.TextInputCallback;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslClient;
@@ -76,21 +81,25 @@ public class ClientCommunicator extends Communicator
 	private final String[] authMechanisms;
 	private final HashMap<Long, DatasetReceiver> databaseRetrievers = new HashMap<Long, DatasetReceiver>();
 
-	SaslClient saslClient;
-	boolean    serverSideAuthenficated;
-	String     userName;
-	String     blacklistedServersRegex;
+	SaslClient             saslClient;
+	boolean                serverSideAuthenficated;
+	String                 blacklistedServersRegex;
+	List<GroupRightEntity> userRights;
 
 	private CommunicatorTask connectTask;
-	private boolean          clientAcceptedFromServer;
-	private boolean          tlsEstablished;
-	private String           serverName;
-	private String           serverVersion;
 
-	private List<String> serverFeatures       = new ArrayList<String>();
+	private boolean clientAcceptedFromServer;
+	private boolean tlsEstablished;
+	private String  serverName;
+	private String  serverVersion;
+	private List<String> serverFeatures = new ArrayList<String>();
+
 	private List<String> serverAuthMechanisms = new ArrayList<String>();
-
 	private static DebugController debugController;
+
+	String                 userName;
+	String                 groupName;
+	List<GroupRightEntity> groupRights;
 
 	public ClientCommunicator(Socket socket,
 							  String authMechanisms,
@@ -153,7 +162,7 @@ public class ClientCommunicator extends Communicator
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
 		stanza.setName("legion:stream");
 		stanza.setSequenceId(this.localStanzaSequenceId);
-		stanza.getAttributes().put("xmlns:" + this.getNamespace(), "'" + this.getNamespaceURI() + "'");
+		stanza.putAttribute("xmlns:" + this.getNamespace(), "'" + this.getNamespaceURI() + "'");
 
 		this.write(stanza);
 	}
@@ -164,8 +173,8 @@ public class ClientCommunicator extends Communicator
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
 		stanza.setName("legion:client");
 		stanza.setSequenceId(this.localStanzaSequenceId++);
-		stanza.getAttributes().put("name", ClientCommunicator.CLIENT_NAME);
-		stanza.getAttributes().put("version", ClientCommunicator.CLIENT_VERSION);
+		stanza.putAttribute("name", ClientCommunicator.CLIENT_NAME);
+		stanza.putAttribute("version", ClientCommunicator.CLIENT_VERSION);
 		this.write(stanza);
 
 		stanza = new XmlStanza();
@@ -203,8 +212,8 @@ public class ClientCommunicator extends Communicator
 			case "legion:stream":
 				this.sendClient();
 			case "legion:server":
-				this.serverName = currentStanza.getAttributes().get("name");
-				this.serverVersion = currentStanza.getAttributes().get("version");
+				this.serverName = currentStanza.getAttribute("name");
+				this.serverVersion = currentStanza.getAttribute("version");
 
 				break;
 			case "legion:proceedtls":
@@ -255,18 +264,10 @@ public class ClientCommunicator extends Communicator
 					}
 				}
 				break;
-			case "legion:success":
-				this.serverSideAuthenficated = true;
-
-				if (this.isAuthenficated())
-				{
-					this.doLogin();
-				}
-				break;
 			case "legion:query":
 				if (this.isAuthenficated())
 				{
-					if ("result".equals(currentStanza.getAttributes().get("type")) &&
+					if ("result".equals(currentStanza.getAttribute("type")) &&
 						currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
 					{
 						long id = Long.parseLong(currentStanza.getSequenceId());
@@ -314,35 +315,6 @@ public class ClientCommunicator extends Communicator
 				if (this.isStackAt(1, "legion:mechanisms") && this.isStackAt(2, "legion:server"))
 				{
 					this.serverAuthMechanisms.add(currentStanza.getValue());
-				}
-				break;
-			case "legion:challenge":
-				if (this.saslClient != null && !this.saslClient.isComplete())
-				{
-					try
-					{
-						byte[] response = this.saslClient.evaluateChallenge(Base64.decode(currentStanza.getValue()));
-						if (!this.saslClient.isComplete())
-						{
-							XmlStanza stanza = new XmlStanza();
-							stanza.setName("legion:response");
-							stanza.setSequenceId(this.localStanzaSequenceId++);
-							stanza.setEventType(XMLStreamConstants.CHARACTERS);
-							stanza.setValue(Base64.encodeBytes(response));
-							this.write(stanza);
-						} else
-						{
-							if (this.isAuthenficated())
-							{
-								this.doLogin();
-							}
-						}
-					}
-					catch (SaslException e)
-					{
-						this.loginFailed(ClientCommunicator.CLIENT_AUTH_ERR);
-						Logger.exception(LegionLogger.AUTH, e);
-					}
 				}
 				break;
 			case "legion:failure":
@@ -435,6 +407,64 @@ public class ClientCommunicator extends Communicator
 				}
 
 				break;
+			case "legion:challenge":
+				if (this.saslClient != null && !this.saslClient.isComplete())
+				{
+					try
+					{
+						byte[] response = this.saslClient.evaluateChallenge(Base64.decode(currentStanza.getValue()));
+						if (!this.saslClient.isComplete())
+						{
+							XmlStanza stanza = new XmlStanza();
+							stanza.setName("legion:response");
+							stanza.setSequenceId(this.localStanzaSequenceId++);
+							stanza.setEventType(XMLStreamConstants.CHARACTERS);
+							stanza.setValue(Base64.encodeBytes(response));
+							this.write(stanza);
+						}
+					}
+					catch (SaslException e)
+					{
+						this.loginFailed(ClientCommunicator.CLIENT_AUTH_ERR);
+						Logger.exception(LegionLogger.AUTH, e);
+					}
+				}
+				break;
+			case "legion:group":
+				if ("true".equals(currentStanza.getAttribute("active")))
+				{
+					this.groupName = currentStanza.getAttribute("name");
+				}
+				break;
+			case "legion:groupRight":
+				if (this.isStackAt(1, "legion:group"))
+				{
+					String name = currentStanza.getAttribute("name");
+					boolean active = "true".equals(currentStanza.getAttribute("active"));
+
+					GroupRightEntity rightEntity = new GroupRightEntity();
+					rightEntity.setName(name);
+					rightEntity.setActive(active);
+
+					if (this.groupRights == null)
+					{
+						this.groupRights = new ArrayList<GroupRightEntity>();
+					}
+
+					this.groupRights.add(rightEntity);
+				}
+				break;
+			case "legion:success":
+				this.serverSideAuthenficated = true;
+
+				if (this.isAuthenficated() && checkRight(LegionRight.LOGIN))
+				{
+					this.doLogin();
+				} else
+				{
+					this.loginFailed(CLIENT_AUTH_ERR);
+				}
+				break;
 			case "legion:stream":
 				if (!this.isCloseRequested)
 				{
@@ -505,6 +535,43 @@ public class ClientCommunicator extends Communicator
 															((RealmCallback) callback)
 																	.setText(ClientCommunicator.this.serverName + "_" +
 																			 ClientCommunicator.this.serverVersion);
+														} else if (callback instanceof TextInputCallback)
+														{
+															((TextInputCallback) callback).setText(null);
+
+															ObservableValue<String> observableValue =
+																	Client.getFxController()
+																		  .showLightweightTextInputDialog(((TextInputCallback) callback)
+																												  .getPrompt(),
+																										  true);
+
+															observableValue
+																	.addListener((observable, oldValue, newValue) -> {
+																		new Thread(() -> {
+																			((TextInputCallback) callback)
+																					.setText(newValue);
+																			synchronized (ClientCommunicator.this)
+																			{
+																				ClientCommunicator.this.notify();
+																			}
+																		}).start();
+																	});
+
+
+															while (((TextInputCallback) callback).getText() == null)
+															{
+																synchronized (ClientCommunicator.this)
+																{
+																	try
+																	{
+																		ClientCommunicator.this.wait();
+																	}
+																	catch (InterruptedException e)
+																	{
+																		Logger.exception(LegionLogger.STDERR, e);
+																	}
+																}
+															}
 														} else
 														{
 															Logger.debug(LegionLogger.AUTH,
@@ -524,10 +591,10 @@ public class ClientCommunicator extends Communicator
 		stanza.setName("legion:auth");
 		stanza.setSequenceId(this.localStanzaSequenceId++);
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
-		stanza.getAttributes().put("mechanism", this.saslClient.getMechanismName());
+		stanza.putAttribute("mechanism", this.saslClient.getMechanismName());
 		if (initialResponse != null && initialResponse.length > 0)
 		{
-			stanza.getAttributes().put("initialResponse", Base64.encodeBytes(initialResponse));
+			stanza.putAttribute("initialResponse", Base64.encodeBytes(initialResponse));
 		}
 		stanza.setEmptyElement(true);
 		this.write(stanza);
@@ -630,7 +697,6 @@ public class ClientCommunicator extends Communicator
 
 	private void doLogin() throws IOException
 	{
-
 		if (Client.getFxController().getCurrentController() instanceof LoginController)
 		{
 			Client.getFxController().loadMask("/niobe/legion/client/fxml/tab/TabView.fxml");
@@ -650,10 +716,10 @@ public class ClientCommunicator extends Communicator
 		stanza.setName("legion:query");
 		stanza.setSequenceId(this.localStanzaSequenceId++);
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
-		stanza.getAttributes().put("action", "get");
-		stanza.getAttributes().put("class", datasetType.getCanonicalName());
-		stanza.getAttributes().put("namedQuery", queryName);
-		stanza.getAttributes().put("where", this.createWhereStringFromMap(parameters));
+		stanza.putAttribute("action", "get");
+		stanza.putAttribute("class", datasetType.getCanonicalName());
+		stanza.putAttribute("namedQuery", queryName);
+		stanza.putAttribute("where", this.createWhereStringFromMap(parameters));
 		this.write(stanza);
 
 		stanza = new XmlStanza();
@@ -669,7 +735,7 @@ public class ClientCommunicator extends Communicator
 		stanza.setName("legion:query");
 		stanza.setSequenceId(this.localStanzaSequenceId);
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
-		stanza.getAttributes().put("action", "set");
+		stanza.putAttribute("action", "set");
 		this.write(stanza);
 
 		List<XmlStanza> stanzas = XmlMarshaller.marshal(dataset, this.localStanzaSequenceId++);
@@ -691,7 +757,7 @@ public class ClientCommunicator extends Communicator
 		stanza.setName("legion:query");
 		stanza.setSequenceId(this.localStanzaSequenceId++);
 		stanza.setEventType(XMLStreamConstants.START_ELEMENT);
-		stanza.getAttributes().put("action", "delete");
+		stanza.putAttribute("action", "delete");
 		this.write(stanza);
 
 		List<XmlStanza> stanzas = XmlMarshaller.marshal(dataset, this.localStanzaSequenceId++);
@@ -725,6 +791,21 @@ public class ClientCommunicator extends Communicator
 			return this.userName;
 		}
 		return null;
+	}
+
+	public boolean checkRight(IRight right)
+	{
+		if (this.groupRights != null)
+		{
+			for (GroupRightEntity rightEntity : this.groupRights)
+			{
+				if (Communicator.validateRight(rightEntity, right))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	@Override

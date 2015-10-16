@@ -2,13 +2,14 @@ package niobe.legion.shared.data;
 
 import javax.xml.stream.XMLStreamConstants;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.function.BiConsumer;
 
 /**
- * this class represents a XML stanza received from a client or clients server
+ * this class represents a XML event, like START_ELEMENT, CHARACTERS and END_ELEMENT
  *
  * @author fireandfuel
  */
-
 public class XmlStanza
 {
 	private int    eventType;
@@ -34,7 +35,7 @@ public class XmlStanza
 			this.setEmptyElement(oldStanza.isEmptyElement());
 			this.setEventType(oldStanza.getEventType());
 
-			this.getAttributes().putAll(oldStanza.getAttributes());
+			this.attributes.putAll(oldStanza.attributes);
 		}
 	}
 
@@ -99,7 +100,7 @@ public class XmlStanza
 	 */
 	public String getSequenceId()
 	{
-		return this.getAttributes().get("sequenceId");
+		return this.getAttribute("sequenceId");
 	}
 
 	/**
@@ -107,20 +108,50 @@ public class XmlStanza
 	 */
 	public void setSequenceId(long id)
 	{
-		this.getAttributes().put("sequenceId", Long.toString(id));
+		this.putAttribute("sequenceId", Long.toString(id));
 	}
 
 	public void setSequenceId(String id)
 	{
 		if (id.matches("\\d+"))
 		{
-			this.getAttributes().put("sequenceId", id);
+			this.putAttribute("sequenceId", id);
 		}
 	}
 
-	public HashMap<String, String> getAttributes()
+	public void putAttribute(String key, String value)
 	{
-		return this.attributes;
+		this.attributes.put(key, value);
+	}
+
+	public String getAttribute(String key)
+	{
+		return this.attributes.get(key);
+	}
+
+	public String removeAttribute(String key)
+	{
+		return this.attributes.remove(key);
+	}
+
+	public Set<String> getAttributeKeys()
+	{
+		return this.attributes.keySet();
+	}
+
+	public boolean hasNoAttributes()
+	{
+		return this.attributes.isEmpty();
+	}
+
+	public void forEachAttribute(BiConsumer<String, String> consumer)
+	{
+		this.attributes.forEach(consumer);
+	}
+
+	public boolean containsAttributeKey(String key)
+	{
+		return this.attributes.containsKey(key);
 	}
 
 	public String getLocalName()

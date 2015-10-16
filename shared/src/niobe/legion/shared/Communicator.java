@@ -1,9 +1,11 @@
 package niobe.legion.shared;
 
-import niobe.legion.shared.data.Right;
+import niobe.legion.shared.data.IRight;
+import niobe.legion.shared.data.LegionRight;
 import niobe.legion.shared.data.XmlStanza;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
+import niobe.legion.shared.model.GroupRightEntity;
 import niobe.legion.shared.module.ModuleRightManager;
 import niobe.legion.shared.sasl.LegionSaslProvider;
 
@@ -81,7 +83,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 			Logger.exception(LegionLogger.STDERR, e);
 		}
 
-		ModuleRightManager.addRights(Right.values());
+		ModuleRightManager.addRights(LegionRight.values());
 	}
 
 	public static void addModuleCommunicator(ICommunicator communicator)
@@ -184,7 +186,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 
 							for (int i = 0; i < this.reader.getAttributeCount(); i++)
 							{
-								this.currentStanza.getAttributes().put(this.reader.getAttributeLocalName(i),
+								this.currentStanza.putAttribute(this.reader.getAttributeLocalName(i),
 																	   this.reader.getAttributeValue(i));
 								Logger.debug(LegionLogger.RECEIVED,
 											 "attribute " + this.reader.getAttributeLocalName(i) + " : " +
@@ -287,7 +289,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 								}
 							}
 
-							// pop stanza from stack
+							// pop start/character stanza from stack
 							this.stanzaStack.pop();
 							// set last stanza from stack as current stanza
 							this.currentStanza = this.stanzaStack.peek();
@@ -348,7 +350,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 				case START_ELEMENT:
 					this.out.write(("<" + message.getName()).getBytes("UTF-8"));
 
-					if (message.getAttributes().isEmpty())
+					if (message.hasNoAttributes())
 					{
 						if (message.isEmptyElement())
 						{
@@ -360,7 +362,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 					} else
 					{
 
-						message.getAttributes().forEach((attrName, attribute) -> {
+						message.forEachAttribute((attrName, attribute) -> {
 							if (attribute != null)
 							{
 								if (!attribute.startsWith("\"") && !attribute.endsWith("\"") &&
@@ -392,14 +394,14 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 				case CHARACTERS:
 					this.out.write(("<" + message.getName()).getBytes("UTF-8"));
 
-					if (message.getAttributes().isEmpty())
+					if (message.hasNoAttributes())
 					{
 						this.out.write(">".getBytes("UTF-8"));
 					} else
 					{
-						for (String attrName : message.getAttributes().keySet())
+						for (String attrName : message.getAttributeKeys())
 						{
-							this.out.write((" " + attrName + "=\"" + message.getAttributes().get(attrName) + "\"")
+							this.out.write((" " + attrName + "=\"" + message.getAttribute(attrName) + "\"")
 												   .getBytes("UTF-8"));
 						}
 						this.out.write(">".getBytes("UTF-8"));
@@ -482,7 +484,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 		stanza = new XmlStanza();
 		stanza.setEventType(XMLStreamConstants.CHARACTERS);
 		stanza.setName("legion:reason");
-		stanza.getAttributes().put("type", type);
+		stanza.putAttribute("type", type);
 		stanza.setValue(reason);
 		this.write(stanza);
 
@@ -537,7 +539,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 	{
 		if (index < this.stanzaStack.size() && this.stanzaStack.get(index) != null)
 		{
-			return this.stanzaStack.get(index).getAttributes().containsKey(name);
+			return this.stanzaStack.get(index).containsAttributeKey(name);
 		}
 		return false;
 	}
@@ -574,7 +576,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 	{
 		if (index < this.stanzaStack.size() && this.stanzaStack.get(index) != null)
 		{
-			return new ArrayList<String>(this.stanzaStack.get(index).getAttributes().keySet());
+			return new ArrayList<String>(this.stanzaStack.get(index).getAttributeKeys());
 		}
 		return null;
 	}
@@ -582,9 +584,9 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 	public final String getParameterValueAt(int index, String key)
 	{
 		if (index < this.stanzaStack.size() && this.stanzaStack.get(index) != null &&
-			this.stanzaStack.get(index).getAttributes().containsKey(key))
+			this.stanzaStack.get(index).containsAttributeKey(key))
 		{
-			return this.stanzaStack.get(index).getAttributes().get(key);
+			return this.stanzaStack.get(index).getAttribute(key);
 		}
 		return null;
 	}
@@ -660,5 +662,30 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 	public int getPort()
 	{
 		return this.socket.getPort();
+	}
+
+	protected static boolean validateRight(GroupRightEntity groupRightEntity, IRight right)
+	{
+		if (groupRightEntity != null && right != null)
+		{
+			if (groupRightEntity.getName() != null && right.getName() != null &&
+				groupRightEntity.getName().equals(right.getName()))
+			{
+				return groupRightEntity.isActive();
+			}
+
+			if (groupRightEntity.getChildren() != null)
+			{
+				for (GroupRightEntity childRightEntity : groupRightEntity.getChildren())
+				{
+					if (validateRight(childRightEntity, right))
+					{
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 }

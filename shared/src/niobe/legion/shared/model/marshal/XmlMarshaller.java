@@ -92,14 +92,14 @@ public class XmlMarshaller implements XMLStreamConstants
 		XmlStanza result = new XmlStanza();
 		result.setName("legion:dataset");
 		result.setEventType(START_ELEMENT);
-		result.getAttributes().put("class", className);
+		result.putAttribute("class", className);
 		result.setSequenceId(sequenceId);
 		results.add(result);
 
 		if (object.getClass().isArray()) // Check if object is an array
 		{
 			// array needs the count of elements to initialize while unmarshalling
-			result.getAttributes().put("arrayCount", Integer.toString(((Object[]) object).length));
+			result.putAttribute("arrayCount", Integer.toString(((Object[]) object).length));
 			// marshal the children of array
 			results.addAll(getStreamEntry(Stream.of((Object[]) object), sequenceId));
 
@@ -116,7 +116,7 @@ public class XmlMarshaller implements XMLStreamConstants
 				if (!checkCollectionClass(collection.getClass()))
 				{
 					collection = convertCollection(collection);
-					result.getAttributes().put("class", collection.getClass().getCanonicalName());
+					result.putAttribute("class", collection.getClass().getCanonicalName());
 				}
 
 				// marshal the children of list
@@ -138,7 +138,7 @@ public class XmlMarshaller implements XMLStreamConstants
 			if (!checkMapClass(map.getClass()))
 			{
 				map = convertMap(map);
-				result.getAttributes().put("class", map.getClass().getCanonicalName());
+				result.putAttribute("class", map.getClass().getCanonicalName());
 			}
 
 			// marshal the children of map
@@ -276,15 +276,15 @@ public class XmlMarshaller implements XMLStreamConstants
 		try
 		{
 			// get the object's class name
-			String className = stanza.getAttributes().get("class");
+			String className = stanza.getAttribute("class");
 			// check if it is an array
 			if (className.endsWith("[]"))
 			{
 				className = className.replace("[]", "");
 
 				// instantiate the array
-				int arrayCount = (stanza.getAttributes().get("arrayCount") != null) ?
-								 Integer.parseInt(stanza.getAttributes().get("arrayCount")) : 0;
+				int arrayCount = (stanza.getAttribute("arrayCount") != null) ?
+								 Integer.parseInt(stanza.getAttribute("arrayCount")) : 0;
 				object = Array.newInstance(Class.forName(className), arrayCount);
 			} else
 			{
@@ -376,7 +376,7 @@ public class XmlMarshaller implements XMLStreamConstants
 			try
 			{
 				// get the class name of a field
-				String className = stanza.getAttributes().get("class");
+				String className = stanza.getAttribute("class");
 				// check if it is an array
 				if (className.endsWith("[]"))
 				{
@@ -387,7 +387,7 @@ public class XmlMarshaller implements XMLStreamConstants
 				// get the field's class by its class name
 				columnClass = Class.forName(className);
 				// get the field's name
-				columnName = stanza.getAttributes().get("name");
+				columnName = stanza.getAttribute("name");
 
 				// check if field class is a primitive class, date class, time class, string class,
 				// list class, map class or is an array
@@ -398,8 +398,8 @@ public class XmlMarshaller implements XMLStreamConstants
 					if (isArrayColumn)
 					{
 						// instantiate the array
-						int arrayCount = (stanza.getAttributes().get("arrayCount") != null) ?
-										 Integer.parseInt(stanza.getAttributes().get("arrayCount")) : 0;
+						int arrayCount = (stanza.getAttribute("arrayCount") != null) ?
+										 Integer.parseInt(stanza.getAttribute("arrayCount")) : 0;
 						value = Array.newInstance(columnClass, arrayCount);
 						// set the object's field to the value
 						setField(object.getClass().getDeclaredField(columnName), object, value);
@@ -439,12 +439,12 @@ public class XmlMarshaller implements XMLStreamConstants
 			try
 			{
 				// get the class name of a field
-				String className = stanza.getAttributes().get("class");
+				String className = stanza.getAttribute("class");
 
 				// get the field's class by its class name
 				columnClass = Class.forName(className);
 				// get the field's name
-				columnName = stanza.getAttributes().get("name");
+				columnName = stanza.getAttribute("name");
 
 				// check if field class is a primitive class, date class, time class, string class,
 				// list class, map class or is an array
@@ -569,8 +569,8 @@ public class XmlMarshaller implements XMLStreamConstants
 							Map map = get(object.getClass(), columnName, object);
 
 							// instantiate the key object
-							Object key = entryStanza.getAttributes().get("key");
-							String keyClassName = entryStanza.getAttributes().get("keyClass");
+							Object key = entryStanza.getAttribute("key");
+							String keyClassName = entryStanza.getAttribute("keyClass");
 							Class<?> keyClass = (keyClassName != null) ? Class.forName(keyClassName) : null;
 
 							if (keyClass == Integer.class)
@@ -653,8 +653,8 @@ public class XmlMarshaller implements XMLStreamConstants
 							if (map != null && checkMapClass(map.getClass()))
 							{
 								// instantiate the key object
-								Object key = entryStanza.getAttributes().get("key");
-								String keyClassName = entryStanza.getAttributes().get("keyClass");
+								Object key = entryStanza.getAttribute("key");
+								String keyClassName = entryStanza.getAttribute("keyClass");
 								Class<?> keyClass = (keyClassName != null) ? Class.forName(keyClassName) : null;
 
 								if (keyClass == Integer.class)
@@ -809,15 +809,15 @@ public class XmlMarshaller implements XMLStreamConstants
 			XmlStanza result = new XmlStanza();
 			result.setName("legion:column");
 			result.setEventType(START_ELEMENT);
-			result.getAttributes().put("name", name);
-			result.getAttributes().put("class", value.getClass().getCanonicalName());
+			result.putAttribute("name", name);
+			result.putAttribute("class", value.getClass().getCanonicalName());
 			result.setSequenceId(sequenceId);
 			results.add(result);
 
 			if (value.getClass().isArray()) // check if value is an array
 			{
 				// set array lenght for unmarshalling
-				result.getAttributes().put("arrayCount", Integer.toString(((Object[]) value).length));
+				result.putAttribute("arrayCount", Integer.toString(((Object[]) value).length));
 				// marshal items of the array
 				results.addAll(getStreamEntry(Stream.of((Object[]) value), sequenceId));
 
@@ -831,7 +831,7 @@ public class XmlMarshaller implements XMLStreamConstants
 				if (!checkCollectionClass(collection.getClass()))
 				{
 					collection = convertCollection(collection);
-					result.getAttributes().put("class", collection.getClass().getCanonicalName());
+					result.putAttribute("class", collection.getClass().getCanonicalName());
 				}
 
 				// marshal items of the list
@@ -848,7 +848,7 @@ public class XmlMarshaller implements XMLStreamConstants
 				if (!checkMapClass(map.getClass()))
 				{
 					map = convertMap(map);
-					result.getAttributes().put("class", map.getClass().getCanonicalName());
+					result.putAttribute("class", map.getClass().getCanonicalName());
 				}
 				// marshal keys and items of the map
 				results.addAll(getMapEntry(map, sequenceId));
@@ -944,8 +944,8 @@ public class XmlMarshaller implements XMLStreamConstants
 			result.setName("legion:entry");
 			result.setEventType(START_ELEMENT);
 			// set the key class and key
-			result.getAttributes().put("keyClass", key.getClass().getCanonicalName());
-			result.getAttributes().put("key", key.toString());
+			result.putAttribute("keyClass", key.getClass().getCanonicalName());
+			result.putAttribute("key", key.toString());
 			result.setSequenceId(sequenceId);
 			results.add(result);
 

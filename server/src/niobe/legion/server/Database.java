@@ -3,7 +3,7 @@ package niobe.legion.server;
 import niobe.legion.shared.Base64;
 import niobe.legion.shared.Utils;
 import niobe.legion.shared.data.IRight;
-import niobe.legion.shared.data.Right;
+import niobe.legion.shared.data.LegionRight;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupEntity;
@@ -526,6 +526,12 @@ public class Database
 		return null;
 	}
 
+	public UserEntity getUser(String name)
+	{
+		return this.getResult("user.getByName", UserEntity.class, entry("name", this.encrypt(name)));
+	}
+
+
 	final void createInitialUsers()
 	{
 		try
@@ -540,7 +546,7 @@ public class Database
 			GroupEntity group = new GroupEntity();
 			group.setName(this.encrypt("users"));
 			group.setActive(true);
-			group.setRights(groupRightsFor(Right.USER_RIGHT, Right.LOGIN));
+			group.setRights(groupRightsFor(LegionRight.USER_RIGHT, LegionRight.LOGIN));
 			this.insert(group);
 
 			group = new GroupEntity();
@@ -550,25 +556,25 @@ public class Database
 			GroupEntity admins = new GroupEntity();
 			admins.setName(this.encrypt("administrators"));
 			admins.setActive(true);
-			admins.setRights(groupRightsFor(Right.USER_RIGHT,
-											Right.LOGIN,
-											Right.ADMINISTRATION,
-											Right.SERVER_ADMINISTRATION,
-											Right.STOP_SERVER,
-											Right.RESTART_SERVER,
-											Right.USER_ADMINISTRATION,
-											Right.ADD_USER,
-											Right.RENAME_USER,
-											Right.DELETE_USER,
-											Right.SET_USER_PASSWORD,
-											Right.SET_USER_GROUP,
-											Right.GROUP_ADMINISTRATION,
-											Right.ADD_GROUP,
-											Right.RENAME_GROUP,
-											Right.DELETE_GROUP,
-											Right.RIGHT_ADMINISTRATION,
-											Right.SET_RIGHT,
-											Right.UNSET_RIGHT));
+			admins.setRights(groupRightsFor(LegionRight.USER_RIGHT,
+											LegionRight.LOGIN,
+											LegionRight.ADMINISTRATION,
+											LegionRight.SERVER_ADMINISTRATION,
+											LegionRight.STOP_SERVER,
+											LegionRight.RESTART_SERVER,
+											LegionRight.USER_ADMINISTRATION,
+											LegionRight.ADD_USER,
+											LegionRight.RENAME_USER,
+											LegionRight.DELETE_USER,
+											LegionRight.SET_USER_PASSWORD,
+											LegionRight.SET_USER_GROUP,
+											LegionRight.GROUP_ADMINISTRATION,
+											LegionRight.ADD_GROUP,
+											LegionRight.RENAME_GROUP,
+											LegionRight.DELETE_GROUP,
+											LegionRight.RIGHT_ADMINISTRATION,
+											LegionRight.SET_RIGHT,
+											LegionRight.UNSET_RIGHT));
 
 			UserEntity user = new UserEntity();
 			user.setName("root");

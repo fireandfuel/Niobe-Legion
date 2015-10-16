@@ -1,6 +1,9 @@
 package niobe.legion.client.gui;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -10,6 +13,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -167,7 +173,14 @@ public class MainController
 			dialog.initStyle(StageStyle.UNDECORATED);
 			dialog.setResizable(false);
 
-			URL location = MainController.class.getResource("/niobe/legion/client/fxml/DialogScene.fxml");
+			URL location;
+			if (System.getProperty("os.name").toLowerCase().contains("mac"))
+			{
+				location = MainController.class.getResource("/niobe/legion/client/fxml/DialogSceneOSX.fxml");
+			} else
+			{
+				location = MainController.class.getResource("/niobe/legion/client/fxml/DialogScene.fxml");
+			}
 
 			FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
 			Scene scene = loader.load();
@@ -227,8 +240,10 @@ public class MainController
 		}
 	}
 
-	public void showLightweightDialog(final String message, ButtonType... buttons)
+	public ObservableValue<ButtonType> showLightweightDialog(final String message, ButtonType... buttons)
 	{
+		final SimpleObjectProperty<ButtonType> observableButton = new SimpleObjectProperty<ButtonType>();
+
 		if (Platform.isFxApplicationThread())
 		{
 			final Stage dialog = new Stage();
@@ -241,13 +256,21 @@ public class MainController
 
 			if (buttons != null && buttons.length > 0)
 			{
-				Stream.of(buttons).forEach(button -> {
-
+				Stream.of(buttons).forEach(type -> {
+					Button button = new Button(type.getText());
+					button.setOnAction(event -> {
+						dialog.close();
+						observableButton.set(type);
+					});
+					buttonBox.getChildren().add(button);
 				});
 			} else
 			{
 				Button okButton = new Button("OK");
-				okButton.setOnAction(arg0 -> dialog.close());
+				okButton.setOnAction(event -> {
+					dialog.close();
+					observableButton.set(ButtonType.OK);
+				});
 				okButton.requestFocus();
 				buttonBox.getChildren().add(okButton);
 			}
@@ -278,8 +301,73 @@ public class MainController
 			dialog.setY(this.stage.getY() + this.stage.getHeight() / 2 - dialog.getHeight() / 2);
 		} else
 		{
-			Platform.runLater(() -> MainController.this.showLightweightDialog(message));
+			Platform.runLater(() -> {
+				ObservableValue<ButtonType> innerObservableValue = MainController.this.showLightweightDialog(message);
+				innerObservableValue.addListener((observable, oldValue, newValue) -> observableButton.set(newValue));
+			});
+
 		}
+		return observableButton;
+	}
+
+	public ObservableValue<String> showLightweightTextInputDialog(final String message, boolean singleLine)
+	{
+		SimpleStringProperty stringProperty = new SimpleStringProperty();
+
+		if (Platform.isFxApplicationThread())
+		{
+			final Stage dialog = new Stage();
+			dialog.initOwner(this.stage);
+			dialog.initModality(Modality.WINDOW_MODAL);
+			dialog.initStyle(StageStyle.UNDECORATED);
+			dialog.setResizable(false);
+
+			HBox buttonBox = new HBox(5);
+
+			TextInputControl textField = singleLine ? new TextField() : new TextArea();
+
+			Button okButton = new Button("OK");
+			okButton.setOnAction(event -> {
+				dialog.close();
+				stringProperty.set(textField.getText());
+			});
+			okButton.requestFocus();
+			buttonBox.getChildren().add(okButton);
+
+			Label messageLabel = new Label(message);
+			messageLabel.setTextAlignment(TextAlignment.CENTER);
+
+			VBox content = new VBox(35, messageLabel, textField, buttonBox);
+			content.setAlignment(Pos.CENTER);
+			content.setPadding(new Insets(10));
+			content.setId("mainPane");
+
+			AnchorPane rootPane = new AnchorPane();
+			rootPane.setId("rootPane");
+			rootPane.getChildren().add(content);
+
+			Scene scene = new Scene(rootPane);
+
+			scene.getStylesheets()
+				 .add(MainController.class.getResource("/niobe/legion/client/css/theme.css").toExternalForm());
+
+			dialog.setScene(scene);
+			ResizeDragListener.addResizeListener(dialog);
+
+			dialog.show();
+
+			dialog.setX(this.stage.getX() + this.stage.getWidth() / 2 - dialog.getWidth() / 2);
+			dialog.setY(this.stage.getY() + this.stage.getHeight() / 2 - dialog.getHeight() / 2);
+		} else
+		{
+			Platform.runLater(() -> {
+				ObservableValue<String> innerObservableValue =
+						MainController.this.showLightweightTextInputDialog(message, singleLine);
+				innerObservableValue.addListener((observable, oldValue, newValue) -> stringProperty.set(newValue));
+			});
+		}
+
+		return stringProperty;
 	}
 
 	@FXML

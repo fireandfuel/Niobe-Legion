@@ -18,29 +18,57 @@ import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Server
 {
 	private static ServerModuleLoader moduleLoader;
 	private static Database           DATABASE;
+
 	private static final ServerCommunicatorThreadFactory COMMUNICATOR_THREAD_FACTORY =
 			new ServerCommunicatorThreadFactory();
-	private static final ExecutorService                 CONNECTION_POOL             =
-			Executors.newCachedThreadPool(COMMUNICATOR_THREAD_FACTORY);
+
+	private final ExecutorService         connectionPool;
+	private final BlockingQueue<Runnable> connectionList;
 
 	private ServerSocket serverSocket;
 
 	private boolean closeRequest;
 
-	public Server(int port,
+	public Server(short port,
 				  String authMechanism,
 				  String blacklistedClientsRegex,
 				  final String keyStoreFile,
 				  final String keyStorePassword,
-				  final String[] cipherSuites) throws XMLStreamException
+				  final String[] cipherSuites,
+				  short maxConnections) throws XMLStreamException
 	{
+		if (maxConnections == 0)
+		{
+			connectionList = new SynchronousQueue<Runnable>();
+			connectionPool = new ThreadPoolExecutor(0,
+													Integer.MAX_VALUE,
+													60L,
+													TimeUnit.SECONDS,
+													this.connectionList,
+													COMMUNICATOR_THREAD_FACTORY,
+													new ThreadPoolExecutor.AbortPolicy());
+		} else
+		{
+			connectionList = new ArrayBlockingQueue<Runnable>(Math.max(maxConnections, 10));
+			connectionPool = new ThreadPoolExecutor(Math.min(maxConnections, 10),
+													Math.max(maxConnections, 10),
+													60L,
+													TimeUnit.SECONDS,
+													this.connectionList,
+													COMMUNICATOR_THREAD_FACTORY,
+													new ThreadPoolExecutor.AbortPolicy());
+		}
 		try
 		{
 			this.serverSocket = new ServerSocket(port);
@@ -68,7 +96,7 @@ public class Server
 																		   keyStorePassword,
 																		   cipherSuites);
 
-						CONNECTION_POOL.execute(communicator);
+						connectionPool.execute(communicator);
 					} else
 					{
 						break;
@@ -78,17 +106,21 @@ public class Server
 		}
 		catch (IOException e)
 		{
+			e.printStackTrace();
+			Logger.exception(LegionLogger.STDERR, e);
 			System.exit(0);
 		}
 	}
 
 	public static void main(String[] args)
 	{
-		String port = "", keyStoreFile = null, keyStorePassword = null, databaseType = null;
+		short port = 5242;
+		String keyStoreFile = null, keyStorePassword = null, databaseType = null;
 		String minConnections = null, maxConnections = null;
 		String[] cipherSuites = null;
 		String authMechanisms = "";
 		String blacklistedClientsRegex = "";
+		short maxThreadPoolSize = 100;
 
 		String configName = "server.ini";
 		if (args.length == 1)
@@ -103,7 +135,11 @@ public class Server
 			if (config.exists())
 			{
 				properties.load(new InputStreamReader(new FileInputStream(configName), "UTF-8"));
-				port = properties.getProperty("port", "5242");
+				String portString = properties.getProperty("port", "5242");
+				if (portString.matches("\\d+"))
+				{
+					port = Short.parseShort(portString);
+				}
 				keyStoreFile = properties.getProperty("keystore_file", null);
 				databaseType = properties.getProperty("database_type", null);
 				keyStorePassword = properties.getProperty("keystore_password", null);
@@ -173,6 +209,11 @@ public class Server
 				}
 
 				authMechanisms = properties.getProperty("auth_mechanisms", "PLAIN");
+				String maxThreadPoolSizeString = properties.getProperty("max_connections", "10");
+				if (maxThreadPoolSizeString.matches("\\d+"))
+				{
+					maxThreadPoolSize = Short.parseShort(maxThreadPoolSizeString);
+				}
 
 			} else
 			{
@@ -182,12 +223,13 @@ public class Server
 
 			try
 			{
-				new Server(Integer.parseInt(port),
+				new Server(port,
 						   authMechanisms,
 						   blacklistedClientsRegex,
 						   keyStoreFile,
 						   keyStorePassword,
-						   cipherSuites);
+						   cipherSuites,
+						   maxThreadPoolSize);
 
 			}
 			catch (NumberFormatException e)

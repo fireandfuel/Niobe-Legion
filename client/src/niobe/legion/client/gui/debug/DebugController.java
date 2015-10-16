@@ -43,9 +43,9 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
 
 			StringBuilder message = new StringBuilder(type + " <" + currentStanza.getName());
 
-			if (currentStanza.getAttributes() != null && !currentStanza.getAttributes().isEmpty())
+			if (!currentStanza.hasNoAttributes())
 			{
-				currentStanza.getAttributes().forEach((key, value) -> message.append(" " + key + "=\"" + value + "\""));
+				currentStanza.forEachAttribute((key, value) -> message.append(" " + key + "=\"" + value + "\""));
 			}
 
 			if (currentStanza.isEmptyElement())
@@ -75,7 +75,7 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
 	{
 		if (currentStanza != null && currentStanza.getValue() != null)
 		{
-			Platform.runLater(() -> messages.appendText(type + "[value] " + currentStanza.getValue() + "\n"));
+			Platform.runLater(() -> messages.appendText(type + " " + currentStanza.getName() + " CDATA: \"" + currentStanza.getValue() + "\"\n"));
 		}
 	}
 
@@ -104,8 +104,8 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
 					this.startElement("[OUT]", stanza);
 					break;
 				case CHARACTERS:
+					this.startElement("[OUT]", stanza);
 					this.characters("[OUT]", stanza);
-					break;
 				case END_ELEMENT:
 					this.endElement("[OUT]", stanza);
 					break;

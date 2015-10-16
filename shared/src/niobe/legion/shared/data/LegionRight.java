@@ -3,7 +3,7 @@ package niobe.legion.shared.data;
 import java.util.ArrayList;
 import java.util.List;
 
-public enum Right implements IRight
+public enum LegionRight implements IRight
 {
 	USER_RIGHT("user_right", null),
 	LOGIN("login", USER_RIGHT),
@@ -35,7 +35,7 @@ public enum Right implements IRight
 
 	private transient List<IRight> children;
 
-	Right(String name, IRight parent)
+	LegionRight(String name, IRight parent)
 	{
 		this.name = name;
 		this.parent = parent;

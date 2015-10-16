@@ -64,7 +64,7 @@
 					</center>
 					<right>
 						<HBox alignment="CENTER_RIGHT">
-							<Button fx:id="userButton" alignment="CENTER_LEFT" visible="false"/>
+							<Button fx:id="userButton" alignment="CENTER_RIGHT" visible="false"/>
 						</HBox>
 					</right>
 				</BorderPane>
