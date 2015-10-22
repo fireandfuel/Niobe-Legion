@@ -262,6 +262,7 @@ public class Client extends Application
 
 				String localeProperty = properties.getProperty("locale", "en_US").replace("_", "-");
 				Client.locale = Locale.forLanguageTag(localeProperty);
+				Locale.setDefault(Client.locale);
 
 				String modulePath = properties.getProperty("module_path", null);
 				Client.moduleLoader = ClientModuleLoader
@@ -297,8 +298,9 @@ public class Client extends Application
 			Scene scene = new Scene(root, 800, 600);
 			scene.getStylesheets()
 				 .add(this.getClass().getResource("/niobe/legion/client/css/theme.css").toExternalForm());
+			scene.setFill(null);
 			stage.setTitle("Legion Client");
-			stage.initStyle(StageStyle.UNDECORATED);
+			stage.initStyle(StageStyle.TRANSPARENT);
 			stage.setScene(scene);
 			Client.javaFxController.setStage(stage);
 			stage.show();

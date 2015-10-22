@@ -2,13 +2,13 @@
 	-fx-font-size: 10.0pt;
 }
 
-#iconfy, #maximize, #close {
+#iconfy, #maximize, #close, #userButton {
 	-fx-padding: 5.0 16.0 5.0 16.0;
 	-fx-border-color: #e2e2e2;
 	-fx-border-width: 0.0;
 	-fx-border-style: null;
 
-	-fx-background-radius: 0.0;
+	-fx-background-radius: 4.0;
 
 	-fx-background-color: transparent;
 
@@ -16,17 +16,19 @@
 	-fx-text-fill: #d8d8d8;
 }
 
-#iconfy:hover, #maximize:hover, #close:hover {
+#iconfy:hover, #maximize:hover, #close:hover, #userButton:hover {
 	-fx-background-color: rgb(150.0, 0.0, 0.0);
 	-fx-background-insets: -1;
 }
 
-#iconfy:focused, #maximize:focused, #close:focused {
+#iconfy:focused, #maximize:focused, #close:focused, #userButton:focused {
 	-fx-border-style: null;
 }
 
 #rootPane {
 	-fx-background-color: linear-gradient(#10202F 0.0%, #E6E8E9 100.0%);
+	-fx-border-radius: 8.0;
+	-fx-background-radius: 8.0;
 	-fx-border-color: black;
 }
 

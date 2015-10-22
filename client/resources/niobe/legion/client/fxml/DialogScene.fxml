@@ -17,7 +17,7 @@
 			<top>
 				<AnchorPane fx:id="draggableTopPane">
 					<BorderPane AnchorPane.bottomAnchor="0.0"
-								AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="7.0"
+								AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0"
 								AnchorPane.topAnchor="0.0">
 						<left>
 							<HBox alignment="CENTER_LEFT" spacing="2">
@@ -26,7 +26,7 @@
 							</HBox>
 						</left>
 						<center>
-							<Label fx:id="topLabel" text="%windowTitle" alignment="CENTER"/>
+							<Label fx:id="topLabel" text="%windowTitle" alignment="CENTER" textAlignment="CENTER"/>
 						</center>
 						<right>
 							<Button fx:id="close" onAction="#close" prefHeight="24"

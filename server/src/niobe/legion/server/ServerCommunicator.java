@@ -58,16 +58,16 @@ public class ServerCommunicator extends Communicator
 	protected final static String       SERVER_VERSION  = "0";
 	private final static   List<String> SERVER_FEATURES = new ArrayList<String>();
 
-	final         String   keyStoreFile;
-	final         String   keyStorePassword;
-	final         String[] cipherSuites;
-	private final String[] authMechanisms;
+	final String   keyStoreFile;
+	final String   keyStorePassword;
+	final String[] cipherSuites;
+	final String[] authMechanisms;
 
 	SaslServer saslServer;
 	UserEntity user;
 	String     blacklistedClientsRegex;
 
-	CallbackHandler saslServerHandler = (Callback[] callbacks) -> {
+	final CallbackHandler saslServerHandler = (Callback[] callbacks) -> {
 		NameCallback ncb = null;
 		PasswordCallback pcb = null;
 		RealmCallback rcb = null;
@@ -561,6 +561,13 @@ public class ServerCommunicator extends Communicator
 					stanza.setSequenceId(this.localStanzaSequenceId++);
 					stanza.setEventType(XMLStreamConstants.END_ELEMENT);
 					this.write(stanza);
+				}
+				break;
+			case "legion:deAuth":
+				if (this.isAuthenficated())
+				{
+					this.user = null;
+					this.saslServer = null;
 				}
 				break;
 			case "legion:stream":

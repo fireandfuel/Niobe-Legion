@@ -16,16 +16,17 @@
 		<top>
 			<AnchorPane fx:id="draggableTopPane">
 				<BorderPane AnchorPane.bottomAnchor="0.0"
-							AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="7.0"
+							AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0"
 							AnchorPane.topAnchor="0.0">
 					<left>
 						<HBox alignment="CENTER_LEFT" spacing="2">
 							<ImageView fx:id="icon" fitHeight="16.0" fitWidth="16.0"/>
-							<Button fx:id="userButton" alignment="CENTER_LEFT" visible="false"/>
+							<Button fx:id="userButton" alignment="CENTER_LEFT" visible="false"
+									focusTraversable="false"/>
 						</HBox>
 					</left>
 					<center>
-						<Label fx:id="topLabel" text="%windowTitle" alignment="CENTER"/>
+						<Label fx:id="topLabel" text="%windowTitle" alignment="CENTER" textAlignment="CENTER"/>
 					</center>
 					<right>
 						<HBox alignment="CENTER_RIGHT" spacing="2">

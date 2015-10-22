@@ -704,6 +704,28 @@ public class ClientCommunicator extends Communicator
 		{
 			Client.hideRelogin();
 		}
+		Client.getFxController().setUserButton(this.getUserName());
+	}
+
+	public void logout() throws IOException
+	{
+		if (this.isAuthenficated())
+		{
+			this.userName = null;
+			this.saslClient = null;
+			this.groupRights = new ArrayList<>();
+			this.serverSideAuthenficated = false;
+
+			XmlStanza stanza = new XmlStanza();
+			stanza.setName("legion:deAuth");
+			stanza.setSequenceId(this.localStanzaSequenceId++);
+			stanza.setEventType(XMLStreamConstants.START_ELEMENT);
+			stanza.setEmptyElement(true);
+			this.write(stanza);
+
+			Client.getFxController().setUserButton(null);
+			Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Login.fxml");
+		}
 	}
 
 	public <T> void getDataset(Class<T> datasetType,

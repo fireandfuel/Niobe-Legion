@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -18,10 +19,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import niobe.legion.client.Client;
@@ -52,6 +55,37 @@ public class MainController
 	@FXML
 	private void initialize() throws IOException
 	{
+		this.userButton.setPadding(new Insets(0));
+		this.userButton.setOnAction(event -> {
+			Popup popup = new Popup();
+			Button button = new Button(Client.getLocalisation("logout"));
+			button.setOnAction(buttonEvent -> {
+
+				this.showLightweightDialog(Client.getLocalisation("logoutQuestion"), ButtonType.YES, ButtonType.NO)
+					.addListener((observable, oldValue, newValue) -> {
+						if (newValue == ButtonType.YES)
+						{
+							try
+							{
+								Client.getCommunicator().logout();
+							}
+							catch (IOException e)
+							{
+								e.printStackTrace();
+							}
+						}
+					});
+
+
+			});
+			button.setFocusTraversable(false);
+			popup.setAutoFix(true);
+			popup.setAutoHide(true);
+			popup.getContent().add(button);
+
+			Bounds bounds = this.userButton.localToScreen(this.userButton.getBoundsInLocal());
+			popup.show(this.userButton, bounds.getMinX(), bounds.getMinY() + this.userButton.getHeight());
+		});
 		this.loadMask("/niobe/legion/client/fxml/connect/Connect.fxml");
 	}
 
@@ -170,7 +204,7 @@ public class MainController
 				dialog.initModality(modality);
 			}
 			dialog.setTitle(title);
-			dialog.initStyle(StageStyle.UNDECORATED);
+			dialog.initStyle(StageStyle.TRANSPARENT);
 			dialog.setResizable(false);
 
 			URL location;
@@ -192,6 +226,7 @@ public class MainController
 
 			scene.getStylesheets()
 				 .add(MainController.class.getResource("/niobe/legion/client/css/theme.css").toExternalForm());
+			scene.setFill(null);
 
 			dialog.setScene(scene);
 			ResizeDragListener.addResizeListener(dialog);
@@ -249,10 +284,11 @@ public class MainController
 			final Stage dialog = new Stage();
 			dialog.initOwner(this.stage);
 			dialog.initModality(Modality.WINDOW_MODAL);
-			dialog.initStyle(StageStyle.UNDECORATED);
+			dialog.initStyle(StageStyle.TRANSPARENT);
 			dialog.setResizable(false);
 
 			HBox buttonBox = new HBox(5);
+			buttonBox.setAlignment(Pos.CENTER);
 
 			if (buttons != null && buttons.length > 0)
 			{
@@ -283,12 +319,36 @@ public class MainController
 			content.setPadding(new Insets(10));
 			content.setId("mainPane");
 
+			BorderPane borderPane = new BorderPane();
+
+			AnchorPane draggableTopPane = new AnchorPane();
+			draggableTopPane.setId("draggableTopPane");
+
+			HBox hBox = new HBox(2.0d);
+			hBox.setAlignment(Pos.CENTER);
+			AnchorPane.setBottomAnchor(hBox, 0d);
+			AnchorPane.setTopAnchor(hBox, 0d);
+			AnchorPane.setLeftAnchor(hBox, 8d);
+			AnchorPane.setRightAnchor(hBox, 8d);
+
+			Label titleLabel = new Label(this.stage.getTitle());
+			titleLabel.setId("topLabel");
+			titleLabel.setAlignment(Pos.CENTER);
+			titleLabel.setTextAlignment(TextAlignment.CENTER);
+			hBox.getChildren().add(titleLabel);
+
+			draggableTopPane.getChildren().add(hBox);
+
+			borderPane.setTop(draggableTopPane);
+			borderPane.setCenter(content);
+
 			AnchorPane rootPane = new AnchorPane();
 			rootPane.setId("rootPane");
-			rootPane.getChildren().add(content);
+			rootPane.getChildren().add(borderPane);
 
 			Scene scene = new Scene(rootPane);
 
+			scene.setFill(null);
 			scene.getStylesheets()
 				 .add(MainController.class.getResource("/niobe/legion/client/css/theme.css").toExternalForm());
 
@@ -319,7 +379,7 @@ public class MainController
 			final Stage dialog = new Stage();
 			dialog.initOwner(this.stage);
 			dialog.initModality(Modality.WINDOW_MODAL);
-			dialog.initStyle(StageStyle.UNDECORATED);
+			dialog.initStyle(StageStyle.TRANSPARENT);
 			dialog.setResizable(false);
 
 			HBox buttonBox = new HBox(5);
@@ -342,12 +402,36 @@ public class MainController
 			content.setPadding(new Insets(10));
 			content.setId("mainPane");
 
+			BorderPane borderPane = new BorderPane();
+
+			AnchorPane draggableTopPane = new AnchorPane();
+			draggableTopPane.setId("draggableTopPane");
+
+			HBox hBox = new HBox(2.0d);
+			hBox.setAlignment(Pos.CENTER);
+			AnchorPane.setBottomAnchor(hBox, 0d);
+			AnchorPane.setTopAnchor(hBox, 0d);
+			AnchorPane.setLeftAnchor(hBox, 8d);
+			AnchorPane.setRightAnchor(hBox, 8d);
+
+			Label titleLabel = new Label(this.stage.getTitle());
+			titleLabel.setId("topLabel");
+			titleLabel.setAlignment(Pos.CENTER);
+			titleLabel.setTextAlignment(TextAlignment.CENTER);
+			hBox.getChildren().add(titleLabel);
+
+			draggableTopPane.getChildren().add(hBox);
+
+			borderPane.setTop(draggableTopPane);
+			borderPane.setCenter(content);
+
 			AnchorPane rootPane = new AnchorPane();
 			rootPane.setId("rootPane");
-			rootPane.getChildren().add(content);
+			rootPane.getChildren().add(borderPane);
 
 			Scene scene = new Scene(rootPane);
 
+			scene.setFill(null);
 			scene.getStylesheets()
 				 .add(MainController.class.getResource("/niobe/legion/client/css/theme.css").toExternalForm());
 
@@ -368,6 +452,25 @@ public class MainController
 		}
 
 		return stringProperty;
+	}
+
+	public void setUserButton(String userName)
+	{
+		if (Platform.isFxApplicationThread())
+		{
+			if (userName != null && !userName.isEmpty())
+			{
+				this.userButton.setText(userName);
+				this.userButton.setVisible(true);
+			} else
+			{
+				this.userButton.setText("");
+				this.userButton.setVisible(false);
+			}
+		} else
+		{
+			Platform.runLater(() -> this.setUserButton(userName));
+		}
 	}
 
 	@FXML
