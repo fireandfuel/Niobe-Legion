@@ -8,8 +8,6 @@
 	-fx-border-width: 0.0;
 	-fx-border-style: null;
 
-	-fx-background-radius: 4.0;
-
 	-fx-background-color: transparent;
 
 	-fx-font-size: 10.0pt;
@@ -26,17 +24,22 @@
 }
 
 #rootPane {
-	-fx-background-color: linear-gradient(#10202F 0.0%, #E6E8E9 100.0%);
-	-fx-border-radius: 8.0;
-	-fx-background-radius: 8.0;
+	-fx-background-color: #10202F;
+	-fx-border-radius: 4.0;
+	-fx-background-radius: 4.0;
 	-fx-border-color: black;
+	-fx-border-width: 1;
 }
 
 #mainPane {
 	-fx-background-color: white;
 	-fx-border-color: darkgrey;
-	-fx-background-insets: 7.0;
-	-fx-border-insets: 7.0;
+	-fx-border-radius: 4.0;
+	-fx-background-radius: 4.0;
+}
+
+#draggableTopPane {
+	-fx-padding: 2 0 2 0;
 }
 
 #topLabel, #userLabel {
@@ -54,7 +57,7 @@
 	-fx-border-width: 1;
 	-fx-border-style: segments(1, 1);
 	-fx-border-color: #ffffff;
-	-fx-background-radius: 0;
+	-fx-background-radius: 4;
 	-fx-background-insets: 0 0 0 0, 0, 1, 2;
 
 	-fx-background-color: #cccccc;
@@ -96,7 +99,7 @@
 .scroll-bar .thumb {
 	-fx-background-color: #cdcdcd;
 	-fx-background-insets: 0.0;
-	-fx-background-radius: 0.0;
+	-fx-background-radius: 4.0;
 }
 
 .scroll-bar .thumb:hover {
@@ -111,18 +114,19 @@
 .scroll-bar .track {
 	-fx-background-color: #f0f0f0;
 	-fx-background-insets: 0.0;
-	-fx-background-radius: 0.0;
+	-fx-background-radius: 4.0;
 }
 
 .scroll-bar .track-background {
 	-fx-background-color: #f0f0f0;
 	-fx-background-insets: 0.0;
+	-fx-background-radius: 4.0;
 }
 
 .scroll-bar .increment-button, .scroll-bar .decrement-button {
 	-fx-background-color: #f0f0f0;
 	-fx-background-insets: 0.0;
-	-fx-background-radius: 0.0;
+	-fx-background-radius: 4.0;
 
 	-fx-padding: 0.25em; /* 3 */
 }
@@ -199,7 +203,7 @@
 }
 
 .text-input {
-	-fx-background-radius: 0.0, 0.0;
+	-fx-background-radius: 4.0, 4.0;
 
 	-fx-background-color: #bababa, white;
 	-fx-background-insets: 0.0, 2.0;
@@ -318,4 +322,13 @@
 
 .table-column, .tree-table-column {
 	-fx-alignment: center-left;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * TabPane			                                                           *
+ *                                                                             *
+ ******************************************************************************/
+.tab-pane > .tab-header-area > .tab-header-background {
+	-fx-background-color: linear-gradient(transparent 0%, derive(-fx-text-box-border, 30%) 100%);
 }

@@ -41,11 +41,6 @@
 								<Label fx:id="topLabel" text="%windowTitle" alignment="CENTER" textAlignment="CENTER"/>
 							</HBox>
 						</center>
-						<right>
-							<HBox alignment="CENTER_RIGHT">
-								<Button fx:id="userLabel" alignment="CENTER_RIGHT" visible="false"/>
-							</HBox>
-						</right>
 					</BorderPane>
 				</AnchorPane>
 			</top>

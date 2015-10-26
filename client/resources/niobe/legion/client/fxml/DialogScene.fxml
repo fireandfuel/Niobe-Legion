@@ -22,7 +22,6 @@
 						<left>
 							<HBox alignment="CENTER_LEFT" spacing="2">
 								<ImageView fx:id="icon" fitHeight="16.0" fitWidth="16.0"/>
-								<Label fx:id="userLabel" alignment="CENTER_LEFT"/>
 							</HBox>
 						</left>
 						<center>
