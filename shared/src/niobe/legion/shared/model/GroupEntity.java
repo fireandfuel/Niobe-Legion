@@ -15,10 +15,11 @@ import java.util.List;
 @Entity(name = "legion_group")
 @NamedQueries({
 					  @NamedQuery(name = "group.get",
-								  query = "SELECT c FROM legion_group c"), @NamedQuery(name = "group.getWithId",
-																					   query = "SELECT c FROM legion_group c WHERE c.id = :id"),
+								  query = "SELECT entity FROM legion_group entity"),
+					  @NamedQuery(name = "group.getWithId",
+								  query = "SELECT entity FROM legion_group entity WHERE entity.id = :id"),
 					  @NamedQuery(name = "group.delete",
-								  query = "DELETE FROM legion_group c WHERE c.id = :id")})
+								  query = "DELETE FROM legion_group entity WHERE entity.id = :id")})
 public class GroupEntity implements IEntity
 {
 	@Id

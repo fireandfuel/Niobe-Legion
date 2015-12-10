@@ -28,21 +28,25 @@
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
 			<version>1.51</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.1</version>
+			<version>2.4.1</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
-			<version>2.1</version>
+			<version>2.4.1</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.javax.persistence</groupId>
 			<artifactId>hibernate-jpa-2.1-api</artifactId>
 			<version>1.0.0.Final</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<!-- Support for JSR 310: Java8 Time and Date API,
@@ -50,11 +54,25 @@
 			<groupId>com.github.marschall</groupId>
 			<artifactId>threeten-jpa</artifactId>
 			<version>1.1.0</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream</artifactId>
 			<version>1.4.8</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.10.19</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
@@ -79,8 +97,7 @@
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
 						<manifestEntries>
-							<mode>Created-By</mode>
-							<key>fireandfuel (fireandfuel@hotmail.de)</key>
+							<author>fireandfuel (fireandfuel@hotmail.de)</author>
 						</manifestEntries>
 					</archive>
 					<outputDirectory>../package/shared</outputDirectory>
@@ -114,6 +131,21 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.maven.surefire</groupId>
+						<artifactId>surefire-junit47</artifactId>
+						<version>2.18.1</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<runOrder>filesystem</runOrder>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

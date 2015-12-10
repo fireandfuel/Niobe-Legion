@@ -3,12 +3,9 @@ package niobe.legion.server;
 import niobe.legion.shared.Base64;
 import niobe.legion.shared.Utils;
 import niobe.legion.shared.data.IRight;
-import niobe.legion.shared.data.LegionRight;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
-import niobe.legion.shared.model.GroupEntity;
 import niobe.legion.shared.model.GroupRightEntity;
-import niobe.legion.shared.model.UserEntity;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.BadPaddingException;
@@ -37,7 +34,6 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -56,27 +52,20 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Database
+/**
+ * Abstract hibernate database
+ */
+public abstract class AbstractDatabase
 {
-	private static Database database;
-
 	@PersistenceUnit
 	EntityManagerFactory entityManagerFactory;
+
 	EntityManager     entityManager;
 	EntityTransaction entityTransaction;
 
 	Cipher encryptCipher, decryptCipher;
 
-	public static Database init(String type, String... args) throws SQLException
-	{
-		if (Database.database == null)
-		{
-			Database.database = new Database(type, args);
-		}
-		return Database.database;
-	}
-
-	Database(String type, String... args) throws SQLException
+	protected AbstractDatabase(String type, String persistenceName, String... args) throws SQLException
 	{
 		HashMap<String, Object> properties = new HashMap<String, Object>();
 
@@ -126,7 +115,6 @@ public class Database
 
 				this.decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
 				this.decryptCipher.init(Cipher.DECRYPT_MODE, keyValue, iVSpec);
-
 			}
 		}
 		catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException
@@ -202,108 +190,9 @@ public class Database
 			properties.put("hibernate.c3p0.max_statements", "50");
 		}
 
-		this.entityManagerFactory = Persistence.createEntityManagerFactory("niobe_legion", properties);
+		this.entityManagerFactory = Persistence.createEntityManagerFactory(persistenceName, properties);
 
 		this.entityManager = this.entityManagerFactory.createEntityManager();
-
-		// Check if database have users
-		List<String> users = this.getUsers();
-		if (users == null || users.isEmpty())
-		{
-			this.createInitialUsers();
-		}
-	}
-
-	public final String encrypt(String text)
-	{
-		if (text == null)
-		{
-			return null;
-		}
-
-		if (this.encryptCipher != null)
-		{
-			byte[] input;
-			try
-			{
-				input = text.getBytes("UTF-8");
-
-				ByteArrayInputStream reader = new ByteArrayInputStream(input);
-				ByteArrayOutputStream writer = new ByteArrayOutputStream();
-
-				byte[] buffer = new byte[16];
-				int noBytes = 0;
-
-				byte[] cipherBlock = new byte[this.encryptCipher.getOutputSize(buffer.length)];
-
-				int cipherBytes;
-				while ((noBytes = reader.read(buffer)) != -1)
-				{
-					cipherBytes = this.encryptCipher.update(buffer, 0, noBytes, cipherBlock);
-					writer.write(cipherBlock, 0, cipherBytes);
-				}
-
-				cipherBytes = this.encryptCipher.doFinal(cipherBlock, 0);
-				writer.write(cipherBlock, 0, cipherBytes);
-
-				byte[] output = writer.toByteArray();
-
-				return Base64.encodeBytes(output);
-			}
-			catch (ShortBufferException | IOException | IllegalBlockSizeException
-					| BadPaddingException e)
-			{
-				Logger.exception(LegionLogger.DATABASE, e);
-				return text;
-			}
-		}
-		return text;
-	}
-
-	public final String decrypt(String text)
-	{
-		if (text == null)
-		{
-			return null;
-		}
-
-		if (this.decryptCipher != null)
-		{
-			byte[] input;
-			try
-			{
-				input = Base64.decode(text);
-
-				ByteArrayInputStream reader = new ByteArrayInputStream(input);
-				ByteArrayOutputStream writer = new ByteArrayOutputStream();
-
-				byte[] buffer = new byte[16];
-				int noBytes = 0;
-
-				byte[] cipherBlock = new byte[this.decryptCipher.getOutputSize(buffer.length)];
-
-				int cipherBytes;
-				while ((noBytes = reader.read(buffer)) != -1)
-				{
-					cipherBytes = this.decryptCipher.update(buffer, 0, noBytes, cipherBlock);
-					writer.write(cipherBlock, 0, cipherBytes);
-				}
-
-				cipherBytes = this.decryptCipher.doFinal(cipherBlock, 0);
-				writer.write(cipherBlock, 0, cipherBytes);
-
-				byte[] output = writer.toByteArray();
-				return new String(output, "UTF-8");
-
-			}
-			catch (IOException | ShortBufferException | IllegalBlockSizeException
-					| BadPaddingException e)
-			{
-				Logger.exception(LegionLogger.DATABASE, e);
-				return text;
-			}
-		}
-		return text;
 	}
 
 	public final void beginTransaction()
@@ -315,7 +204,7 @@ public class Database
 		}
 	}
 
-	public final void commitTransaction()
+	protected final void commitTransaction()
 	{
 		if (this.entityTransaction != null)
 		{
@@ -324,7 +213,7 @@ public class Database
 		}
 	}
 
-	public final void rollbackTransaction()
+	protected final void rollbackTransaction()
 	{
 		if (this.entityTransaction != null)
 		{
@@ -434,7 +323,7 @@ public class Database
 		return results;
 	}
 
-	public final Object insert(Object object)
+	public final <T> T insert(T object)
 	{
 		try
 		{
@@ -486,7 +375,7 @@ public class Database
 		}
 	}
 
-	protected Entry<String, Object> entry(String key, Object value)
+	public static Entry<String, Object> entry(String key, Object value)
 	{
 		return new SimpleEntry<String, Object>(key, value);
 	}
@@ -496,102 +385,104 @@ public class Database
 		return (parameters != null) ? Collections.unmodifiableMap(Stream.of(parameters).collect(entriesToMap())) : null;
 	}
 
-	private <K, U> Collector<Map.Entry<K, U>, ?, Map<K, U>> entriesToMap()
+	private <K, U> Collector<Entry<K, U>, ?, Map<K, U>> entriesToMap()
 	{
 		return Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue);
 	}
 
-	public List<String> getUsers()
+	public final String encrypt(String text)
 	{
-		List<String> users = null;
-		List<UserEntity> results = this.getResults(UserEntity.class);
-
-		if (results != null)
+		if (text == null)
 		{
-			users = results.stream().map(UserEntity::getName).collect(Collectors.toList());
+			return null;
 		}
 
-		return users;
+		if (this.encryptCipher != null)
+		{
+			byte[] input;
+			try
+			{
+				input = text.getBytes("UTF-8");
+
+				ByteArrayInputStream reader = new ByteArrayInputStream(input);
+				ByteArrayOutputStream writer = new ByteArrayOutputStream();
+
+				byte[] buffer = new byte[16];
+				int noBytes = 0;
+
+				byte[] cipherBlock = new byte[this.encryptCipher.getOutputSize(buffer.length)];
+
+				int cipherBytes;
+				while ((noBytes = reader.read(buffer)) != -1)
+				{
+					cipherBytes = this.encryptCipher.update(buffer, 0, noBytes, cipherBlock);
+					writer.write(cipherBlock, 0, cipherBytes);
+				}
+
+				cipherBytes = this.encryptCipher.doFinal(cipherBlock, 0);
+				writer.write(cipherBlock, 0, cipherBytes);
+
+				byte[] output = writer.toByteArray();
+
+				return Base64.encodeBytes(output);
+			}
+			catch (ShortBufferException | IOException | IllegalBlockSizeException
+					| BadPaddingException e)
+			{
+				Logger.exception(LegionLogger.DATABASE, e);
+				return text;
+			}
+		}
+		return text;
 	}
 
-	public String getPassword(String user)
+	public final String decrypt(String text)
 	{
-		UserEntity result = this.getResult("user.getByName", UserEntity.class, entry("name", this.encrypt(user)));
-
-		if (result != null)
+		if (text == null)
 		{
-			return result.getPassword();
+			return null;
 		}
 
-		return null;
-	}
-
-	public UserEntity getUser(String name)
-	{
-		return this.getResult("user.getByName", UserEntity.class, entry("name", this.encrypt(name)));
-	}
-
-
-	final void createInitialUsers()
-	{
-		try
+		if (this.decryptCipher != null)
 		{
-			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			byte[] input;
+			try
+			{
+				input = Base64.decode(text);
 
-			byte[] entropy = new byte[1024];
-			Utils.random.nextBytes(entropy);
-			md.update(entropy, 0, 1024);
-			String password = new BigInteger(1, md.digest()).toString(16).substring(0, 12);
+				ByteArrayInputStream reader = new ByteArrayInputStream(input);
+				ByteArrayOutputStream writer = new ByteArrayOutputStream();
 
-			GroupEntity group = new GroupEntity();
-			group.setName(this.encrypt("users"));
-			group.setActive(true);
-			group.setRights(groupRightsFor(LegionRight.USER_RIGHT, LegionRight.LOGIN));
-			this.insert(group);
+				byte[] buffer = new byte[16];
+				int noBytes = 0;
 
-			group = new GroupEntity();
-			group.setName(this.encrypt("inactive"));
-			this.insert(group);
+				byte[] cipherBlock = new byte[this.decryptCipher.getOutputSize(buffer.length)];
 
-			GroupEntity admins = new GroupEntity();
-			admins.setName(this.encrypt("administrators"));
-			admins.setActive(true);
-			admins.setRights(groupRightsFor(LegionRight.USER_RIGHT,
-											LegionRight.LOGIN,
-											LegionRight.ADMINISTRATION,
-											LegionRight.SERVER_ADMINISTRATION,
-											LegionRight.STOP_SERVER,
-											LegionRight.RESTART_SERVER,
-											LegionRight.USER_ADMINISTRATION,
-											LegionRight.ADD_USER,
-											LegionRight.RENAME_USER,
-											LegionRight.DELETE_USER,
-											LegionRight.SET_USER_PASSWORD,
-											LegionRight.SET_USER_GROUP,
-											LegionRight.GROUP_ADMINISTRATION,
-											LegionRight.ADD_GROUP,
-											LegionRight.RENAME_GROUP,
-											LegionRight.DELETE_GROUP,
-											LegionRight.RIGHT_ADMINISTRATION,
-											LegionRight.SET_RIGHT,
-											LegionRight.UNSET_RIGHT));
+				int cipherBytes;
+				while ((noBytes = reader.read(buffer)) != -1)
+				{
+					cipherBytes = this.decryptCipher.update(buffer, 0, noBytes, cipherBlock);
+					writer.write(cipherBlock, 0, cipherBytes);
+				}
 
-			UserEntity user = new UserEntity();
-			user.setName("root");
-			user.setPassword(password);
-			user.setGroup(admins);
-			this.insert(user);
+				cipherBytes = this.decryptCipher.doFinal(cipherBlock, 0);
+				writer.write(cipherBlock, 0, cipherBytes);
 
-			System.out.println("Root password is: " + password);
-			System.out.println("SECURITY WARNING: Please change the root password later");
+				byte[] output = writer.toByteArray();
+				return new String(output, "UTF-8");
+
+			}
+			catch (IOException | ShortBufferException | IllegalBlockSizeException
+					| BadPaddingException e)
+			{
+				Logger.exception(LegionLogger.DATABASE, e);
+				return text;
+			}
 		}
-		catch (NoSuchAlgorithmException e)
-		{
-			Logger.exception(LegionLogger.DATABASE, e);
-		}
+		return text;
 	}
 
-	private List<GroupRightEntity> groupRightsFor(IRight... rights)
+	protected List<GroupRightEntity> groupRightsFor(IRight... rights)
 	{
 		if (rights != null && rights.length > 0)
 		{

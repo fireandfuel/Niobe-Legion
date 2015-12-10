@@ -16,6 +16,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -27,14 +28,18 @@ import java.util.concurrent.TimeUnit;
 
 public class Server
 {
+	private static final String PERSISTENCE_NAME = "niobe_legion";
+
 	private static ServerModuleLoader moduleLoader;
-	private static Database           DATABASE;
+	private static LegionDatabase     DATABASE;
 
 	private static final ServerCommunicatorThreadFactory COMMUNICATOR_THREAD_FACTORY =
 			new ServerCommunicatorThreadFactory();
+	private static final List<Communicator> COMMUNICATORS  = new ArrayList<Communicator>();
 
 	private final ExecutorService         connectionPool;
 	private final BlockingQueue<Runnable> connectionList;
+
 
 	private ServerSocket serverSocket;
 
@@ -95,7 +100,7 @@ public class Server
 																		   keyStoreFile,
 																		   keyStorePassword,
 																		   cipherSuites);
-
+						COMMUNICATORS.add(communicator);
 						connectionPool.execute(communicator);
 					} else
 					{
@@ -170,10 +175,6 @@ public class Server
 					}
 				}
 
-				String modulePath = properties.getProperty("module_path", null);
-				Server.moduleLoader = ServerModuleLoader
-						.getModuleLoader(ServerCommunicator.SERVER_NAME, ServerCommunicator.SERVER_VERSION, modulePath);
-
 				if (databaseType.equalsIgnoreCase("mariadb") || databaseType.equalsIgnoreCase("h2-server"))
 				{
 					String host = properties.getProperty("sql_host");
@@ -183,15 +184,16 @@ public class Server
 					String database = properties.getProperty("sql_database");
 					String encryptionPassword = properties.getProperty("encryption_key");
 
-					Server.DATABASE = Database.init(databaseType,
-													host,
-													sqlPort,
-													database,
-													user,
-													password,
-													encryptionPassword,
-													minConnections,
-													maxConnections);
+					Server.DATABASE = LegionDatabase.init(databaseType,
+														  PERSISTENCE_NAME,
+														  host,
+														  sqlPort,
+														  database,
+														  user,
+														  password,
+														  encryptionPassword,
+														  minConnections,
+														  maxConnections);
 				} else if (databaseType.equalsIgnoreCase("h2-embedded"))
 				{
 					String h2Database = properties.getProperty("sql_database_file");
@@ -199,13 +201,14 @@ public class Server
 					String password = properties.getProperty("sql_password");
 					String encryptionPassword = properties.getProperty("encryption_key");
 
-					Server.DATABASE = Database.init(databaseType,
-													h2Database,
-													user,
-													password,
-													encryptionPassword,
-													minConnections,
-													maxConnections);
+					Server.DATABASE = LegionDatabase.init(databaseType,
+														  PERSISTENCE_NAME,
+														  h2Database,
+														  user,
+														  password,
+														  encryptionPassword,
+														  minConnections,
+														  maxConnections);
 				}
 
 				authMechanisms = properties.getProperty("auth_mechanisms", "PLAIN");
@@ -215,6 +218,9 @@ public class Server
 					maxThreadPoolSize = Short.parseShort(maxThreadPoolSizeString);
 				}
 
+				String modulePath = properties.getProperty("module_path", null);
+				Server.moduleLoader = ServerModuleLoader
+						.getModuleLoader(ServerCommunicator.SERVER_NAME, ServerCommunicator.SERVER_VERSION, modulePath);
 			} else
 			{
 				System.err.println("ERROR: No config file found. Stop!");
@@ -251,8 +257,13 @@ public class Server
 		}
 	}
 
-	public static Database getDatabase()
+	public static LegionDatabase getDatabase()
 	{
 		return Server.DATABASE;
+	}
+
+	public static List<Communicator> getCommunicators()
+	{
+		return COMMUNICATORS;
 	}
 }

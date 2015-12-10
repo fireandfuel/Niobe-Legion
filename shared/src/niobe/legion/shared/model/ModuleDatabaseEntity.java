@@ -4,14 +4,9 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 
-@Entity(name = "legion_module_table_registry")
-@NamedQueries({
-					  @NamedQuery(name = "module_registry.get",
-								  query = "SELECT c FROM legion_module_table_registry c")})
-public class ModuleTableRegistryEntity implements IEntity
+@Entity(name = "legion_database_table")
+public class ModuleDatabaseEntity implements IEntity
 {
 	@Id
 	@Column(name = "id")
@@ -20,7 +15,6 @@ public class ModuleTableRegistryEntity implements IEntity
 
 	private String name;
 	private String version;
-	private String createStatement;
 
 	public String getName()
 	{
@@ -40,16 +34,6 @@ public class ModuleTableRegistryEntity implements IEntity
 	public void setVersion(String version)
 	{
 		this.version = version;
-	}
-
-	public String getCreateStatement()
-	{
-		return createStatement;
-	}
-
-	public void setCreateStatement(String createStatement)
-	{
-		this.createStatement = createStatement;
 	}
 
 	@Override

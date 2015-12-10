@@ -14,7 +14,6 @@ import niobe.legion.shared.model.ModuleEntity;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class ModuleAdminController implements DatasetReceiver<ModuleEntity>
 {
@@ -93,11 +92,5 @@ public class ModuleAdminController implements DatasetReceiver<ModuleEntity>
 		{
 			this.modules.remove(index);
 		}
-	}
-
-	@Override
-	public void removeAll(List<ModuleEntity> dbObjects)
-	{
-		dbObjects.forEach(this::remove);
 	}
 }

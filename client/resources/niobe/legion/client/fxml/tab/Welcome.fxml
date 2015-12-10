@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.layout.BorderPane?>
+<Tab xmlns:fx="http://javafx.com/fxml" text="%welcome">
+	<BorderPane>
+		<center>
+			<Label text="%welcome"/>
+		</center>
+	</BorderPane>
+</Tab>

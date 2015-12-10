@@ -3,13 +3,40 @@ package niobe.legion.shared.module;
 import niobe.legion.shared.ICommunicator;
 import niobe.legion.shared.data.IRight;
 
+/**
+ * This Interface is part of the Niobe Legion Module API Level 1
+ */
 public interface IModule
 {
-	public boolean startModule();
+	/**
+	 * starts the module
+	 * @return module is started successfully
+	 */
+	boolean startModule();
 
-	public void stopModule();
+	/**
+	 * stops the module
+	 * @return module is stopped successfully
+	 */
+	boolean stopModule();
 
-	public ICommunicator getCommunicator();
+	/**
+	 * @return a module communicator, may be null if not needed
+	 */
+	ICommunicator newCommunicator(ICommunicator parent);
 
-	public IRight[] getRights();
+	/**
+	 * @return the module communicator namespace, may be null if not needed
+	 */
+	String getNamespace();
+
+	/**
+	 * @return the module communicator namespace uri, may be null if not needed
+	 */
+	String getNamespaceURI();
+
+	/**
+	 * @return the rights the module sets at the host
+	 */
+	IRight[] getRights();
 }

@@ -6,9 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Created by nk on 03.07.15.
- */
 public class ModuleRightManager
 {
 	final static List<IRight> rights = new ArrayList<IRight>();
@@ -18,7 +15,7 @@ public class ModuleRightManager
 
 	}
 
-	public final static void addRights(IRight... rightsToAdd)
+	public static void addRights(IRight... rightsToAdd)
 	{
 		if (rightsToAdd != null && rightsToAdd.length > 0)
 		{
@@ -26,7 +23,7 @@ public class ModuleRightManager
 		}
 	}
 
-	public final static void removeRights(IRight... rightsToRemove)
+	public static void removeRights(IRight... rightsToRemove)
 	{
 		if (rightsToRemove != null && rightsToRemove.length > 0)
 		{
@@ -34,7 +31,7 @@ public class ModuleRightManager
 		}
 	}
 
-	public final static IRight[] getRights()
+	public static IRight[] getRights()
 	{
 		return rights.toArray(new IRight[rights.size()]);
 	}

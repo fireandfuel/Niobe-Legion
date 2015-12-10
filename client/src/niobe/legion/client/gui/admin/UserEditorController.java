@@ -17,7 +17,6 @@ import niobe.legion.shared.model.GroupEntity;
 import niobe.legion.shared.model.UserEntity;
 
 import java.io.IOException;
-import java.util.List;
 
 public class UserEditorController implements ICloseableDialogController, DatasetReceiver<GroupEntity>
 {
@@ -155,11 +154,5 @@ public class UserEditorController implements ICloseableDialogController, Dataset
 		{
 			this.group.getItems().remove(index);
 		}
-	}
-
-	@Override
-	public void removeAll(List<GroupEntity> dbObjects)
-	{
-		dbObjects.forEach(this::remove);
 	}
 }

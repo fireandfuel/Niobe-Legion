@@ -2,22 +2,25 @@ package niobe.legion.shared.data;
 
 import java.util.List;
 
+/**
+ * This Interface is part of the Niobe Legion Module API Level 1
+ */
 public interface IRight
 {
-	public String getName();
+	String getName();
 
-	public List<IRight> getChildren();
+	List<IRight> getChildren();
 
-	public IRight getParent();
+	IRight getParent();
 
-	public void addChildren(IRight right);
+	void addChildren(IRight right);
 
-	public default boolean isRoot()
+	default boolean isRoot()
 	{
 		return this.getParent() == null;
 	}
 
-	public default boolean isLeaf()
+	default boolean isLeaf()
 	{
 		return this.getChildren() == null || this.getChildren().isEmpty();
 	}

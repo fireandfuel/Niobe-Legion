@@ -4,28 +4,27 @@ import niobe.legion.shared.data.XmlStanza;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.SocketException;
 
 public interface ICommunicator
 {
-	public void consumeStartElement(XmlStanza currentStanza) throws IOException;
+	void consumeStartElement(XmlStanza currentStanza) throws IOException;
 
-	public void consumeCharacters(XmlStanza currentStanza) throws IOException;
+	void consumeCharacters(XmlStanza currentStanza) throws IOException;
 
-	public void consumeEndElement(XmlStanza currentStanza) throws IOException;
+	void consumeEndElement(XmlStanza currentStanza) throws IOException;
 
-	public void write(XmlStanza stanza) throws IOException, SocketException;
+	void write(XmlStanza stanza) throws IOException;
 
-	public String getNamespace();
+	String getNamespace();
 
-	public String getNamespaceURI();
+	String getNamespaceURI();
 
-	public default InetAddress getAddress()
+	default InetAddress getAddress()
 	{
 		return null;
 	}
 
-	public default int getPort()
+	default int getPort()
 	{
 		return -1;
 	}

@@ -31,7 +31,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -47,6 +46,7 @@ public class Client extends Application
 	static String[] cipherSuites            = null;
 	static String   authMechanisms          = "";
 	static String   blacklistedServersRegex = "";
+	static String   modulePath              = "";
 
 	static boolean        debug;
 	static Locale         locale;
@@ -128,7 +128,7 @@ public class Client extends Application
 	 */
 	public static ClientCommunicator getCommunicator()
 	{
-		if (Client.communicator == null || Client.communicator.isClosed())
+		if ((Client.communicator == null || Client.communicator.isClosed() && !Client.clientCommService.isRunning()))
 		{
 			Client.clientCommService.restart();
 		}
@@ -221,6 +221,7 @@ public class Client extends Application
 
 		// read client configuration file, if exists
 		Properties properties = new Properties();
+
 		try
 		{
 			File config = new File(configName);
@@ -264,10 +265,7 @@ public class Client extends Application
 				Client.locale = Locale.forLanguageTag(localeProperty);
 				Locale.setDefault(Client.locale);
 
-				String modulePath = properties.getProperty("module_path", null);
-				Client.moduleLoader = ClientModuleLoader
-						.getModuleLoader(ClientCommunicator.CLIENT_NAME, ClientCommunicator.CLIENT_VERSION, modulePath);
-
+				Client.modulePath = properties.getProperty("module_path", null);
 			} else
 			{
 				Logger.error(LegionLogger.STDERR, "No config file found. Stop!");
@@ -284,9 +282,8 @@ public class Client extends Application
 				location = this.getClass().getResource("/niobe/legion/client/fxml/Main.fxml");
 			}
 
-			Client.localeBundle = ResourceBundle.getBundle("niobe.legion.client.locale.Locale",
-														   Client.locale,
-														   new EncodedControl("UTF-8"));
+			Client.localeBundle = ResourceBundle
+					.getBundle("niobe.legion.client.locale.Locale", Client.locale, new EncodedControl("UTF-8"));
 
 			FXMLLoader loader = new FXMLLoader(location, Client.localeBundle);
 			Parent root = loader.load();
@@ -307,14 +304,6 @@ public class Client extends Application
 
 			// try to start communicator
 			Client.getCommunicator();
-
-			// start all client modules
-			List<String> moduleNames = moduleLoader.getModuleNames();
-			if (moduleNames != null)
-			{
-				moduleNames.forEach(moduleLoader::startModule);
-			}
-
 		}
 		catch (IOException e)
 		{
@@ -331,7 +320,7 @@ public class Client extends Application
 		}
 
 		@Override
-		protected ClientCommunicator call() throws Exception
+		protected synchronized ClientCommunicator call() throws Exception
 		{
 			this.updateTitle("CommunicatorTask");
 
@@ -401,6 +390,15 @@ public class Client extends Application
 					} else
 					{
 						new Thread(communicator, "ClientCommunicator").start();
+
+						if (Client.moduleLoader == null)
+						{
+							Platform.runLater(() -> Client.moduleLoader = ClientModuleLoader.getModuleLoader(
+									ClientCommunicator.CLIENT_NAME,
+									ClientCommunicator.CLIENT_VERSION,
+									Client.modulePath));
+						}
+
 						this.succeeded();
 					}
 				}

@@ -15,7 +15,6 @@ import niobe.legion.shared.model.UserEntity;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class UserAdminController implements DatasetReceiver<UserEntity>
 {
@@ -124,11 +123,5 @@ public class UserAdminController implements DatasetReceiver<UserEntity>
 		{
 			this.users.remove(index);
 		}
-	}
-
-	@Override
-	public void removeAll(List<UserEntity> dbObjects)
-	{
-		dbObjects.forEach(this::remove);
 	}
 }

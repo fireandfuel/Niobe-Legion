@@ -1,7 +1,5 @@
 package niobe.legion.shared.module;
 
-import niobe.legion.shared.Communicator;
-import niobe.legion.shared.ICommunicator;
 import niobe.legion.shared.data.IRight;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
@@ -11,18 +9,29 @@ import java.io.IOException;
 import java.net.URLClassLoader;
 
 /**
- * Module status:<br>
- * UNINITIALIZED <-> INITIALIZED <-> RUNNING<br>
- * UNINITIALIZED -> MISSING_DEPENDENCIES<br>
- * UNINITIALIZED -> IN_CONFLICT
+ * Module state transitions:<br>
+ * Load module: UNINITIALIZED -> LOADING -> INITIALIZED<br>
+ * Unload module: INITIALIZED -> UNLOADING -> UNINITIALIZED<br>
+ * Start module: INITIALIZED <-> STARTING -> RUNNING<br>
+ * Stop module: RUNNING <-> STOPPING -> INITIALIZED<br>
+ * Forced stop module: RUNNING -> TERMINATED<br>
+ * Module with missing dependencies: UNINITIALIZED -> MISSING_DEPENDENCIES<br>
+ * Module with conflicts: UNINITIALIZED -> IN_CONFLICT<br>
+ * Module with database conflict (server module only): UNINITIALIZED -> DATABASE_CONFLICT
  */
-public class ModuleInstance
+public abstract class ModuleInstance
 {
 	public final static int UNINITIALIZED        = 0;
-	public final static int INITIALIZED          = 1;
-	public final static int RUNNING              = 2;
+	public final static int LOADING              = 1;
+	public final static int INITIALIZED          = 2;
+	public final static int STARTING             = 3;
+	public final static int RUNNING              = 4;
+	public final static int STOPPING             = 5;
+	public final static int UNLOADING            = 6;
 	public final static int MISSING_DEPENDENCIES = -1;
 	public final static int IN_CONFLICT          = -2;
+	public final static int DATABASE_CONFLICT    = -3;
+	public final static int TERMINATED           = -4;
 
 	private String[] dependencies;
 	private String[] conflicts;
@@ -31,15 +40,13 @@ public class ModuleInstance
 	private String   contact;
 	private String   description;
 
-	private URLClassLoader loader;
-	private IModule        module;
+	private   URLClassLoader loader;
+	protected IModule        module;
 
 	private File   moduleFile;
 	private String moduleClass;
 
-	private IModuleDatabaseManager databaseManager;
-
-	private int status;
+	protected int state;
 
 	public ModuleInstance(String dependencies,
 						  String conflicts,
@@ -58,15 +65,19 @@ public class ModuleInstance
 		this.description = description;
 		this.moduleFile = moduleFile;
 		this.moduleClass = moduleClass;
-		this.status = ModuleInstance.UNINITIALIZED;
+		this.state = ModuleInstance.UNINITIALIZED;
 	}
 
 	/**
-	 * @return the loader
+	 * @param loader the loader to set,
+	 *               only if this instance's loader is not set and parameter is not null
 	 */
-	public URLClassLoader getLoader()
+	public void setLoader(URLClassLoader loader)
 	{
-		return this.loader;
+		if (loader != null && this.loader == null)
+		{
+			this.loader = loader;
+		}
 	}
 
 	/**
@@ -75,15 +86,7 @@ public class ModuleInstance
 	public void setModule(IModule module)
 	{
 		this.module = module;
-		this.status = ModuleInstance.INITIALIZED;
-	}
-
-	/**
-	 * @return the module
-	 */
-	public IModule getModule()
-	{
-		return this.module;
+		this.state = ModuleInstance.INITIALIZED;
 	}
 
 	/**
@@ -152,40 +155,32 @@ public class ModuleInstance
 
 	public synchronized void start()
 	{
-		if (this.module != null && this.status == ModuleInstance.INITIALIZED && this.module.startModule())
+		if (this.module != null && this.state == ModuleInstance.INITIALIZED)
 		{
-			this.status = ModuleInstance.RUNNING;
+			this.state = ModuleInstance.STARTING;
+			if (this.module.startModule())
+			{
+				this.state = ModuleInstance.RUNNING;
+			} else
+			{
+				this.state = INITIALIZED;
+			}
 		}
 	}
 
-	public synchronized void stop()
-	{
-		if (this.module != null && this.status == ModuleInstance.RUNNING)
-		{
-			this.module.stopModule();
-			if (this.module.getCommunicator() != null && this.module.getCommunicator().getNamespaceURI() != null &&
-				!this.module.getCommunicator().getNamespaceURI().isEmpty())
-			{
-				Communicator.removeModuleCommunicator(this.module.getCommunicator().getNamespaceURI());
-			}
-			this.status = ModuleInstance.INITIALIZED;
-		}
-	}
+	public abstract void stop();
 
 	public synchronized void unload()
 	{
 		if (this.loader != null)
 		{
-			if (this.status == ModuleInstance.RUNNING)
+			if (this.state == ModuleInstance.INITIALIZED)
 			{
-				this.stop();
-			}
-			if (this.status == ModuleInstance.INITIALIZED)
-			{
+				this.state = ModuleInstance.UNLOADING;
 				try
 				{
 					this.loader.close();
-					this.status = ModuleInstance.UNINITIALIZED;
+					this.state = ModuleInstance.UNINITIALIZED;
 				}
 				catch (IOException e)
 				{
@@ -195,73 +190,62 @@ public class ModuleInstance
 		}
 	}
 
-	public synchronized int getStatus()
+	public synchronized int getState()
 	{
-		return this.status;
+		return this.state;
 	}
 
-	public synchronized void setStatus(int status)
+	public synchronized void setState(int state)
 	{
-		if (this.status == ModuleInstance.UNINITIALIZED && status == ModuleInstance.MISSING_DEPENDENCIES &&
-			status == ModuleInstance.IN_CONFLICT)
+		if (this.state == ModuleInstance.UNINITIALIZED && (state == ModuleInstance.MISSING_DEPENDENCIES ||
+														   state == ModuleInstance.IN_CONFLICT ||
+														   state == ModuleInstance.DATABASE_CONFLICT))
 		{
-			this.status = status;
+			this.state = state;
 		}
 	}
 
-	private String getStatusAsString()
+	protected String getStateAsString()
 	{
-		switch (this.status)
+		switch (this.state)
 		{
+			case TERMINATED:
+				return "terminated";
 			case MISSING_DEPENDENCIES:
 				return "missing dependencies";
 			case IN_CONFLICT:
 				return "in conflict";
+			case DATABASE_CONFLICT:
+				return "database in conflict";
 			case UNINITIALIZED:
 				return "uninitialized";
 			case INITIALIZED:
 				return "initialized";
+			case STARTING:
+				return "starting";
 			case RUNNING:
 				return "running";
+			case STOPPING:
+				return "stopping";
 			default:
 				return "not set";
 		}
 	}
 
-	public ICommunicator getCommunicator()
-	{
-		if (this.module == null || this.status == MISSING_DEPENDENCIES || this.status == IN_CONFLICT ||
-			this.status == UNINITIALIZED)
-		{
-			return null;
-		}
-		return this.module.getCommunicator();
-	}
-
 	public IRight[] getRights()
 	{
-		if (this.module == null || this.status == MISSING_DEPENDENCIES || this.status == IN_CONFLICT ||
-			this.status == UNINITIALIZED)
+		if (this.module == null || this.state == MISSING_DEPENDENCIES || this.state == IN_CONFLICT ||
+			this.state == UNINITIALIZED || this.state == DATABASE_CONFLICT || this.state == TERMINATED)
 		{
 			return null;
 		}
 		return this.module.getRights();
 	}
 
-	public void setDatabaseManager(IModuleDatabaseManager databaseManager)
-	{
-		this.databaseManager = databaseManager;
-	}
-
-	public IModuleDatabaseManager getDatabaseManager()
-	{
-		return this.databaseManager;
-	}
-
 	@Override
 	public String toString()
 	{
 		return "ModuleInstance name=" + this.name + ", version=" + this.version + ", class=" + this.moduleClass +
-			   ", status=" + this.getStatusAsString();
+			   ", state=" + this.getStateAsString();
 	}
 }

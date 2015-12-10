@@ -15,7 +15,11 @@ import java.util.List;
 @Entity(name = "legion_module")
 @NamedQueries({
 					  @NamedQuery(name = "module.get",
-								  query = "SELECT c FROM legion_module c")})
+								  query = "SELECT entity FROM legion_module entity"),
+					  @NamedQuery(name = "module.getByName",
+								  query = "SELECT entity FROM legion_module entity WHERE entity.name = :name AND " +
+										  "entity.version = :version"),
+			  })
 public class ModuleEntity implements IEntity
 {
 	@Id
@@ -24,13 +28,16 @@ public class ModuleEntity implements IEntity
 	private int id;
 
 	private String  name;
+	private String  version;
+	private String  fileName;
+
 	private boolean activated;
 
 	@OneToMany(cascade = CascadeType.ALL,
 			   fetch = FetchType.EAGER)
 	@JoinColumn(name = "moduleId",
 				referencedColumnName = "id")
-	private List<ModuleTableRegistryEntity> moduleTableRegistryList;
+	private List<ModuleDatabaseEntity> moduleTables;
 
 	public String getName()
 	{
@@ -40,6 +47,26 @@ public class ModuleEntity implements IEntity
 	public void setName(String name)
 	{
 		this.name = name;
+	}
+
+	public String getVersion()
+	{
+		return version;
+	}
+
+	public void setVersion(String version)
+	{
+		this.version = version;
+	}
+
+	public String getFileName()
+	{
+		return fileName;
+	}
+
+	public void setFileName(String fileName)
+	{
+		this.fileName = fileName;
 	}
 
 	public boolean isActivated()
@@ -52,14 +79,14 @@ public class ModuleEntity implements IEntity
 		this.activated = activated;
 	}
 
-	public List<ModuleTableRegistryEntity> getModuleTableRegistryList()
+	public List<ModuleDatabaseEntity> getModuleTables()
 	{
-		return moduleTableRegistryList;
+		return moduleTables;
 	}
 
-	public void setModuleTableRegistryList(List<ModuleTableRegistryEntity> moduleTableRegistryList)
+	public void setModuleTables(List<ModuleDatabaseEntity> moduleTables)
 	{
-		this.moduleTableRegistryList = moduleTableRegistryList;
+		this.moduleTables = moduleTables;
 	}
 
 	@Override

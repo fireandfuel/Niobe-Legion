@@ -4,7 +4,7 @@
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<Tab xmlns:fx="http://javafx.com/fxml" fx:controller="niobe.legion.client.gui.admin.AdminTabController" closable="false"
+<Tab xmlns:fx="http://javafx.com/fxml" fx:controller="niobe.legion.client.gui.admin.AdminTabController"
 	 text="%administration">
 	<BorderPane>
 		<left>

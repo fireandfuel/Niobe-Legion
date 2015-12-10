@@ -27,5 +27,7 @@
 		<module>shared</module>
 		<module>client</module>
 		<module>server</module>
+		<module>test-client-module</module>
+		<module>test-server-module</module>
 	</modules>
 </project>

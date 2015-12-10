@@ -15,7 +15,6 @@ import niobe.legion.shared.model.GroupEntity;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class GroupAdminController implements DatasetReceiver<GroupEntity>
 {
@@ -123,11 +122,5 @@ public class GroupAdminController implements DatasetReceiver<GroupEntity>
 		{
 			this.groups.remove(index);
 		}
-	}
-
-	@Override
-	public void removeAll(List<GroupEntity> dbObjects)
-	{
-		dbObjects.forEach(this::remove);
 	}
 }

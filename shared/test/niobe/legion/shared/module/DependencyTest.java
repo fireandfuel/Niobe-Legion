@@ -1,5 +1,6 @@
 package niobe.legion.shared.module;
 
-public interface IModuleDatabaseManager
+public class DependencyTest
 {
+
 }

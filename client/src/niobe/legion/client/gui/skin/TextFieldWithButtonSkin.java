@@ -1,15 +1,11 @@
 package niobe.legion.client.gui.skin;
 
 import com.sun.javafx.scene.control.skin.TextFieldSkin;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 
@@ -50,46 +46,26 @@ public class TextFieldWithButtonSkin extends TextFieldSkin
 	{
 
 		final TextField textField = this.getSkinnable();
-		this.rightButton.setOnMousePressed(new EventHandler<MouseEvent>()
-		{
-			@Override
-			public void handle(MouseEvent event)
+		this.rightButton.setOnMousePressed(event -> {
+			if (TextFieldWithButtonSkin.this.textField.isEditable() &&
+				!TextFieldWithButtonSkin.this.textField.isDisabled())
 			{
-				if (TextFieldWithButtonSkin.this.textField.isEditable() &&
-					!TextFieldWithButtonSkin.this.textField.isDisabled())
-				{
-					TextFieldWithButtonSkin.this.rightButtonPressed();
-				}
+				TextFieldWithButtonSkin.this.rightButtonPressed();
 			}
 		});
-		this.rightButton.setOnMouseReleased(new EventHandler<MouseEvent>()
-		{
-			@Override
-			public void handle(MouseEvent event)
+		this.rightButton.setOnMouseReleased(event -> {
+			if (TextFieldWithButtonSkin.this.textField.isEditable() &&
+				!TextFieldWithButtonSkin.this.textField.isDisabled())
 			{
-				if (TextFieldWithButtonSkin.this.textField.isEditable() &&
-					!TextFieldWithButtonSkin.this.textField.isDisabled())
-				{
-					TextFieldWithButtonSkin.this.rightButtonReleased();
-				}
+				TextFieldWithButtonSkin.this.rightButtonReleased();
 			}
 		});
 
-		textField.textProperty().addListener(new ChangeListener<String>()
-		{
-			@Override
-			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue)
-			{
-				TextFieldWithButtonSkin.this.textChanged();
-			}
+		textField.textProperty().addListener((observable, oldValue, newValue) -> {
+			TextFieldWithButtonSkin.this.textChanged();
 		});
-		textField.focusedProperty().addListener(new ChangeListener<Boolean>()
-		{
-			@Override
-			public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
-			{
-				TextFieldWithButtonSkin.this.focusChanged();
-			}
+		textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+			TextFieldWithButtonSkin.this.focusChanged();
 		});
 	}
 

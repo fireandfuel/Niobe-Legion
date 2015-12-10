@@ -127,7 +127,7 @@ public class ClientCommunicator extends Communicator
 												  Modality.NONE,
 												  true);
 
-					Communicator.addModuleCommunicator(debugController);
+					this.addModuleCommunicator(debugController);
 				} else
 				{
 					debugController.writeMessage("reconnected " + LocalDateTime.now().toString());

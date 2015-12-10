@@ -623,7 +623,7 @@ public class ServerCommunicator extends Communicator
 									@Override
 									public void run()
 									{
-										Database db = Server.getDatabase();
+										LegionDatabase db = Server.getDatabase();
 										List<Object> datasetsToSend = new ArrayList<Object>();
 
 										XmlMarshaller.unmarshal(stanzas).stream().filter(dataset -> dataset != null)
@@ -781,7 +781,7 @@ public class ServerCommunicator extends Communicator
 			@Override
 			public void run()
 			{
-				Database db = Server.getDatabase();
+				LegionDatabase db = Server.getDatabase();
 
 				List<?> result = null;
 				if (queryName != null && !queryName.isEmpty())

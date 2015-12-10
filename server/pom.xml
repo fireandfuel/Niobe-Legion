@@ -27,29 +27,45 @@
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
-			<version>1.2.0</version>
+			<version>1.3.0</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<version>1.4.187</version>
+			<version>1.4.190</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>niobe.legion</groupId>
 			<artifactId>niobe-legion-shared</artifactId>
 			<version>0</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>4.3.10.Final</version>
+			<version>5.0.3.Final</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-entitymanager</artifactId>
-			<version>4.3.10.Final</version>
+			<version>5.0.3.Final</version>
+			<scope>compile</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.10.19</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
@@ -73,8 +89,7 @@
 							<mainClass>niobe.legion.server.Server</mainClass>
 						</manifest>
 						<manifestEntries>
-							<mode>Created-By</mode>
-							<key>fireandfuel (fireandfuel@hotmail.de)</key>
+							<author>fireandfuel (fireandfuel@hotmail.de)</author>
 						</manifestEntries>
 					</archive>
 					<outputDirectory>../package/server</outputDirectory>
@@ -108,6 +123,21 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.maven.surefire</groupId>
+						<artifactId>surefire-junit47</artifactId>
+						<version>2.18.1</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<runOrder>filesystem</runOrder>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -28,11 +28,25 @@
 			<groupId>niobe.legion</groupId>
 			<artifactId>niobe-legion-shared</artifactId>
 			<version>0</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>niobe.metro</groupId>
 			<artifactId>metro-progress-indicator</artifactId>
 			<version>1.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.10.19</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
@@ -58,8 +72,7 @@
 							<mainClass>niobe.legion.client.Client</mainClass>
 						</manifest>
 						<manifestEntries>
-							<mode>Created-By</mode>
-							<key>fireandfuel (fireandfuel@hotmail.de)</key>
+							<author>fireandfuel (fireandfuel@hotmail.de)</author>
 						</manifestEntries>
 					</archive>
 					<outputDirectory>../package/client</outputDirectory>
@@ -93,6 +106,21 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.maven.surefire</groupId>
+						<artifactId>surefire-junit47</artifactId>
+						<version>2.18.1</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<runOrder>filesystem</runOrder>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

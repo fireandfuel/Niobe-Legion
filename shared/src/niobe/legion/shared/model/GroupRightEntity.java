@@ -16,7 +16,7 @@ import java.util.List;
 @Entity(name = "legion_group_right")
 @NamedQueries({
 					  @NamedQuery(name = "group_right.get",
-								  query = "SELECT c FROM legion_group_right c where c.id = :id")})
+								  query = "SELECT entity FROM legion_group_right entity where entity.id = :id")})
 public class GroupRightEntity implements IEntity
 {
 	@Id

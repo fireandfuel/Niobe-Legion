@@ -4,16 +4,18 @@ import java.util.List;
 
 public interface DatasetReceiver<T>
 {
-	public void set(T dataset);
+	void set(T dataset);
 
-	public default void setAll(List<T> datasets)
+	default void setAll(List<T> datasets)
 	{
 		datasets.forEach(this::set);
 	}
 
-	public void clear();
+	void clear();
 
-	public void remove(T dataset);
+	void remove(T dataset);
 
-	public void removeAll(List<T> datasets);
+	default void removeAll(List<T> datasets){
+		datasets.forEach(this::remove);
+	}
 }

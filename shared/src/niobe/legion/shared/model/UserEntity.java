@@ -14,8 +14,8 @@ import javax.persistence.OneToOne;
 @Entity(name = "legion_user")
 @NamedQueries({
 					  @NamedQuery(name = "user.get",
-								  query = "SELECT c FROM legion_user c"), @NamedQuery(name = "user.getByName",
-																					  query = "SELECT c FROM legion_user c WHERE c.name = :name")})
+								  query = "SELECT entity FROM legion_user entity"), @NamedQuery(name = "user.getByName",
+																								query = "SELECT entity FROM legion_user entity WHERE entity.name = :name")})
 public class UserEntity implements IEntity
 {
 	@Id

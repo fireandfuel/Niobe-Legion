@@ -13,7 +13,6 @@ import niobe.legion.shared.data.XmlStanza;
 
 import javax.xml.stream.XMLStreamConstants;
 import java.io.IOException;
-import java.net.SocketException;
 import java.time.LocalDateTime;
 
 public class DebugController implements ICommunicator, ICloseableDialogController, XMLStreamConstants
@@ -94,7 +93,7 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
 	}
 
 	@Override
-	public void write(XmlStanza stanza) throws IOException, SocketException
+	public void write(XmlStanza stanza) throws IOException
 	{
 		if (stanza != null && stanza.getName() != null)
 		{

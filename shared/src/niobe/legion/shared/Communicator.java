@@ -41,10 +41,10 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 	public static final String DEBUG_NAMESPACE     = "debug";
 	public static final String DEBUG_NAMESPACE_URI = "ashnurazg.de/niobe/legion_debug";
 
-	private static final LegionSaslProvider             SASL_PROVIDER        = new LegionSaslProvider();
-	private static final HashMap<String, ICommunicator> MODULE_COMMUNICATORS = new HashMap<String, ICommunicator>();
+	private static final LegionSaslProvider SASL_PROVIDER = new LegionSaslProvider();
 
-	protected final HashMap<Long, List<XmlStanza>> cachedStanzas = new HashMap<Long, List<XmlStanza>>();
+	private final   HashMap<String, ICommunicator> moduleCommunicators = new HashMap<String, ICommunicator>();
+	protected final HashMap<Long, List<XmlStanza>> cachedStanzas       = new HashMap<Long, List<XmlStanza>>();
 
 	static
 	{
@@ -86,7 +86,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 		ModuleRightManager.addRights(LegionRight.values());
 	}
 
-	public static void addModuleCommunicator(ICommunicator communicator)
+	public void addModuleCommunicator(ICommunicator communicator)
 	{
 
 		if (communicator != null)
@@ -96,12 +96,12 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 				DEBUG_COMMUNICATOR = communicator;
 			} else
 			{
-				Communicator.MODULE_COMMUNICATORS.put(communicator.getNamespaceURI(), communicator);
+				moduleCommunicators.put(communicator.getNamespaceURI(), communicator);
 			}
 		}
 	}
 
-	public static void removeModuleCommunicator(String namespaceURI)
+	public void removeModuleCommunicator(String namespaceURI)
 	{
 		if (namespaceURI != null)
 		{
@@ -110,7 +110,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 				DEBUG_COMMUNICATOR = null;
 			} else
 			{
-				Communicator.MODULE_COMMUNICATORS.remove(namespaceURI);
+				moduleCommunicators.remove(namespaceURI);
 			}
 		}
 	}
@@ -187,7 +187,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 							for (int i = 0; i < this.reader.getAttributeCount(); i++)
 							{
 								this.currentStanza.putAttribute(this.reader.getAttributeLocalName(i),
-																	   this.reader.getAttributeValue(i));
+																this.reader.getAttributeValue(i));
 								Logger.debug(LegionLogger.RECEIVED,
 											 "attribute " + this.reader.getAttributeLocalName(i) + " : " +
 											 this.reader.getAttributeValue(i));
@@ -214,7 +214,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 								} else
 								{
 									ICommunicator communicator =
-											Communicator.MODULE_COMMUNICATORS.get(this.currentStanza.getNameSpaceURI());
+											moduleCommunicators.get(this.currentStanza.getNameSpaceURI());
 									if (communicator != null)
 									{
 										communicator.consumeStartElement(this.currentStanza);
@@ -247,7 +247,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 							} else
 							{
 								ICommunicator communicator =
-										Communicator.MODULE_COMMUNICATORS.get(this.currentStanza.getNameSpaceURI());
+										moduleCommunicators.get(this.currentStanza.getNameSpaceURI());
 								if (communicator != null)
 								{
 									communicator.consumeCharacters(this.currentStanza);
@@ -277,7 +277,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 							} else
 							{
 								ICommunicator communicator =
-										Communicator.MODULE_COMMUNICATORS.get(this.currentStanza.getNameSpaceURI());
+										moduleCommunicators.get(this.currentStanza.getNameSpaceURI());
 								if (communicator != null)
 								{
 									communicator.consumeEndElement(this.currentStanza);

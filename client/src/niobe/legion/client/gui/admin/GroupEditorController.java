@@ -219,10 +219,4 @@ public class GroupEditorController implements ICloseableDialogController, Datase
 	{
 
 	}
-
-	@Override
-	public void removeAll(List<GroupRightEntity> datasets)
-	{
-
-	}
 }
