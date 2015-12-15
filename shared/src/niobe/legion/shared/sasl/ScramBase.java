@@ -24,6 +24,8 @@
 
 package niobe.legion.shared.sasl;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.callback.CallbackHandler;
@@ -32,7 +34,9 @@ import javax.xml.bind.DatatypeConverter;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
+import java.security.Security;
 import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +47,10 @@ import java.util.Random;
  */
 public class ScramBase
 {
+	static
+	{
+		Security.addProvider(new BouncyCastleProvider());
+	}
 
 	private static final byte[] INT1 = new byte[]{0, 0, 0, 1};
 
@@ -78,13 +86,59 @@ public class ScramBase
 		this.mechanism = "SCRAM-";
 		hashAlgorithm = hashAlgorithm.toUpperCase();
 
-		if ("SHA-1".equals(hashAlgorithm))
-		{
-			this.hmacAlgorithm = "HmacSHA1";
-		} else
-		{
-			throw new UnsupportedOperationException("Hash algorithm not supported.");
+		switch (hashAlgorithm){
+			// MD5
+			case "MD5":
+				this.hmacAlgorithm = "HMac-MD5";
+				break;
+			// SHA-1
+			case "SHA-1":
+				this.hmacAlgorithm = "HMac-SHA1";
+				break;
+			// SHA-2 algorithms:
+			case "SHA224":
+				this.hmacAlgorithm = "HMac-SHA224";
+				break;
+			case "SHA256":
+				this.hmacAlgorithm = "HMac-SHA256";
+				break;
+			case "SHA384":
+				this.hmacAlgorithm = "HMac-SHA384";
+				break;
+			case "SHA512":
+				this.hmacAlgorithm = "HMac-SHA512";
+				break;
+			// SHA-3 algorithms (alias Keccak):
+			case "KECCAK224":
+				this.hmacAlgorithm = "HMac-KECCAK224";
+				break;
+			case "KECCAK256":
+				this.hmacAlgorithm = "HMac-KECCAK256";
+				break;
+			case "KECCAK288":
+				this.hmacAlgorithm = "HMac-KECCAK288";
+				break;
+			case "KECCAK384":
+				this.hmacAlgorithm = "HMac-KECCAK384";
+				break;
+			case "KECCAK512":
+				this.hmacAlgorithm = "HMac-KECCAK512";
+				break;
+			// RipeMD algorithms
+			case "RipeMD128":
+				this.hmacAlgorithm = "HMac-RipeMD128";
+				break;
+			case "RipeMD160":
+				this.hmacAlgorithm = "HMac-RipeMD160";
+				break;
+			// Whirlpool
+			case "Whirlpool":
+				this.hmacAlgorithm = "HMac-Whirlpool";
+				break;
+			default:
+				throw new UnsupportedOperationException("Hash algorithm not supported.");
 		}
+
 		this.mechanism += hashAlgorithm;
 		this.hashAlgorithm = hashAlgorithm;
 		this.callbackHandler = callbackHandler;
@@ -181,7 +235,8 @@ public class ScramBase
 	 */
 	protected byte[] computeClientSignature(byte[] clientKey, String authMessage) throws
 																				  InvalidKeyException,
-																				  NoSuchAlgorithmException
+																				  NoSuchAlgorithmException,
+																				  NoSuchProviderException
 	{
 		byte[] storedKey = this.computeStoredKey(clientKey);
 		// ClientSignature := HMAC(StoredKey, AuthMessage)
@@ -214,7 +269,8 @@ public class ScramBase
 	 */
 	protected byte[] computeSaltedPassword(char[] password, byte[] salt, int iterationCount) throws
 																							 InvalidKeyException,
-																							 NoSuchAlgorithmException
+																							 NoSuchAlgorithmException,
+																							 NoSuchProviderException
 	{
 		// SaltedPassword := Hi(Normalize(password), salt, i)
 		if (password != null)
@@ -232,7 +288,10 @@ public class ScramBase
 	 * @throws InvalidKeyException
 	 * @throws NoSuchAlgorithmException
 	 */
-	protected byte[] computeClientKey(byte[] saltedPassword) throws InvalidKeyException, NoSuchAlgorithmException
+	protected byte[] computeClientKey(byte[] saltedPassword) throws
+															 InvalidKeyException,
+															 NoSuchAlgorithmException,
+															 NoSuchProviderException
 	{
 		// ClientKey := HMAC(SaltedPassword, "Client Key")
 		return this.hmac(saltedPassword, ScramBase.CLIENT_KEY);
@@ -245,7 +304,7 @@ public class ScramBase
 	 * @return The stored key.
 	 * @throws NoSuchAlgorithmException
 	 */
-	protected byte[] computeStoredKey(byte[] clientKey) throws NoSuchAlgorithmException
+	protected byte[] computeStoredKey(byte[] clientKey) throws NoSuchAlgorithmException, NoSuchProviderException
 	{
 		// StoredKey := H(ClientKey)
 		return this.h(clientKey);
@@ -259,7 +318,10 @@ public class ScramBase
 	 * @throws InvalidKeyException
 	 * @throws NoSuchAlgorithmException
 	 */
-	protected byte[] computeServerKey(byte[] saltedPassword) throws InvalidKeyException, NoSuchAlgorithmException
+	protected byte[] computeServerKey(byte[] saltedPassword) throws
+															 InvalidKeyException,
+															 NoSuchAlgorithmException,
+															 NoSuchProviderException
 	{
 		// ServerKey := HMAC(SalterPassword, "Server Key")
 		return this.hmac(saltedPassword, ScramBase.SERVER_KEY);
@@ -276,7 +338,8 @@ public class ScramBase
 	 */
 	protected byte[] computeServerSignature(byte[] serverKey, String authMessage) throws
 																				  InvalidKeyException,
-																				  NoSuchAlgorithmException
+																				  NoSuchAlgorithmException,
+																				  NoSuchProviderException
 	{
 		return this.hmac(serverKey, authMessage.getBytes());
 	}
@@ -288,9 +351,9 @@ public class ScramBase
 	 *
 	 * @param str The byte array.
 	 */
-	protected byte[] h(byte[] str) throws NoSuchAlgorithmException
+	protected byte[] h(byte[] str) throws NoSuchAlgorithmException, NoSuchProviderException
 	{
-		MessageDigest digest = MessageDigest.getInstance(this.hashAlgorithm);
+		MessageDigest digest = MessageDigest.getInstance(this.hashAlgorithm, "BC");
 		digest.update(str);
 		return digest.digest();
 	}
@@ -308,9 +371,12 @@ public class ScramBase
 	 * @throws NoSuchAlgorithmException
 	 * @throws InvalidKeyException
 	 */
-	protected byte[] hmac(byte[] key, byte[] str) throws NoSuchAlgorithmException, InvalidKeyException
+	protected byte[] hmac(byte[] key, byte[] str) throws
+												  NoSuchAlgorithmException,
+												  InvalidKeyException,
+												  NoSuchProviderException
 	{
-		Mac mac = Mac.getInstance(this.hmacAlgorithm);
+		Mac mac = Mac.getInstance(this.hmacAlgorithm, "BC");
 		mac.init(new SecretKeySpec(key, this.hmacAlgorithm));
 		mac.update(str);
 		return mac.doFinal();
@@ -326,9 +392,12 @@ public class ScramBase
 	 * @throws java.security.NoSuchAlgorithmException
 	 * @throws java.security.InvalidKeyException
 	 */
-	byte[] hi(byte[] str, byte[] salt, int i) throws NoSuchAlgorithmException, InvalidKeyException
+	byte[] hi(byte[] str, byte[] salt, int i) throws
+											  NoSuchAlgorithmException,
+											  InvalidKeyException,
+											  NoSuchProviderException
 	{
-		Mac hmac = Mac.getInstance(this.hmacAlgorithm);
+		Mac hmac = Mac.getInstance(this.hmacAlgorithm, "BC");
 		hmac.init(new SecretKeySpec(str, this.hmacAlgorithm));
 
 		// U1 := HMAC(str, salt + INT(1))

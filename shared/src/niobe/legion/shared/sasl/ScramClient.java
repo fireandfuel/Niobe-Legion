@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -186,7 +187,7 @@ final class ScramClient extends ScramBase implements SaslClient
 						return new byte[0];
 					}
 				}
-				catch (NoSuchAlgorithmException | InvalidKeyException e)
+				catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException e)
 				{
 					throw new SaslException(e.getMessage(), e);
 				}
@@ -242,7 +243,7 @@ final class ScramClient extends ScramBase implements SaslClient
 					return clientFinalMessage.getBytes();
 
 				}
-				catch (NoSuchAlgorithmException | InvalidKeyException e)
+				catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException e)
 				{
 					throw new SaslException(e.getMessage(), e);
 				}

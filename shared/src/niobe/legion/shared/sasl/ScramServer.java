@@ -37,6 +37,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
@@ -238,7 +239,7 @@ class ScramServer extends ScramBase implements SaslServer
 				}
 
 			}
-			catch (InvalidKeyException | NoSuchAlgorithmException e)
+			catch (InvalidKeyException | NoSuchAlgorithmException  | NoSuchProviderException e)
 			{
 				throw new SaslException("SCRAM", e);
 			}

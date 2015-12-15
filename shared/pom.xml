@@ -5,7 +5,7 @@
 
 	<groupId>niobe.legion</groupId>
 	<artifactId>niobe-legion-shared</artifactId>
-	<version>0</version>
+	<version>${global.version}</version>
 	<packaging>jar</packaging>
 	<name>Niobe Legion Shared</name>
 
@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.51</version>
+			<version>1.53</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

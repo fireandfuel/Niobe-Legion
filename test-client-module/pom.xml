@@ -6,8 +6,7 @@
 
 	<artifactId>niobe-legion-test-client-module</artifactId>
 	<groupId>niobe.legion</groupId>
-	<version>0</version>
-
+	<version>${global.version}</version>
 	<name>Niobe Legion Test Client Module</name>
 
 	<properties>
