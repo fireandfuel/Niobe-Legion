@@ -5,7 +5,7 @@
 
 	<groupId>niobe.legion</groupId>
 	<artifactId>niobe-legion</artifactId>
-	<version>${global.version}</version>
+	<version>0.1</version>
 	<packaging>pom</packaging>
 	<name>Niobe Legion Package</name>
 
@@ -14,7 +14,6 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<project.build.creator>fireandfuel (fireandfuel@hotmail.de)</project.build.creator>
-		<global.version>0</global.version>
 	</properties>
 
 	<licenses>

@@ -5,7 +5,7 @@
 
 	<groupId>niobe.legion</groupId>
 	<artifactId>niobe-legion-client</artifactId>
-	<version>${global.version}</version>
+	<version>0.1</version>
 	<packaging>jar</packaging>
 	<name>Niobe Legion Client</name>
 
@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>niobe.legion</groupId>
 			<artifactId>niobe-legion-shared</artifactId>
-			<version>0</version>
+			<version>0.1</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

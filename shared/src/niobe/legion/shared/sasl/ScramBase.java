@@ -1,27 +1,3 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2014 Christian Schudt
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 package niobe.legion.shared.sasl;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -43,7 +19,7 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * @author Christian Schudt
+ * @author Christian Schudt, fireandfuel
  */
 public class ScramBase
 {
@@ -84,7 +60,6 @@ public class ScramBase
 																									 SaslException
 	{
 		this.mechanism = "SCRAM-";
-		hashAlgorithm = hashAlgorithm.toUpperCase();
 
 		switch (hashAlgorithm){
 			// MD5
@@ -96,32 +71,32 @@ public class ScramBase
 				this.hmacAlgorithm = "HMac-SHA1";
 				break;
 			// SHA-2 algorithms:
-			case "SHA224":
+			case "SHA-224":
 				this.hmacAlgorithm = "HMac-SHA224";
 				break;
-			case "SHA256":
+			case "SHA-256":
 				this.hmacAlgorithm = "HMac-SHA256";
 				break;
-			case "SHA384":
+			case "SHA-384":
 				this.hmacAlgorithm = "HMac-SHA384";
 				break;
-			case "SHA512":
+			case "SHA-512":
 				this.hmacAlgorithm = "HMac-SHA512";
 				break;
 			// SHA-3 algorithms (alias Keccak):
-			case "KECCAK224":
+			case "KECCAK-224":
 				this.hmacAlgorithm = "HMac-KECCAK224";
 				break;
-			case "KECCAK256":
+			case "KECCAK-256":
 				this.hmacAlgorithm = "HMac-KECCAK256";
 				break;
-			case "KECCAK288":
+			case "KECCAK-288":
 				this.hmacAlgorithm = "HMac-KECCAK288";
 				break;
-			case "KECCAK384":
+			case "KECCAK-384":
 				this.hmacAlgorithm = "HMac-KECCAK384";
 				break;
-			case "KECCAK512":
+			case "KECCAK-512":
 				this.hmacAlgorithm = "HMac-KECCAK512";
 				break;
 			// RipeMD algorithms

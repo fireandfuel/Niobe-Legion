@@ -6,7 +6,7 @@
 
 	<artifactId>niobe-legion-test-server-module</artifactId>
 	<groupId>niobe.legion</groupId>
-	<version>${global.version}</version>
+	<version>0.1</version>
 	<name>Niobe Legion Test Client Module</name>
 
 	<properties>
@@ -15,6 +15,13 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<project.build.creator>fireandfuel (fireandfuel@hotmail.de)</project.build.creator>
 	</properties>
+
+	<parent>
+		<groupId>niobe.legion</groupId>
+		<artifactId>niobe-legion</artifactId>
+		<version>0.1</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
 
 	<licenses>
 		<license>
@@ -27,13 +34,13 @@
 		<dependency>
 			<groupId>niobe.legion</groupId>
 			<artifactId>niobe-legion-server</artifactId>
-			<version>0</version>
+			<version>0.1</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>niobe.legion</groupId>
 			<artifactId>niobe-legion-shared</artifactId>
-			<version>0</version>
+			<version>0.1</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
