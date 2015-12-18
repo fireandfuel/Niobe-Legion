@@ -5,5 +5,5 @@ package niobe.legion.shared.logger;
  */
 public interface ILogger
 {
-	String getLoggerName();
+    String getLoggerName();
 }

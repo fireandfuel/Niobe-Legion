@@ -1,5 +1,7 @@
 package niobe.legion.client.gui.connect;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -7,112 +9,107 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javax.security.sasl.SaslException;
 import niobe.legion.client.Client;
 import niobe.legion.client.gui.ICloseableDialogController;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 
-import javax.security.sasl.SaslException;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-
 public class ReloginController implements ICloseableDialogController
 {
-	@FXML
-	private TextField userName;
+    @FXML
+    private TextField userName;
 
-	@FXML
-	private PasswordField password;
+    @FXML
+    private PasswordField password;
 
-	@FXML
-	private Button login;
+    @FXML
+    private Button login;
 
-	@FXML
-	private Label status;
+    @FXML
+    private Label status;
 
-	private Stage stage;
+    private Stage stage;
 
-	@FXML
-	private void initialize()
-	{
-		this.status.setText(Client.getLocalisation("loginEnterUserNameAndPassword"));
-		if (this.userName == null || this.password == null)
-		{
-			this.login.setDisable(true);
-		} else
-		{
-			Platform.runLater(() -> ReloginController.this.userName.requestFocus());
-		}
-	}
+    @FXML
+    private void initialize()
+    {
+        this.status.setText(Client.getLocalisation("loginEnterUserNameAndPassword"));
+        if(this.userName == null || this.password == null)
+        {
+            this.login.setDisable(true);
+        } else
+        {
+            Platform.runLater(() -> ReloginController.this.userName.requestFocus());
+        }
+    }
 
-	@FXML
-	private void login() throws UnsupportedEncodingException, SaslException
-	{
-		if (this.userName != null && this.userName.getText() != null && !this.userName.getText().isEmpty())
-		{
-			if (this.password != null && this.password.getText() != null && !this.password.getText().isEmpty())
-			{
-				this.login.setDisable(true);
-				this.userName.setEditable(false);
-				this.password.setEditable(false);
-				try
-				{
-					this.status.setText(Client.getLocalisation("loginAuthenticate"));
-					Client.getCommunicator().login(this.userName.getText(), this.password.getText().toCharArray());
-				}
-				catch (IOException e)
-				{
-					Logger.exception(LegionLogger.STDERR, e);
-				}
-			} else
-			{
-				Client.getFxController().showLightweightDialog(Client.getLocalisation("loginEnterPassword"));
-			}
-		} else
-		{
-			Client.getFxController().showLightweightDialog(Client.getLocalisation("loginEnterUserNameAndPassword"));
-		}
-	}
+    @FXML
+    private void login() throws UnsupportedEncodingException, SaslException
+    {
+        if(this.userName != null && this.userName.getText() != null && !this.userName.getText().isEmpty())
+        {
+            if(this.password != null && this.password.getText() != null && !this.password.getText().isEmpty())
+            {
+                this.login.setDisable(true);
+                this.userName.setEditable(false);
+                this.password.setEditable(false);
+                try
+                {
+                    this.status.setText(Client.getLocalisation("loginAuthenticate"));
+                    Client.getCommunicator().login(this.userName.getText(), this.password.getText().toCharArray());
+                } catch(IOException e)
+                {
+                    Logger.exception(LegionLogger.STDERR, e);
+                }
+            } else
+            {
+                Client.getFxController().showLightweightDialog(Client.getLocalisation("loginEnterPassword"));
+            }
+        } else
+        {
+            Client.getFxController().showLightweightDialog(Client.getLocalisation("loginEnterUserNameAndPassword"));
+        }
+    }
 
-	public void loginFailed(final int sender)
-	{
-		if (Platform.isFxApplicationThread())
-		{
-			this.status
-					.setText(Client.getLocalisation("loginAuthenticationFailed"));
-			this.login.setDisable(false);
-			this.userName.setEditable(true);
-			this.password.setEditable(true);
-		} else
-		{
-			Platform.runLater(() -> ReloginController.this.loginFailed(sender));
-		}
-	}
+    public void loginFailed(final int sender)
+    {
+        if(Platform.isFxApplicationThread())
+        {
+            this.status.setText(Client.getLocalisation("loginAuthenticationFailed"));
+            this.login.setDisable(false);
+            this.userName.setEditable(true);
+            this.password.setEditable(true);
+        } else
+        {
+            Platform.runLater(() -> ReloginController.this.loginFailed(sender));
+        }
+    }
 
-	@FXML
-	private void cancel()
-	{
-		Platform.exit();
-	}
+    @FXML
+    private void cancel()
+    {
+        Platform.exit();
+    }
 
-	@Override
-	public void setStage(Stage stage)
-	{
-		this.stage = stage;
-	}
+    @Override
+    public void setStage(Stage stage)
+    {
+        this.stage = stage;
+    }
 
-	@Override
-	public void close()
-	{
-		if (Platform.isFxApplicationThread())
-		{
-			if (this.stage != null)
-			{
-				this.stage.close();
-			}
-		} else
-		{
-			Platform.runLater(() -> ReloginController.this.close());
-		}
-	}
+    @Override
+    public void close()
+    {
+        if(Platform.isFxApplicationThread())
+        {
+            if(this.stage != null)
+            {
+                this.stage.close();
+            }
+        } else
+        {
+            Platform.runLater(() -> ReloginController.this.close());
+        }
+    }
 }

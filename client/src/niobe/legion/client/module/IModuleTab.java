@@ -7,9 +7,9 @@ import niobe.legion.shared.data.IRight;
  */
 public interface IModuleTab
 {
-	String getTabFileName();
+    String getTabFileName();
 
-	boolean isCloseable();
+    boolean isCloseable();
 
-	IRight[] getNeededGroupRights();
+    IRight[] getNeededGroupRights();
 }

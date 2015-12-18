@@ -12,65 +12,64 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 
 @Entity(name = "legion_user")
-@NamedQueries({
-					  @NamedQuery(name = "user.get",
-								  query = "SELECT entity FROM legion_user entity"), @NamedQuery(name = "user.getByName",
-																								query = "SELECT entity FROM legion_user entity WHERE entity.name = :name")})
+@NamedQueries({@NamedQuery(name = "user.get",
+                           query = "SELECT entity FROM legion_user entity"), @NamedQuery(name = "user.getByName",
+                                                                                         query = "SELECT entity FROM legion_user entity WHERE entity.name = :name")})
 public class UserEntity implements IEntity
 {
-	@Id
-	@Column(name = "id")
-	@GeneratedValue
-	private int id;
+    @Id
+    @Column(name = "id")
+    @GeneratedValue
+    private int id;
 
-	private String name;
-	private String password;
+    private String name;
+    private String password;
 
-	@OneToOne(cascade = CascadeType.ALL,
-			  fetch = FetchType.EAGER)
-	@JoinColumn(name = "groupId",
-				referencedColumnName = "id")
-	private GroupEntity group;
+    @OneToOne(cascade = CascadeType.ALL,
+              fetch = FetchType.EAGER)
+    @JoinColumn(name = "groupId",
+                referencedColumnName = "id")
+    private GroupEntity group;
 
-	public String getName()
-	{
-		return name;
-	}
+    public String getName()
+    {
+        return name;
+    }
 
-	public void setName(String name)
-	{
-		this.name = name;
-	}
+    public void setName(String name)
+    {
+        this.name = name;
+    }
 
-	public String getPassword()
-	{
-		return password;
-	}
+    public String getPassword()
+    {
+        return password;
+    }
 
-	public void setPassword(String password)
-	{
-		this.password = password;
-	}
+    public void setPassword(String password)
+    {
+        this.password = password;
+    }
 
-	public GroupEntity getGroup()
-	{
-		return group;
-	}
+    public GroupEntity getGroup()
+    {
+        return group;
+    }
 
-	public void setGroup(GroupEntity group)
-	{
-		this.group = group;
-	}
+    public void setGroup(GroupEntity group)
+    {
+        this.group = group;
+    }
 
-	@Override
-	public int getId()
-	{
-		return id;
-	}
+    @Override
+    public int getId()
+    {
+        return id;
+    }
 
-	@Override
-	public void setId(int id)
-	{
-		this.id = id;
-	}
+    @Override
+    public void setId(int id)
+    {
+        this.id = id;
+    }
 }

@@ -1,5 +1,10 @@
 package niobe.legion.client.gui.admin;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -14,87 +19,81 @@ import niobe.legion.client.gui.MainController;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 public class AdminTabController
 {
-	private static final List<IMaskType>     children =
-			new ArrayList<IMaskType>(Arrays.asList(new AdminType(Client.getLocalisation("userAdministration"),
-																 "/niobe/legion/client/fxml/tab/admin/UserAdmin.fxml"),
-												   new AdminType(Client.getLocalisation("groupAdministration"),
-																 "/niobe/legion/client/fxml/tab/admin/GroupAdmin.fxml"),
-												   new AdminType(Client.getLocalisation("moduleAdministration"),
-																 "/niobe/legion/client/fxml/tab/admin/ModuleAdmin.fxml")));
-	private              TreeItem<IMaskType> rootItem =
-			new TreeItem<IMaskType>(new AdminType(Client.getLocalisation("administration"), null));
-	private Object childController;
+    private static final List<IMaskType> children = new ArrayList<IMaskType>(Arrays.asList(new AdminType(Client.getLocalisation(
+            "userAdministration"), "/niobe/legion/client/fxml/tab/admin/UserAdmin.fxml"),
+                                                                                           new AdminType(Client.getLocalisation(
+                                                                                                   "groupAdministration"),
+                                                                                                         "/niobe/legion/client/fxml/tab/admin/GroupAdmin.fxml"),
+                                                                                           new AdminType(Client.getLocalisation(
+                                                                                                   "moduleAdministration"),
+                                                                                                         "/niobe/legion/client/fxml/tab/admin/ModuleAdmin.fxml")));
+    private TreeItem<IMaskType> rootItem = new TreeItem<IMaskType>(new AdminType(Client.getLocalisation("administration"),
+                                                                                 null));
+    private Object childController;
 
-	@FXML
-	private TreeView<IMaskType> selectionTree;
+    @FXML
+    private TreeView<IMaskType> selectionTree;
 
-	@FXML
-	private AnchorPane adminRoot;
+    @FXML
+    private AnchorPane adminRoot;
 
-	@FXML
-	private void initialize()
-	{
-		if (this.selectionTree != null)
-		{
-			this.selectionTree.setRoot(this.rootItem);
+    @FXML
+    private void initialize()
+    {
+        if(this.selectionTree != null)
+        {
+            this.selectionTree.setRoot(this.rootItem);
 
-			for (IMaskType child : AdminTabController.children)
-			{
-				this.rootItem.getChildren().add(new TreeItem<IMaskType>(child));
-			}
-			this.rootItem.setExpanded(true);
-		}
+            for(IMaskType child : AdminTabController.children)
+            {
+                this.rootItem.getChildren().add(new TreeItem<IMaskType>(child));
+            }
+            this.rootItem.setExpanded(true);
+        }
 
-		this.selectionTree.setOnMouseClicked(new EventHandler<MouseEvent>()
-		{
+        this.selectionTree.setOnMouseClicked(new EventHandler<MouseEvent>()
+        {
 
-			@Override
-			public void handle(MouseEvent arg0)
-			{
-				TreeItem<IMaskType> selected =
-						AdminTabController.this.selectionTree.getSelectionModel().getSelectedItem();
-				if (selected != null && selected.getValue() != null && selected.getValue().getMaskURI() != null)
-				{
-					String maskURI = selected.getValue().getMaskURI();
-					AdminTabController.this.adminRoot.getChildren().clear();
+            @Override
+            public void handle(MouseEvent arg0)
+            {
+                TreeItem<IMaskType> selected = AdminTabController.this.selectionTree.getSelectionModel()
+                        .getSelectedItem();
+                if(selected != null && selected.getValue() != null && selected.getValue().getMaskURI() != null)
+                {
+                    String maskURI = selected.getValue().getMaskURI();
+                    AdminTabController.this.adminRoot.getChildren().clear();
 
-					URL location = MainController.class.getResource(maskURI);
+                    URL location = MainController.class.getResource(maskURI);
 
-					if (location != null)
-					{
+                    if(location != null)
+                    {
 
-						FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
-						try
-						{
-							Node node = loader.load();
-							AnchorPane.setBottomAnchor(node, 0.0d);
-							AnchorPane.setLeftAnchor(node, 0.0d);
-							AnchorPane.setRightAnchor(node, 0.0d);
-							AnchorPane.setTopAnchor(node, 0.0d);
+                        FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
+                        try
+                        {
+                            Node node = loader.load();
+                            AnchorPane.setBottomAnchor(node, 0.0d);
+                            AnchorPane.setLeftAnchor(node, 0.0d);
+                            AnchorPane.setRightAnchor(node, 0.0d);
+                            AnchorPane.setTopAnchor(node, 0.0d);
 
-							AdminTabController.this.adminRoot.getChildren().addAll(node);
-							AdminTabController.this.childController = loader.getController();
-						}
-						catch (IOException e)
-						{
-							Logger.exception(LegionLogger.STDERR, e);
-						}
-					}
-				}
-			}
-		});
-	}
+                            AdminTabController.this.adminRoot.getChildren().addAll(node);
+                            AdminTabController.this.childController = loader.getController();
+                        } catch(IOException e)
+                        {
+                            Logger.exception(LegionLogger.STDERR, e);
+                        }
+                    }
+                }
+            }
+        });
+    }
 
-	public Object getChildController()
-	{
-		return this.childController;
-	}
+    public Object getChildController()
+    {
+        return this.childController;
+    }
 }

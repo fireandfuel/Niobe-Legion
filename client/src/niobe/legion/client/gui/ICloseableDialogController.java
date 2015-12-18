@@ -4,7 +4,7 @@ import javafx.stage.Stage;
 
 public interface ICloseableDialogController
 {
-	void setStage(Stage stage);
+    void setStage(Stage stage);
 
-	void close();
+    void close();
 }

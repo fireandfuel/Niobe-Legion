@@ -9,7 +9,7 @@ import javax.persistence.AccessType;
 @Access(value = AccessType.PROPERTY)
 public interface IEntity
 {
-	int getId();
+    int getId();
 
-	void setId(int id);
+    void setId(int id);
 }

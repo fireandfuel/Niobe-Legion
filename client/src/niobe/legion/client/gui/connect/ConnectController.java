@@ -8,25 +8,25 @@ import javafx.scene.control.ProgressIndicator;
 
 public class ConnectController
 {
-	@FXML
-	private ProgressIndicator progress;
+    @FXML
+    private ProgressIndicator progress;
 
-	@FXML
-	private Label progressLabel;
+    @FXML
+    private Label progressLabel;
 
-	@FXML
-	private void initialize()
-	{
+    @FXML
+    private void initialize()
+    {
 
-	}
+    }
 
-	public DoubleProperty getProgressStatusProperty()
-	{
-		return this.progress.progressProperty();
-	}
+    public DoubleProperty getProgressStatusProperty()
+    {
+        return this.progress.progressProperty();
+    }
 
-	public StringProperty getProgressLabelProperty()
-	{
-		return this.progressLabel.textProperty();
-	}
+    public StringProperty getProgressLabelProperty()
+    {
+        return this.progressLabel.textProperty();
+    }
 }

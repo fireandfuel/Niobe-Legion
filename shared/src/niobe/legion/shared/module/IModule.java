@@ -8,35 +8,37 @@ import niobe.legion.shared.data.IRight;
  */
 public interface IModule
 {
-	/**
-	 * starts the module
-	 * @return module is started successfully
-	 */
-	boolean startModule();
+    /**
+     * starts the module
+     *
+     * @return module is started successfully
+     */
+    boolean startModule();
 
-	/**
-	 * stops the module
-	 * @return module is stopped successfully
-	 */
-	boolean stopModule();
+    /**
+     * stops the module
+     *
+     * @return module is stopped successfully
+     */
+    boolean stopModule();
 
-	/**
-	 * @return a module communicator, may be null if not needed
-	 */
-	ICommunicator newCommunicator(ICommunicator parent);
+    /**
+     * @return a module communicator, may be null if not needed
+     */
+    ICommunicator newCommunicator(ICommunicator parent);
 
-	/**
-	 * @return the module communicator namespace, may be null if not needed
-	 */
-	String getNamespace();
+    /**
+     * @return the module communicator namespace, may be null if not needed
+     */
+    String getNamespace();
 
-	/**
-	 * @return the module communicator namespace uri, may be null if not needed
-	 */
-	String getNamespaceURI();
+    /**
+     * @return the module communicator namespace uri, may be null if not needed
+     */
+    String getNamespaceURI();
 
-	/**
-	 * @return the rights the module sets at the host
-	 */
-	IRight[] getRights();
+    /**
+     * @return the rights the module sets at the host
+     */
+    IRight[] getRights();
 }

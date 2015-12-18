@@ -34,50 +34,50 @@ import javax.security.sasl.SaslException;
  */
 final class AnonymousSaslClient implements SaslClient
 {
-	@Override
-	public String getMechanismName()
-	{
-		return "ANONYMOUS";
-	}
+    @Override
+    public String getMechanismName()
+    {
+        return "ANONYMOUS";
+    }
 
-	@Override
-	public boolean hasInitialResponse()
-	{
-		return true;
-	}
+    @Override
+    public boolean hasInitialResponse()
+    {
+        return true;
+    }
 
-	@Override
-	public byte[] evaluateChallenge(byte[] challenge) throws SaslException
-	{
-		return new byte[0];
-	}
+    @Override
+    public byte[] evaluateChallenge(byte[] challenge) throws SaslException
+    {
+        return new byte[0];
+    }
 
-	@Override
-	public boolean isComplete()
-	{
-		return true;
-	}
+    @Override
+    public boolean isComplete()
+    {
+        return true;
+    }
 
-	@Override
-	public byte[] unwrap(byte[] incoming, int offset, int len) throws SaslException
-	{
-		return new byte[0];
-	}
+    @Override
+    public byte[] unwrap(byte[] incoming, int offset, int len) throws SaslException
+    {
+        return new byte[0];
+    }
 
-	@Override
-	public byte[] wrap(byte[] outgoing, int offset, int len) throws SaslException
-	{
-		return new byte[0];
-	}
+    @Override
+    public byte[] wrap(byte[] outgoing, int offset, int len) throws SaslException
+    {
+        return new byte[0];
+    }
 
-	@Override
-	public Object getNegotiatedProperty(String propName)
-	{
-		return null;
-	}
+    @Override
+    public Object getNegotiatedProperty(String propName)
+    {
+        return null;
+    }
 
-	@Override
-	public void dispose() throws SaslException
-	{
-	}
+    @Override
+    public void dispose() throws SaslException
+    {
+    }
 }

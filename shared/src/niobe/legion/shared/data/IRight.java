@@ -7,21 +7,21 @@ import java.util.List;
  */
 public interface IRight
 {
-	String getName();
+    String getName();
 
-	List<IRight> getChildren();
+    List<IRight> getChildren();
 
-	IRight getParent();
+    IRight getParent();
 
-	void addChildren(IRight right);
+    void addChildren(IRight right);
 
-	default boolean isRoot()
-	{
-		return this.getParent() == null;
-	}
+    default boolean isRoot()
+    {
+        return this.getParent() == null;
+    }
 
-	default boolean isLeaf()
-	{
-		return this.getChildren() == null || this.getChildren().isEmpty();
-	}
+    default boolean isLeaf()
+    {
+        return this.getChildren() == null || this.getChildren().isEmpty();
+    }
 }

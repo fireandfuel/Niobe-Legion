@@ -14,63 +14,75 @@ import java.util.ResourceBundle.Control;
 
 public class EncodedControl extends Control
 {
-	private final String encoding;
+    private final String encoding;
 
-	public EncodedControl(String encoding)
-	{
-		this.encoding = encoding;
-	}
+    public EncodedControl(String encoding)
+    {
+        this.encoding = encoding;
+    }
 
-	public List<String> getFormats(String basename) {
+    public List<String> getFormats(String basename)
+    {
 
-		if (basename == null) {
-			throw new NullPointerException();
-		}
-		return Arrays.asList("properties");
+        if(basename == null)
+        {
+            throw new NullPointerException();
+        }
+        return Arrays.asList("properties");
 
-	}
+    }
 
-	@Override
-	public ResourceBundle newBundle(String baseName, Locale locale, String format,
-									ClassLoader loader, boolean reload) {
+    @Override
+    public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
+    {
 
-		if (baseName == null || locale == null || format == null || loader == null) {
-			throw new NullPointerException();
-		}
+        if(baseName == null || locale == null || format == null || loader == null)
+        {
+            throw new NullPointerException();
+        }
 
-		ResourceBundle bundle = null;
+        ResourceBundle bundle = null;
 
-		if (format.equals("properties")) {
+        if(format.equals("properties"))
+        {
 
-			String bundleName = this.toBundleName(baseName, locale);
-			String resourceName = this.toResourceName(bundleName, format);
-			InputStream stream = null;
+            String bundleName = this.toBundleName(baseName, locale);
+            String resourceName = this.toResourceName(bundleName, format);
+            InputStream stream = null;
 
-			try {
-				if (reload) {
-					URL url = loader.getResource(resourceName);
-					if (url != null) {
-						URLConnection connection;
-						connection = url.openConnection();
+            try
+            {
+                if(reload)
+                {
+                    URL url = loader.getResource(resourceName);
+                    if(url != null)
+                    {
+                        URLConnection connection;
+                        connection = url.openConnection();
 
-						if (connection != null) {
-							connection.setUseCaches(false);
-							stream = connection.getInputStream();
-						}
-					}
-				} else {
-					stream = loader.getResourceAsStream(resourceName);
-				}
+                        if(connection != null)
+                        {
+                            connection.setUseCaches(false);
+                            stream = connection.getInputStream();
+                        }
+                    }
+                } else
+                {
+                    stream = loader.getResourceAsStream(resourceName);
+                }
 
-				if (stream != null) {
-					InputStreamReader is = new InputStreamReader(stream, this.encoding);
-					bundle = new PropertyResourceBundle(is);
-					is.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+                if(stream != null)
+                {
+                    InputStreamReader is = new InputStreamReader(stream, this.encoding);
+                    bundle = new PropertyResourceBundle(is);
+                    is.close();
+                }
+            } catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
 
-		return bundle;}
+        return bundle;
+    }
 }

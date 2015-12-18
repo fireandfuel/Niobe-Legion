@@ -11,136 +11,128 @@ import javafx.scene.layout.StackPane;
 
 public class TextFieldWithButtonSkin extends TextFieldSkin
 {
-	private StackPane rightButton;
-	private Region    rightButtonGraphic;
+    private StackPane rightButton;
+    private Region rightButtonGraphic;
 
-	protected TextField textField;
+    protected TextField textField;
 
-	public TextFieldWithButtonSkin(TextField textField)
-	{
-		super(textField);
+    public TextFieldWithButtonSkin(TextField textField)
+    {
+        super(textField);
 
-		this.textField = textField;
+        this.textField = textField;
 
-		this.rightButton = new StackPane();
-		this.rightButton.getStyleClass().setAll("right-button");
-		this.rightButton.setFocusTraversable(false);
+        this.rightButton = new StackPane();
+        this.rightButton.getStyleClass().setAll("right-button");
+        this.rightButton.setFocusTraversable(false);
 
-		this.rightButtonGraphic = new Region();
-		this.rightButtonGraphic.getStyleClass().setAll("right-button-graphic");
-		this.rightButtonGraphic.setFocusTraversable(false);
+        this.rightButtonGraphic = new Region();
+        this.rightButtonGraphic.getStyleClass().setAll("right-button-graphic");
+        this.rightButtonGraphic.setFocusTraversable(false);
 
-		this.rightButtonGraphic.setMaxWidth(Region.USE_PREF_SIZE);
-		this.rightButtonGraphic.setMaxHeight(Region.USE_PREF_SIZE);
+        this.rightButtonGraphic.setMaxWidth(Region.USE_PREF_SIZE);
+        this.rightButtonGraphic.setMaxHeight(Region.USE_PREF_SIZE);
 
-		this.rightButton.setVisible(false);
-		this.rightButtonGraphic.setVisible(false);
+        this.rightButton.setVisible(false);
+        this.rightButtonGraphic.setVisible(false);
 
-		this.rightButton.getChildren().add(this.rightButtonGraphic);
-		this.getChildren().add(this.rightButton);
+        this.rightButton.getChildren().add(this.rightButtonGraphic);
+        this.getChildren().add(this.rightButton);
 
-		this.setupListeners();
-	}
+        this.setupListeners();
+    }
 
-	private void setupListeners()
-	{
+    private void setupListeners()
+    {
 
-		final TextField textField = this.getSkinnable();
-		this.rightButton.setOnMousePressed(event -> {
-			if (TextFieldWithButtonSkin.this.textField.isEditable() &&
-				!TextFieldWithButtonSkin.this.textField.isDisabled())
-			{
-				TextFieldWithButtonSkin.this.rightButtonPressed();
-			}
-		});
-		this.rightButton.setOnMouseReleased(event -> {
-			if (TextFieldWithButtonSkin.this.textField.isEditable() &&
-				!TextFieldWithButtonSkin.this.textField.isDisabled())
-			{
-				TextFieldWithButtonSkin.this.rightButtonReleased();
-			}
-		});
+        final TextField textField = this.getSkinnable();
+        this.rightButton.setOnMousePressed(event -> {
+            if(TextFieldWithButtonSkin.this.textField.isEditable() && !TextFieldWithButtonSkin.this.textField
+                    .isDisabled())
+            {
+                TextFieldWithButtonSkin.this.rightButtonPressed();
+            }
+        });
+        this.rightButton.setOnMouseReleased(event -> {
+            if(TextFieldWithButtonSkin.this.textField.isEditable() && !TextFieldWithButtonSkin.this.textField
+                    .isDisabled())
+            {
+                TextFieldWithButtonSkin.this.rightButtonReleased();
+            }
+        });
 
-		textField.textProperty().addListener((observable, oldValue, newValue) -> {
-			TextFieldWithButtonSkin.this.textChanged();
-		});
-		textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
-			TextFieldWithButtonSkin.this.focusChanged();
-		});
-	}
+        textField.textProperty().addListener((observable, oldValue, newValue) -> {
+            TextFieldWithButtonSkin.this.textChanged();
+        });
+        textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            TextFieldWithButtonSkin.this.focusChanged();
+        });
+    }
 
-	protected void textChanged()
-	{
-		if (this.textField.getText() == null)
-		{
-			return;
-		}
+    protected void textChanged()
+    {
+        if(this.textField.getText() == null)
+        {
+            return;
+        }
 
-		this.rightButton.setVisible(!this.textField.getText().isEmpty());
-		this.rightButtonGraphic.setVisible(!this.textField.getText().isEmpty());
-	}
+        this.rightButton.setVisible(!this.textField.getText().isEmpty());
+        this.rightButtonGraphic.setVisible(!this.textField.getText().isEmpty());
+    }
 
-	protected void focusChanged()
-	{
-		if (this.textField.getText() == null || !TextFieldWithButtonSkin.this.textField.isEditable() ||
-			TextFieldWithButtonSkin.this.textField.isDisabled())
-		{
-			return;
-		}
+    protected void focusChanged()
+    {
+        if(this.textField.getText() == null || !TextFieldWithButtonSkin.this.textField.isEditable() ||
+                TextFieldWithButtonSkin.this.textField.isDisabled())
+        {
+            return;
+        }
 
-		this.rightButton.setVisible(this.textField.isFocused() && !this.textField.getText().isEmpty());
-		this.rightButtonGraphic.setVisible(this.textField.isFocused() && !this.textField.getText().isEmpty());
-	}
+        this.rightButton.setVisible(this.textField.isFocused() && !this.textField.getText().isEmpty());
+        this.rightButtonGraphic.setVisible(this.textField.isFocused() && !this.textField.getText().isEmpty());
+    }
 
-	@Override
-	protected void layoutInArea(Node child,
-								double areaX,
-								double areaY,
-								double areaWidth,
-								double areaHeight,
-								double areaBaselineOffset,
-								Insets margin,
-								boolean fillWidth,
-								boolean fillHeight,
-								HPos halignment,
-								VPos valignment)
-	{
-		if (child == this.rightButton)
-		{
-			final double clearGraphicWidth = this.snapSize(this.rightButtonGraphic.prefWidth(-1));
+    @Override
+    protected void layoutInArea(Node child, double areaX, double areaY, double areaWidth, double areaHeight,
+                                double areaBaselineOffset, Insets margin, boolean fillWidth, boolean fillHeight,
+                                HPos halignment, VPos valignment)
+    {
+        if(child == this.rightButton)
+        {
+            final double clearGraphicWidth = this.snapSize(this.rightButtonGraphic.prefWidth(-1));
 
-			this.rightButton.resize(clearGraphicWidth, areaHeight);
-			this.positionInArea(this.rightButton,
-								(areaX + areaWidth) - clearGraphicWidth,
-								areaY,
-								clearGraphicWidth,
-								areaHeight,
-								0,
-								HPos.CENTER,
-								VPos.CENTER);
-		} else
-		{
-			super.layoutInArea(child,
-							   areaX,
-							   areaY,
-							   areaWidth,
-							   areaHeight,
-							   areaBaselineOffset,
-							   margin,
-							   fillWidth,
-							   fillHeight,
-							   halignment,
-							   valignment);
-		}
-	}
+            this.rightButton.resize(clearGraphicWidth, areaHeight);
+            this.positionInArea(this.rightButton,
+                                (areaX + areaWidth) - clearGraphicWidth,
+                                areaY,
+                                clearGraphicWidth,
+                                areaHeight,
+                                0,
+                                HPos.CENTER,
+                                VPos.CENTER);
+        } else
+        {
+            super.layoutInArea(child,
+                               areaX,
+                               areaY,
+                               areaWidth,
+                               areaHeight,
+                               areaBaselineOffset,
+                               margin,
+                               fillWidth,
+                               fillHeight,
+                               halignment,
+                               valignment);
+        }
+    }
 
-	protected void rightButtonPressed()
-	{
-	}
+    protected void rightButtonPressed()
+    {
+    }
 
-	protected void rightButtonReleased()
-	{
+    protected void rightButtonReleased()
+    {
 
-	}
+    }
 
 }

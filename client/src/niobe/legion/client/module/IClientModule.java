@@ -7,5 +7,5 @@ import niobe.legion.shared.module.IModule;
  */
 public interface IClientModule extends IModule
 {
-	IModuleTab[] getMainTabs();
+    IModuleTab[] getMainTabs();
 }

@@ -7,15 +7,15 @@ import javafx.scene.control.TextField;
  */
 public class MetroTextFieldSkin extends TextFieldWithButtonSkin
 {
-	public MetroTextFieldSkin(TextField textField)
-	{
-		super(textField);
-	}
+    public MetroTextFieldSkin(TextField textField)
+    {
+        super(textField);
+    }
 
-	@Override
-	protected void rightButtonPressed()
-	{
-		this.getSkinnable().setText("");
-	}
+    @Override
+    protected void rightButtonPressed()
+    {
+        this.getSkinnable().setText("");
+    }
 
 }
