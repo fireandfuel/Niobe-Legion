@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (Client.java) is part of Niobe Legion (module niobe-legion-client).
  *
@@ -105,6 +105,7 @@ public class Client extends Application
                 if(connectController != null)
                 {
                     connectController.getProgressLabelProperty().bind(Client.clientCommService.messageProperty());
+                    connectController.getProgressStatusProperty().bind(Client.clientCommService.progressProperty());
 
                 } else
                 {
@@ -380,6 +381,7 @@ public class Client extends Application
             if(communicator == null && trials == Client.MAX_CONNECT_TRIALS)
             {
                 this.updateMessage(Client.getLocalisation("connectionTimeout"));
+                this.updateProgress(0, 0);
                 this.failed();
             } else
             {

@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (ClientCommunicator.java) is part of Niobe Legion (module niobe-legion-client).
  *
@@ -61,7 +61,6 @@ import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-import niobe.legion.client.Client.CommunicatorTask;
 import niobe.legion.client.gui.connect.CertificateController;
 import niobe.legion.client.gui.connect.ConnectController;
 import niobe.legion.client.gui.connect.LoginController;
@@ -104,9 +103,6 @@ public class ClientCommunicator extends Communicator
     SaslClient saslClient;
     boolean serverSideAuthenficated;
     String blacklistedServersRegex;
-    List<GroupRightEntity> userRights;
-
-    private CommunicatorTask connectTask;
 
     private boolean clientAcceptedFromServer;
     private boolean tlsEstablished;
@@ -268,7 +264,6 @@ public class ClientCommunicator extends Communicator
                         {
                             this.openStream();
                             this.resetReader();
-                            this.connectTask = null;
                             if(Client.getFxController().getCurrentController() instanceof ConnectController)
                             {
                                 Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Login.fxml");
@@ -447,7 +442,6 @@ public class ClientCommunicator extends Communicator
                         this.write(stanza);
                     } else
                     {
-                        this.connectTask = null;
                         if(Client.getFxController().getCurrentController() instanceof ConnectController)
                         {
                             Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Login.fxml");
@@ -557,6 +551,32 @@ public class ClientCommunicator extends Communicator
                         {
                             retriever.setAll(XmlMarshaller.unmarshal(datasets));
                         }
+                    }
+                }
+                break;
+            case "legion:decline":
+                if(currentStanza.getAttribute("type") != null)
+                {
+                    switch(currentStanza.getAttribute("type"))
+                    {
+                        case "legion:server":
+                            final ConnectController connectController = (Client.getFxController()
+                                    .getCurrentController() instanceof ConnectController) ? (ConnectController) Client
+                                    .getFxController().getCurrentController() : null;
+                            if(connectController != null)
+                            {
+                                Platform.runLater(() -> {
+                                    connectController.getProgressStatusProperty().unbind();
+                                    connectController.getProgressStatusProperty().setValue(0);
+                                    connectController.getProgressLabelProperty().unbind();
+                                    connectController.getProgressLabelProperty()
+                                            .setValue(Client.getLocalisation("serverRefusedConnection"));
+                                });
+                            }
+
+                            // TODO: ReConnectController?
+
+                            break;
                     }
                 }
                 break;

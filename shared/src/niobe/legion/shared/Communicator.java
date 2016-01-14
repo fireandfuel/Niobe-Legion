@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (Communicator.java) is part of Niobe Legion (module niobe-legion-shared).
  *
@@ -439,7 +439,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     @Override
     public abstract void consumeEndElement(final XmlStanza currentStanza) throws IOException;
 
-    public final synchronized void close() throws SocketException, IOException
+    public final synchronized void close() throws IOException
     {
         XmlStanza stanza = new XmlStanza();
         stanza.setName("legion:stream");
@@ -490,20 +490,10 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     public final void decline(String type, String reason) throws IOException
     {
         XmlStanza stanza = new XmlStanza();
-        stanza.setEventType(XMLStreamConstants.START_ELEMENT);
-        stanza.setName("legion:decline");
-        this.write(stanza);
-
-        stanza = new XmlStanza();
         stanza.setEventType(XMLStreamConstants.CHARACTERS);
-        stanza.setName("legion:reason");
+        stanza.setName("legion:decline");
         stanza.putAttribute("type", type);
         stanza.setValue(reason);
-        this.write(stanza);
-
-        stanza = new XmlStanza();
-        stanza.setEventType(XMLStreamConstants.END_ELEMENT);
-        stanza.setName("legion:decline");
         this.write(stanza);
     }
 

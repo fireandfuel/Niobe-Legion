@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (ServerCommunicator.java) is part of Niobe Legion (module niobe-legion-server).
  *
@@ -734,6 +734,17 @@ public class ServerCommunicator extends Communicator
                                         .forEach(dataset -> this.deleteDataset((IEntity) dataset));
                             }
                         }
+                    }
+                }
+                break;
+            case "legion:decline":
+                if(currentStanza.getAttribute("type") != null)
+                {
+                    switch(currentStanza.getAttribute("type"))
+                    {
+                        case "legion:client":
+                            this.close();
+                            break;
                     }
                 }
                 break;
