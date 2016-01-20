@@ -55,10 +55,10 @@ import niobe.legion.shared.sasl.LegionSaslProvider;
 public abstract class Communicator implements XMLStreamConstants, ICommunicator, Runnable
 {
     private static final String LEGION_NAMESPACE = "legion";
-    private static final String LEGION_NAMESPACE_URI = "ashnurazg.de/niobe/legion";
+    private static final String LEGION_NAMESPACE_URI = "https://github.com/fireandfuel/Niobe-Legion";
 
     public static final String DEBUG_NAMESPACE = "debug";
-    public static final String DEBUG_NAMESPACE_URI = "ashnurazg.de/niobe/legion_debug";
+    public static final String DEBUG_NAMESPACE_URI = "https://github.com/fireandfuel/Niobe-Legion/debug";
 
     private static final LegionSaslProvider SASL_PROVIDER = new LegionSaslProvider();
 
