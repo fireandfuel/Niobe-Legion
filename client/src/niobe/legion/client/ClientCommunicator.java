@@ -247,6 +247,8 @@ public class ClientCommunicator extends Communicator
                 this.serverName = currentStanza.getAttribute("name");
                 this.serverVersion = currentStanza.getAttribute("version");
 
+
+
                 break;
             case "legion:proceedtls":
                 if(this.clientAcceptedFromServer && !this.tlsEstablished && this.keyStorePassword != null &&
@@ -398,15 +400,17 @@ public class ClientCommunicator extends Communicator
                             this.serverVersion.isEmpty())
                     {
                         this.decline("legion:server", "Invalid Server Identification received");
+                        this.connectionFailed("clientRefusedConnection");
                         return;
                     }
 
                     if(this.blacklistedServersRegex != null && !this.blacklistedServersRegex.isEmpty())
                     {
-                        String checkValue = this.serverName + ":" + this.serverVersion;
+                        String checkValue = this.serverName + "_" + this.serverVersion;
                         if(checkValue.matches(this.blacklistedServersRegex))
                         {
                             this.decline("legion:server", "Server is blacklisted on client");
+                            this.connectionFailed("clientRefusedConnection");
                             return;
                         }
                     }
@@ -417,11 +421,13 @@ public class ClientCommunicator extends Communicator
                                 .noneMatch(authMechanism -> this.serverAuthMechanisms.contains(authMechanism)))
                         {
                             this.decline("legion:server", "Client have no auth mechanisms in common");
+                            this.connectionFailed("clientRefusedConnection");
                             return;
                         }
                     } else
                     {
                         this.decline("legion:server", "Client have no auth mechanisms in common");
+                        this.connectionFailed("clientRefusedConnection");
                         return;
                     }
 
@@ -560,26 +566,29 @@ public class ClientCommunicator extends Communicator
                     switch(currentStanza.getAttribute("type"))
                     {
                         case "legion:server":
-                            final ConnectController connectController = (Client.getFxController()
-                                    .getCurrentController() instanceof ConnectController) ? (ConnectController) Client
-                                    .getFxController().getCurrentController() : null;
-                            if(connectController != null)
-                            {
-                                Platform.runLater(() -> {
-                                    connectController.getProgressStatusProperty().unbind();
-                                    connectController.getProgressStatusProperty().setValue(0);
-                                    connectController.getProgressLabelProperty().unbind();
-                                    connectController.getProgressLabelProperty()
-                                            .setValue(Client.getLocalisation("serverRefusedConnection"));
-                                });
-                            }
-
-                            // TODO: ReConnectController?
-
+                        case "legion:client":
+                            this.connectionFailed("serverRefusedConnection");
                             break;
                     }
                 }
                 break;
+        }
+    }
+
+    private void connectionFailed(String reason)
+    {
+        final ConnectController connectController = (Client.getFxController()
+                .getCurrentController() instanceof ConnectController) ? (ConnectController) Client
+                .getFxController().getCurrentController() : null;
+        if(connectController != null)
+        {
+            Platform.runLater(() -> {
+                connectController.getProgressStatusProperty().unbind();
+                connectController.getProgressStatusProperty().setValue(0);
+                connectController.getProgressLabelProperty().unbind();
+                connectController.getProgressLabelProperty()
+                        .setValue(Client.getLocalisation(reason));
+            });
         }
     }
 
