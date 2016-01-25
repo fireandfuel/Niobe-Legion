@@ -1,8 +1,8 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (XmlStanza.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (Stanza.java) is part of Niobe Legion (module niobe-legion-shared).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -26,11 +26,11 @@ import java.util.function.BiConsumer;
 import javax.xml.stream.XMLStreamConstants;
 
 /**
- * this class represents a XML event, like START_ELEMENT, CHARACTERS and END_ELEMENT
+ * this class represents a communication event, like START_ELEMENT, CHARACTERS and END_ELEMENT
  *
  * @author fireandfuel
  */
-public class XmlStanza
+public class Stanza
 {
     private int eventType;
     private String name, localName;
@@ -39,12 +39,12 @@ public class XmlStanza
     private boolean emptyElement;
     private HashMap<String, String> attributes = new HashMap<String, String>();
 
-    public XmlStanza()
+    public Stanza()
     {
 
     }
 
-    public XmlStanza(XmlStanza oldStanza)
+    public Stanza(Stanza oldStanza)
     {
         if(oldStanza != null)
         {
@@ -202,7 +202,7 @@ public class XmlStanza
     @Override
     public String toString()
     {
-        String output = "XmlStanza name: " + this.getName() + ", localname: " + this.getLocalName() + ", eventType: " +
+        String output = "Stanza name: " + this.getName() + ", localname: " + this.getLocalName() + ", eventType: " +
                 this.getEventTypeAsString() + ", value: " + this.getValue();
         for(String key : this.attributes.keySet())
         {

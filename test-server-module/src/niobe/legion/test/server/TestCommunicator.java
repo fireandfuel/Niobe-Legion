@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (TestCommunicator.java) is part of Niobe Legion (module niobe-legion-test-server-module).
  *
@@ -23,7 +23,7 @@ package niobe.legion.test.server;
 import java.io.IOException;
 import java.net.SocketException;
 import niobe.legion.shared.ICommunicator;
-import niobe.legion.shared.data.XmlStanza;
+import niobe.legion.shared.data.Stanza;
 
 public class TestCommunicator implements ICommunicator
 {
@@ -38,25 +38,25 @@ public class TestCommunicator implements ICommunicator
     }
 
     @Override
-    public void consumeStartElement(XmlStanza currentStanza) throws IOException
+    public void consumeStartElement(Stanza currentStanza) throws IOException
     {
 
     }
 
     @Override
-    public void consumeCharacters(XmlStanza currentStanza) throws IOException
+    public void consumeCharacters(Stanza currentStanza) throws IOException
     {
 
     }
 
     @Override
-    public void consumeEndElement(XmlStanza currentStanza) throws IOException
+    public void consumeEndElement(Stanza currentStanza) throws IOException
     {
 
     }
 
     @Override
-    public void write(XmlStanza stanza) throws IOException, SocketException
+    public void write(Stanza stanza) throws IOException, SocketException
     {
         this.parent.write(stanza);
     }

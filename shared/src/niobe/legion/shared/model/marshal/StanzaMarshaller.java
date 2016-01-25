@@ -1,8 +1,8 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (XmlMarshaller.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (StanzaMarshaller.java) is part of Niobe Legion (module niobe-legion-shared).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -39,12 +39,12 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Stream;
 import javax.xml.stream.XMLStreamConstants;
-import niobe.legion.shared.data.XmlStanza;
+import niobe.legion.shared.data.Stanza;
 
 /**
  * @author fireandfuel, 07.04.15
  */
-public class XmlMarshaller implements XMLStreamConstants
+public class StanzaMarshaller implements XMLStreamConstants
 {
 
     private static final class StanzaColumn
@@ -96,7 +96,7 @@ public class XmlMarshaller implements XMLStreamConstants
      * @param object
      * @return
      */
-    public static List<XmlStanza> marshal(Object object, long sequenceId)
+    public static List<Stanza> marshal(Object object, long sequenceId)
     {
         if(object == null)
         {
@@ -106,9 +106,9 @@ public class XmlMarshaller implements XMLStreamConstants
         // get object's class name
         String className = object.getClass().getCanonicalName();
 
-        List<XmlStanza> results = new ArrayList<XmlStanza>();
+        List<Stanza> results = new ArrayList<Stanza>();
 
-        XmlStanza result = new XmlStanza();
+        Stanza result = new Stanza();
         result.setName("legion:dataset");
         result.setEventType(START_ELEMENT);
         result.putAttribute("class", className);
@@ -122,7 +122,7 @@ public class XmlMarshaller implements XMLStreamConstants
             // marshal the children of array
             results.addAll(getStreamEntry(Stream.of((Object[]) object), sequenceId));
 
-            result = new XmlStanza();
+            result = new Stanza();
             result.setName("legion:dataset");
             result.setEventType(END_ELEMENT);
             results.add(result);
@@ -141,7 +141,7 @@ public class XmlMarshaller implements XMLStreamConstants
                 // marshal the children of list
                 results.addAll(getStreamEntry(collection.stream(), sequenceId));
 
-                result = new XmlStanza();
+                result = new Stanza();
                 result.setName("legion:dataset");
                 result.setEventType(END_ELEMENT);
                 results.add(result);
@@ -162,7 +162,7 @@ public class XmlMarshaller implements XMLStreamConstants
             // marshal the children of map
             results.addAll(getMapEntry(map, sequenceId));
 
-            result = new XmlStanza();
+            result = new Stanza();
             result.setName("legion:dataset");
             result.setEventType(END_ELEMENT);
             results.add(result);
@@ -196,7 +196,7 @@ public class XmlMarshaller implements XMLStreamConstants
                 return null;
             }).filter(list -> list != null && !list.isEmpty()).forEach(list -> results.addAll(list));
 
-            result = new XmlStanza();
+            result = new Stanza();
             result.setName("legion:dataset");
             result.setEventType(END_ELEMENT);
             results.add(result);
@@ -210,7 +210,7 @@ public class XmlMarshaller implements XMLStreamConstants
      * @param xml
      * @return
      */
-    public static List<Object> unmarshal(List<XmlStanza> xml)
+    public static List<Object> unmarshal(List<Stanza> xml)
     {
         List<Object> results = new ArrayList<Object>();
 
@@ -221,7 +221,7 @@ public class XmlMarshaller implements XMLStreamConstants
         while(xml.size() > 0)
         {
             int closeIndex = searchCloseEntryIndexInStack(0, xml);
-            List<XmlStanza> subList = new ArrayList<XmlStanza>(xml.subList(0, closeIndex));
+            List<Stanza> subList = new ArrayList<Stanza>(xml.subList(0, closeIndex));
             xml.removeAll(subList);
             Object result = unmarshalStanzas(subList);
 
@@ -240,7 +240,7 @@ public class XmlMarshaller implements XMLStreamConstants
      * @param xml
      * @return
      */
-    private static Object unmarshalStanzas(List<XmlStanza> xml)
+    private static Object unmarshalStanzas(List<Stanza> xml)
     {
         if(xml == null)
         {
@@ -253,7 +253,7 @@ public class XmlMarshaller implements XMLStreamConstants
         int index = 0;
         while(index < xml.size())
         {
-            XmlStanza stanza = xml.get(index);
+            Stanza stanza = xml.get(index);
 
             switch(stanza.getName())
             {
@@ -273,8 +273,8 @@ public class XmlMarshaller implements XMLStreamConstants
                         int closeEntryIndex = searchCloseEntryIndexInStack(index + 1, xml);
 
                         // get the child object xml stanzas
-                        List<XmlStanza> childrenList = new ArrayList<XmlStanza>(xml.subList(index + 1,
-                                                                                            closeEntryIndex));
+                        List<Stanza> childrenList = new ArrayList<Stanza>(xml.subList(index + 1,
+                                                                                      closeEntryIndex));
                         // remove add child object xml stanzas from the object xml stanza list
                         xml.removeAll(childrenList);
 
@@ -287,7 +287,7 @@ public class XmlMarshaller implements XMLStreamConstants
         return object;
     }
 
-    private static Object unmarshalDataset(XmlStanza stanza)
+    private static Object unmarshalDataset(Stanza stanza)
     {
         Object object = null;
         try
@@ -381,7 +381,7 @@ public class XmlMarshaller implements XMLStreamConstants
         return object;
     }
 
-    private static StanzaColumn unmarshalColumn(Object object, XmlStanza stanza)
+    private static StanzaColumn unmarshalColumn(Object object, Stanza stanza)
     {
         String columnName = null;
         Class<?> columnClass = null;
@@ -533,7 +533,7 @@ public class XmlMarshaller implements XMLStreamConstants
         return new StanzaColumn(columnName, columnClass, isArrayColumn);
     }
 
-    private static void unmarshalEntry(Object object, XmlStanza entryStanza, List<XmlStanza> stanzas,
+    private static void unmarshalEntry(Object object, Stanza entryStanza, List<Stanza> stanzas,
                                        StanzaColumn stanzaColumn)
     {
         Class<?> columnClass = stanzaColumn != null ? stanzaColumn.columnClass : null;
@@ -747,16 +747,16 @@ public class XmlMarshaller implements XMLStreamConstants
      * @param list       the list on which the search runs
      * @return index of the closest end stanza without opening stanza
      */
-    private static int searchCloseEntryIndexInStack(int startIndex, List<XmlStanza> list)
+    private static int searchCloseEntryIndexInStack(int startIndex, List<Stanza> list)
     {
         // initialize a stack for the stanzas
-        LinkedList<XmlStanza> stack = new LinkedList<XmlStanza>();
+        LinkedList<Stanza> stack = new LinkedList<Stanza>();
 
-        XmlStanza start = list.get(startIndex);
+        Stanza start = list.get(startIndex);
 
         for(int index = startIndex + 1; index < list.size(); index++)
         {
-            XmlStanza stanza = list.get(index);
+            Stanza stanza = list.get(index);
             // if start stanza and not empty element
             if(stanza.getEventType() == START_ELEMENT && !stanza.isEmptyElement())
             {
@@ -775,7 +775,7 @@ public class XmlMarshaller implements XMLStreamConstants
                 }
 
                 // get the stanza on the top of the stack
-                XmlStanza peek = stack.peek();
+                Stanza peek = stack.peek();
                 // if top of the stack is a start stanza and name of stanza equals stanza on the top of the stack
                 if(peek.getEventType() == START_ELEMENT && peek.getName().equals(stanza.getName()))
                 // pop (remove first) from the top of the stanza stack
@@ -797,7 +797,7 @@ public class XmlMarshaller implements XMLStreamConstants
      * @return
      * @throws IllegalAccessException
      */
-    private static List<XmlStanza> getField(Field field, Object object, long sequenceId) throws IllegalAccessException
+    private static List<Stanza> getField(Field field, Object object, long sequenceId) throws IllegalAccessException
     {
         if(field == null || object == null)
         {
@@ -811,11 +811,11 @@ public class XmlMarshaller implements XMLStreamConstants
         String name = field.getName();
         Object value = field.get(object);
 
-        List<XmlStanza> results = new ArrayList<XmlStanza>();
+        List<Stanza> results = new ArrayList<Stanza>();
         if(value != null)
         {
             // field will be ignored if its value is null
-            XmlStanza result = new XmlStanza();
+            Stanza result = new Stanza();
             result.setName("legion:column");
             result.setEventType(START_ELEMENT);
             result.putAttribute("name", name);
@@ -830,7 +830,7 @@ public class XmlMarshaller implements XMLStreamConstants
                 // marshal items of the array
                 results.addAll(getStreamEntry(Stream.of((Object[]) value), sequenceId));
 
-                result = new XmlStanza();
+                result = new Stanza();
                 result.setName("legion:column");
                 result.setEventType(END_ELEMENT);
                 results.add(result);
@@ -846,7 +846,7 @@ public class XmlMarshaller implements XMLStreamConstants
                 // marshal items of the list
                 results.addAll(getStreamEntry(collection.stream(), sequenceId));
 
-                result = new XmlStanza();
+                result = new Stanza();
                 result.setName("legion:column");
                 result.setEventType(END_ELEMENT);
                 results.add(result);
@@ -862,7 +862,7 @@ public class XmlMarshaller implements XMLStreamConstants
                 // marshal keys and items of the map
                 results.addAll(getMapEntry(map, sequenceId));
 
-                result = new XmlStanza();
+                result = new Stanza();
                 result.setName("legion:column");
                 result.setEventType(END_ELEMENT);
                 results.add(result);
@@ -878,7 +878,7 @@ public class XmlMarshaller implements XMLStreamConstants
             } else
             {
                 // otherwise marshal the child object
-                result = new XmlStanza();
+                result = new Stanza();
                 result.setName("legion:entry");
                 result.setEventType(START_ELEMENT);
                 result.setSequenceId(sequenceId);
@@ -886,12 +886,12 @@ public class XmlMarshaller implements XMLStreamConstants
 
                 results.addAll(marshal(value, sequenceId));
 
-                result = new XmlStanza();
+                result = new Stanza();
                 result.setName("legion:entry");
                 result.setEventType(END_ELEMENT);
                 results.add(result);
 
-                result = new XmlStanza();
+                result = new Stanza();
                 result.setName("legion:column");
                 result.setEventType(END_ELEMENT);
                 results.add(result);
@@ -907,28 +907,28 @@ public class XmlMarshaller implements XMLStreamConstants
      * @param stream
      * @return
      */
-    private static <T> List<XmlStanza> getStreamEntry(Stream<T> stream, long sequenceId)
+    private static <T> List<Stanza> getStreamEntry(Stream<T> stream, long sequenceId)
     {
 
-        List<XmlStanza> results = new ArrayList<XmlStanza>();
+        List<Stanza> results = new ArrayList<Stanza>();
 
         // for every element of the stream
         stream.forEach(value -> {
-            XmlStanza result = new XmlStanza();
+            Stanza result = new Stanza();
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
             results.add(result);
 
             // marshal the value
-            List<XmlStanza> stanzas = XmlMarshaller.marshal(value, sequenceId);
+            List<Stanza> stanzas = StanzaMarshaller.marshal(value, sequenceId);
 
             if(stanzas != null)
             {
                 results.addAll(stanzas);
             }
 
-            result = new XmlStanza();
+            result = new Stanza();
             result.setName("legion:entry");
             result.setEventType(END_ELEMENT);
             results.add(result);
@@ -943,13 +943,13 @@ public class XmlMarshaller implements XMLStreamConstants
      * @param map
      * @return
      */
-    private static <S, T> List<XmlStanza> getMapEntry(Map<S, T> map, long sequenceId)
+    private static <S, T> List<Stanza> getMapEntry(Map<S, T> map, long sequenceId)
     {
-        List<XmlStanza> results = new ArrayList<XmlStanza>();
+        List<Stanza> results = new ArrayList<Stanza>();
 
         // for every key value pair in the map
         map.forEach((key, value) -> {
-            XmlStanza result = new XmlStanza();
+            Stanza result = new Stanza();
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             // set the key class and key
@@ -959,14 +959,14 @@ public class XmlMarshaller implements XMLStreamConstants
             results.add(result);
 
             // marshal the value
-            List<XmlStanza> stanzas = XmlMarshaller.marshal(value, sequenceId);
+            List<Stanza> stanzas = StanzaMarshaller.marshal(value, sequenceId);
 
             if(stanzas != null)
             {
                 results.addAll(stanzas);
             }
 
-            result = new XmlStanza();
+            result = new Stanza();
             result.setName("legion:entry");
             result.setEventType(END_ELEMENT);
             results.add(result);

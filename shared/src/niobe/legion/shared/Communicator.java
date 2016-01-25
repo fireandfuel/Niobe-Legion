@@ -39,13 +39,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.net.ssl.SSLSocket;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
+import niobe.legion.shared.communication.CommunicationException;
+import niobe.legion.shared.communication.ICommunication;
 import niobe.legion.shared.data.IRight;
 import niobe.legion.shared.data.LegionRight;
-import niobe.legion.shared.data.XmlStanza;
+import niobe.legion.shared.data.Stanza;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupRightEntity;
@@ -63,39 +63,40 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     private static final LegionSaslProvider SASL_PROVIDER = new LegionSaslProvider();
 
     private final HashMap<String, ICommunicator> moduleCommunicators = new HashMap<String, ICommunicator>();
-    protected final HashMap<Long, List<XmlStanza>> cachedStanzas = new HashMap<Long, List<XmlStanza>>();
+    protected final HashMap<Long, List<Stanza>> cachedStanzas = new HashMap<Long, List<Stanza>>();
+
+    protected Socket socket;
+    protected SSLSocket sslSocket;
+
+    private ICommunication communication;
 
     static
     {
         Security.addProvider(Communicator.SASL_PROVIDER);
     }
 
-    protected Socket socket;
-    protected SSLSocket sslSocket;
+
     protected long localStanzaSequenceId = Math.abs(Utils.random.nextLong());
     protected boolean isCloseRequested;
 
     private DataInputStream in;
     private DataOutputStream out;
-    private XMLInputFactory inputFactory;
-    private XMLStreamReader reader;
 
-    private LinkedList<XmlStanza> stanzaStack = new LinkedList<XmlStanza>();
-    private XmlStanza currentStanza;
+    private LinkedList<Stanza> stanzaStack = new LinkedList<Stanza>();
 
     protected static ICommunicator DEBUG_COMMUNICATOR;
 
-    protected Communicator(Socket socket)
+    protected Communicator(Socket socket, ICommunication communication)
     {
         this.socket = socket;
-
         Logger.debug(LegionLogger.STDOUT, "connected to " + this.getAddress().getHostAddress() + ":" + this.getPort());
 
         try
         {
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
-            this.inputFactory = XMLInputFactory.newFactory();
+
+            this.communication = communication;
         } catch(IOException e)
         {
             Logger.exception(LegionLogger.STDERR, e);
@@ -133,11 +134,6 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         }
     }
 
-    protected void initInputReader() throws XMLStreamException
-    {
-        this.reader = this.inputFactory.createXMLStreamReader(this.in, "UTF-8");
-    }
-
     /**
      * Sets a TLSv1.2 socket.
      *
@@ -169,153 +165,111 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         this.out = new DataOutputStream(this.sslSocket.getOutputStream());
     }
 
-    protected final void resetReader() throws XMLStreamException
-    {
-        this.reader = this.inputFactory.createXMLStreamReader(this.in, "UTF-8");
-    }
-
     @Override
     public void run()
     {
         try
         {
-            this.initInputReader();
+            this.communication.initInputReader(this.in);
 
-            while((this.reader == null || this.reader.hasNext()) && !this.isClosed())
+            while((this.communication == null || this.communication.hasNextStanza()) && !this.isClosed())
             {
-                if(this.reader != null)
+                if(this.communication != null)
                 {
-                    this.reader.next();
-
-                    switch(this.reader.getEventType())
+                    Stanza currentStanza = this.communication.getNextStanza();
+                    if(currentStanza != null)
                     {
-                        case START_ELEMENT:
-                            // create current stanza from reader
-                            this.currentStanza = new XmlStanza();
-                            this.currentStanza
-                                    .setName(((this.reader.getName().getPrefix() != null) ? (this.reader.getName()
-                                            .getPrefix() + ":") : "") + this.reader.getName().getLocalPart());
-                            this.currentStanza.setLocalName(this.reader.getLocalName());
-                            this.currentStanza.setNameSpaceURI(this.reader.getName().getNamespaceURI());
-                            this.currentStanza.setEventType(XMLStreamConstants.START_ELEMENT);
+                        switch(currentStanza.getEventType())
+                        {
+                            case START_ELEMENT:
+                                this.stanzaStack.addFirst(currentStanza);
 
-                            Logger.debug(LegionLogger.RECEIVED,
-                                         "received START_ELEMENT : " + this.currentStanza.getName());
+                                if("legion:ping".equals(currentStanza.getName()))
+                                {
+                                    this.pong();
+                                } else if("legion:pong".equals(currentStanza.getName()))
+                                {
+                                    // ping successful
+                                } else
+                                {
+                                    if(DEBUG_COMMUNICATOR != null)
+                                    {
+                                        DEBUG_COMMUNICATOR.consumeStartElement(currentStanza);
+                                    }
 
-                            for(int i = 0; i < this.reader.getAttributeCount(); i++)
-                            {
-                                this.currentStanza.putAttribute(this.reader.getAttributeLocalName(i),
-                                                                this.reader.getAttributeValue(i));
-                                Logger.debug(LegionLogger.RECEIVED,
-                                             "attribute " + this.reader.getAttributeLocalName(i) + " : " +
-                                                     this.reader.getAttributeValue(i));
-                            }
+                                    if(Communicator.LEGION_NAMESPACE_URI.equals(currentStanza.getNameSpaceURI()))
+                                    {
+                                        this.consumeStartElement(currentStanza);
+                                    } else
+                                    {
+                                        ICommunicator communicator = moduleCommunicators
+                                                .get(currentStanza.getNameSpaceURI());
+                                        if(communicator != null)
+                                        {
+                                            communicator.consumeStartElement(currentStanza);
+                                        } else
+                                        {
+                                            Logger.debug(LegionLogger.RECEIVED,
+                                                         "Unknown xml stanza namespace " + currentStanza
+                                                                 .getNameSpaceURI());
+                                        }
+                                    }
+                                }
+                                break;
 
-                            this.stanzaStack.addFirst(this.currentStanza);
-
-                            if("legion:ping".equals(this.currentStanza.getName()))
-                            {
-                                this.pong();
-                            } else if("legion:pong".equals(this.currentStanza.getName()))
-                            {
-                                // ping successful
-                            } else
-                            {
+                            case CHARACTERS:
                                 if(DEBUG_COMMUNICATOR != null)
                                 {
-                                    DEBUG_COMMUNICATOR.consumeStartElement(this.currentStanza);
+                                    DEBUG_COMMUNICATOR.consumeCharacters(currentStanza);
                                 }
 
-                                if(Communicator.LEGION_NAMESPACE_URI.equals(this.currentStanza.getNameSpaceURI()))
+                                if(Communicator.LEGION_NAMESPACE_URI.equals(currentStanza.getNameSpaceURI()))
                                 {
-                                    this.consumeStartElement(this.currentStanza);
+                                    this.consumeCharacters(currentStanza);
                                 } else
                                 {
                                     ICommunicator communicator = moduleCommunicators
-                                            .get(this.currentStanza.getNameSpaceURI());
+                                            .get(currentStanza.getNameSpaceURI());
                                     if(communicator != null)
                                     {
-                                        communicator.consumeStartElement(this.currentStanza);
+                                        communicator.consumeCharacters(currentStanza);
                                     } else
                                     {
                                         Logger.debug(LegionLogger.RECEIVED,
-                                                     "Unknown xml stanza namespace " + this.currentStanza
-                                                             .getNameSpaceURI());
+                                                     "Unknown xml stanza namespace " + currentStanza.getNameSpaceURI());
                                     }
                                 }
-                            }
-                            break;
+                                break;
 
-                        case CHARACTERS:
-                            // set content of stanza
-                            this.currentStanza.setValue(this.reader.getText());
-                            Logger.debug(LegionLogger.RECEIVED,
-                                         "received CHARACTERS : " + this.currentStanza.getName() + " value: " +
-                                                 this.reader.getText());
-                            this.currentStanza.setEventType(XMLStreamConstants.CHARACTERS);
-
-                            if(DEBUG_COMMUNICATOR != null)
-                            {
-                                DEBUG_COMMUNICATOR.consumeCharacters(this.currentStanza);
-                            }
-
-                            if(Communicator.LEGION_NAMESPACE_URI.equals(this.currentStanza.getNameSpaceURI()))
-                            {
-                                this.consumeCharacters(this.currentStanza);
-                            } else
-                            {
-                                ICommunicator communicator = moduleCommunicators
-                                        .get(this.currentStanza.getNameSpaceURI());
-                                if(communicator != null)
+                            case END_ELEMENT:
+                                if(DEBUG_COMMUNICATOR != null)
                                 {
-                                    communicator.consumeCharacters(this.currentStanza);
+                                    DEBUG_COMMUNICATOR.consumeEndElement(currentStanza);
+                                }
+
+                                if(Communicator.LEGION_NAMESPACE_URI.equals(currentStanza.getNameSpaceURI()))
+                                {
+                                    this.consumeEndElement(currentStanza);
                                 } else
                                 {
-                                    Logger.debug(LegionLogger.RECEIVED,
-                                                 "Unknown xml stanza namespace " + this.currentStanza
-                                                         .getNameSpaceURI());
+                                    ICommunicator communicator = moduleCommunicators
+                                            .get(currentStanza.getNameSpaceURI());
+                                    if(communicator != null)
+                                    {
+                                        communicator.consumeEndElement(currentStanza);
+                                    } else
+                                    {
+                                        Logger.debug(LegionLogger.RECEIVED,
+                                                     "Unknown xml stanza namespace " + currentStanza.getNameSpaceURI());
+                                    }
                                 }
-                            }
-                            break;
 
-                        case END_ELEMENT:
-                            this.currentStanza = new XmlStanza(this.currentStanza);
-                            this.currentStanza.setEventType(XMLStreamConstants.END_ELEMENT);
-                            Logger.debug(LegionLogger.RECEIVED,
-                                         "received END_ELEMENT : " + this.currentStanza.getName());
-
-                            if(DEBUG_COMMUNICATOR != null)
-                            {
-                                DEBUG_COMMUNICATOR.consumeEndElement(this.currentStanza);
-                            }
-
-                            if(Communicator.LEGION_NAMESPACE_URI.equals(this.currentStanza.getNameSpaceURI()))
-                            {
-                                this.consumeEndElement(this.currentStanza);
-                            } else
-                            {
-                                ICommunicator communicator = moduleCommunicators
-                                        .get(this.currentStanza.getNameSpaceURI());
-                                if(communicator != null)
-                                {
-                                    communicator.consumeEndElement(this.currentStanza);
-                                } else
-                                {
-                                    Logger.debug(LegionLogger.RECEIVED,
-                                                 "Unknown xml stanza namespace " + this.currentStanza
-                                                         .getNameSpaceURI());
-                                }
-                            }
-
-                            // pop start/character stanza from stack
-                            this.stanzaStack.pop();
-                            // set last stanza from stack as current stanza
-                            this.currentStanza = this.stanzaStack.peek();
-                            break;
-
-                        default:
-                            Logger.debug(LegionLogger.RECEIVED, "Unknown event type " + this.reader.getEventType());
-                            break;
+                                // pop start/character stanza from stack
+                                this.stanzaStack.pop();
+                                // set last stanza from stack as current stanza
+                                this.communication.setCurrentStanza(this.stanzaStack.peek());
+                                break;
+                        }
                     }
                 } else
                 {
@@ -348,7 +302,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     protected abstract void socketUnexpectedClosed();
 
     @Override
-    public final void write(XmlStanza message) throws IOException, SocketException
+    public final void write(Stanza message) throws IOException, SocketException
     {
         if(this.socket != null && !this.socket.isClosed() && message != null)
         {
@@ -358,90 +312,22 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
             {
                 DEBUG_COMMUNICATOR.write(message);
             }
-
-            switch(message.getEventType())
-            {
-                case START_ELEMENT:
-                    this.out.write(("<" + message.getName()).getBytes("UTF-8"));
-
-                    if(message.hasNoAttributes())
-                    {
-                        if(message.isEmptyElement())
-                        {
-                            this.out.write("/>".getBytes("UTF-8"));
-                        } else
-                        {
-                            this.out.write(">".getBytes("UTF-8"));
-                        }
-                    } else
-                    {
-
-                        message.forEachAttribute((attrName, attribute) -> {
-                            if(attribute != null)
-                            {
-                                if(!attribute.startsWith("\"") && !attribute.endsWith("\"") &&
-                                        !attribute.startsWith("'") && !attribute.endsWith("'"))
-                                {
-                                    attribute = "\"" + attribute + "\"";
-                                }
-                                try
-                                {
-                                    this.out.write((" " + attrName + "=" + attribute).getBytes("UTF-8"));
-                                } catch(IOException e)
-                                {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-
-                        if(message.isEmptyElement())
-                        {
-                            this.out.write("/>".getBytes("UTF-8"));
-                        } else
-                        {
-                            this.out.write(">".getBytes("UTF-8"));
-                        }
-                    }
-
-                    break;
-                case CHARACTERS:
-                    this.out.write(("<" + message.getName()).getBytes("UTF-8"));
-
-                    if(message.hasNoAttributes())
-                    {
-                        this.out.write(">".getBytes("UTF-8"));
-                    } else
-                    {
-                        for(String attrName : message.getAttributeKeys())
-                        {
-                            this.out.write((" " + attrName + "=\"" + message.getAttribute(attrName) + "\"")
-                                                   .getBytes("UTF-8"));
-                        }
-                        this.out.write(">".getBytes("UTF-8"));
-                    }
-
-                    this.out.write(message.getValue().getBytes("UTF-8"));
-                case END_ELEMENT:
-                    this.out.write(("</" + message.getName() + ">").getBytes("UTF-8"));
-                    break;
-            }
-
-            this.out.flush();
+            this.communication.write(this.out, message);
         }
     }
 
     @Override
-    public abstract void consumeStartElement(final XmlStanza currentStanza) throws IOException;
+    public abstract void consumeStartElement(final Stanza currentStanza) throws IOException;
 
     @Override
-    public abstract void consumeCharacters(final XmlStanza currentStanza) throws IOException;
+    public abstract void consumeCharacters(final Stanza currentStanza) throws IOException;
 
     @Override
-    public abstract void consumeEndElement(final XmlStanza currentStanza) throws IOException;
+    public abstract void consumeEndElement(final Stanza currentStanza) throws IOException;
 
     public final synchronized void close() throws IOException
     {
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setName("legion:stream");
         stanza.setSequenceId(this.localStanzaSequenceId++);
         stanza.setEventType(XMLStreamConstants.END_ELEMENT);
@@ -467,16 +353,16 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return this.socket == null || this.socket.isClosed() || this.isCloseRequested;
     }
 
-    public final void accept(XmlStanza message) throws IOException
+    public final void accept(Stanza message) throws IOException
     {
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setName("legion:accept");
         this.write(stanza);
 
         this.write(message);
 
-        stanza = new XmlStanza();
+        stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.END_ELEMENT);
         stanza.setName("legion:accept");
         this.write(stanza);
@@ -489,7 +375,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 
     public final void decline(String type, String reason) throws IOException
     {
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.CHARACTERS);
         stanza.setName("legion:decline");
         stanza.putAttribute("type", type);
@@ -499,7 +385,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 
     public final void ping() throws IOException
     {
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setEmptyElement(true);
         stanza.setName("legion:ping");
@@ -508,7 +394,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 
     protected final void pong() throws IOException
     {
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setEmptyElement(true);
         stanza.setName("legion:pong");
@@ -518,15 +404,6 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     public final boolean isDeclineAt(int index)
     {
         return this.isStackAt(index, "legion:decline");
-    }
-
-    public final boolean isCurrent(String name)
-    {
-        if(this.currentStanza != null)
-        {
-            return this.currentStanza.getName().equals(name);
-        }
-        return false;
     }
 
     public final boolean isStackAt(int index, String name)
@@ -690,5 +567,10 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         }
 
         return false;
+    }
+
+    public void resetReader() throws CommunicationException
+    {
+        this.communication.initInputReader(this.in);
     }
 }

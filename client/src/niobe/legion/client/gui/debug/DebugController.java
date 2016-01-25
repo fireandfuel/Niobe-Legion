@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (DebugController.java) is part of Niobe Legion (module niobe-legion-client).
  *
@@ -32,7 +32,7 @@ import niobe.legion.client.Client;
 import niobe.legion.client.gui.ICloseableDialogController;
 import niobe.legion.shared.Communicator;
 import niobe.legion.shared.ICommunicator;
-import niobe.legion.shared.data.XmlStanza;
+import niobe.legion.shared.data.Stanza;
 
 public class DebugController implements ICommunicator, ICloseableDialogController, XMLStreamConstants
 {
@@ -49,12 +49,12 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
     }
 
     @Override
-    public void consumeStartElement(XmlStanza currentStanza) throws IOException
+    public void consumeStartElement(Stanza currentStanza) throws IOException
     {
         this.startElement("[IN]", currentStanza);
     }
 
-    private void startElement(String type, XmlStanza currentStanza)
+    private void startElement(String type, Stanza currentStanza)
     {
         if(currentStanza != null && currentStanza.getName() != null)
         {
@@ -84,12 +84,12 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
     }
 
     @Override
-    public void consumeCharacters(XmlStanza currentStanza) throws IOException
+    public void consumeCharacters(Stanza currentStanza) throws IOException
     {
         this.characters("[IN]", currentStanza);
     }
 
-    private void characters(String type, XmlStanza currentStanza)
+    private void characters(String type, Stanza currentStanza)
     {
         if(currentStanza != null && currentStanza.getValue() != null)
         {
@@ -100,12 +100,12 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
     }
 
     @Override
-    public void consumeEndElement(XmlStanza currentStanza) throws IOException
+    public void consumeEndElement(Stanza currentStanza) throws IOException
     {
         this.endElement("[IN]", currentStanza);
     }
 
-    private void endElement(String type, XmlStanza currentStanza)
+    private void endElement(String type, Stanza currentStanza)
     {
         if(currentStanza != null && currentStanza.getName() != null)
         {
@@ -114,7 +114,7 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
     }
 
     @Override
-    public void write(XmlStanza stanza) throws IOException
+    public void write(Stanza stanza) throws IOException
     {
         if(stanza != null && stanza.getName() != null)
         {

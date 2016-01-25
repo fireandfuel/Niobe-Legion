@@ -67,13 +67,14 @@ import niobe.legion.client.gui.connect.LoginController;
 import niobe.legion.client.gui.debug.DebugController;
 import niobe.legion.shared.Base64;
 import niobe.legion.shared.Communicator;
+import niobe.legion.shared.communication.XmlCommunication;
 import niobe.legion.shared.data.IRight;
 import niobe.legion.shared.data.LegionRight;
-import niobe.legion.shared.data.XmlStanza;
+import niobe.legion.shared.data.Stanza;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupRightEntity;
-import niobe.legion.shared.model.marshal.XmlMarshaller;
+import niobe.legion.shared.model.marshal.StanzaMarshaller;
 
 /**
  * Bidirectional communicator client to server based on XML stream parsing
@@ -120,7 +121,7 @@ public class ClientCommunicator extends Communicator
     public ClientCommunicator(Socket socket, String authMechanisms, String blacklistedServersRegex,
                               final String keyStoreFile, final String keyStorePassword, final String[] cipherSuites)
     {
-        super(socket);
+        super(socket, new XmlCommunication());
         this.authMechanisms = authMechanisms.split(" ");
         this.blacklistedServersRegex = blacklistedServersRegex;
         this.keyStoreFile = keyStoreFile;
@@ -166,7 +167,7 @@ public class ClientCommunicator extends Communicator
 
     private void openStream() throws IOException
     {
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setName("legion:stream");
         stanza.setSequenceId(this.localStanzaSequenceId);
@@ -177,7 +178,7 @@ public class ClientCommunicator extends Communicator
 
     private void sendClient() throws IOException
     {
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setName("legion:client");
         stanza.setSequenceId(this.localStanzaSequenceId++);
@@ -185,26 +186,26 @@ public class ClientCommunicator extends Communicator
         stanza.putAttribute("version", ClientCommunicator.CLIENT_VERSION);
         this.write(stanza);
 
-        stanza = new XmlStanza();
+        stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setName("legion:features");
         this.write(stanza);
 
         for(String feature : ClientCommunicator.CLIENT_FEATURES)
         {
-            stanza = new XmlStanza();
+            stanza = new Stanza();
             stanza.setEventType(XMLStreamConstants.CHARACTERS);
             stanza.setName("legion:feature");
             stanza.setValue(feature);
             this.write(stanza);
         }
 
-        stanza = new XmlStanza();
+        stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.END_ELEMENT);
         stanza.setName("legion:features");
         this.write(stanza);
 
-        stanza = new XmlStanza();
+        stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setName("legion:mechanisms");
         this.write(stanza);
@@ -216,26 +217,26 @@ public class ClientCommunicator extends Communicator
                 continue;
             }
 
-            stanza = new XmlStanza();
+            stanza = new Stanza();
             stanza.setEventType(XMLStreamConstants.CHARACTERS);
             stanza.setName("legion:mechanism");
             stanza.setValue(authMechanism);
             this.write(stanza);
         }
 
-        stanza = new XmlStanza();
+        stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.END_ELEMENT);
         stanza.setName("legion:mechanisms");
         this.write(stanza);
 
-        stanza = new XmlStanza();
+        stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.END_ELEMENT);
         stanza.setName("legion:client");
         this.write(stanza);
     }
 
     @Override
-    public final void consumeStartElement(final XmlStanza currentStanza) throws IOException
+    public final void consumeStartElement(final Stanza currentStanza) throws IOException
     {
         String stanzaName = currentStanza.getName();
 
@@ -306,7 +307,7 @@ public class ClientCommunicator extends Communicator
 
                         if(!this.cachedStanzas.containsKey(id))
                         {
-                            this.cachedStanzas.put(id, new ArrayList<XmlStanza>());
+                            this.cachedStanzas.put(id, new ArrayList<Stanza>());
                         }
                     }
                 }
@@ -322,7 +323,7 @@ public class ClientCommunicator extends Communicator
 
                         if(this.cachedStanzas.containsKey(id))
                         {
-                            this.cachedStanzas.get(id).add(new XmlStanza(currentStanza));
+                            this.cachedStanzas.get(id).add(new Stanza(currentStanza));
                         }
                     }
                 }
@@ -331,7 +332,7 @@ public class ClientCommunicator extends Communicator
     }
 
     @Override
-    public final void consumeCharacters(final XmlStanza currentStanza) throws IOException
+    public final void consumeCharacters(final Stanza currentStanza) throws IOException
     {
         String stanzaName = currentStanza.getName();
 
@@ -376,7 +377,7 @@ public class ClientCommunicator extends Communicator
     }
 
     @Override
-    public final void consumeEndElement(final XmlStanza currentStanza) throws IOException
+    public final void consumeEndElement(final Stanza currentStanza) throws IOException
     {
         String stanzaName = currentStanza.getName();
 
@@ -431,7 +432,7 @@ public class ClientCommunicator extends Communicator
                         return;
                     }
 
-                    XmlStanza stanza = new XmlStanza();
+                    Stanza stanza = new Stanza();
                     stanza.setEventType(XMLStreamConstants.CHARACTERS);
                     stanza.setName("legion:server");
                     stanza.setSequenceId(this.localStanzaSequenceId++);
@@ -441,7 +442,7 @@ public class ClientCommunicator extends Communicator
                     if(ClientCommunicator.CLIENT_FEATURES.contains("starttls") &&
                             this.serverFeatures.contains("starttls") && !tlsEstablished)
                     {
-                        stanza = new XmlStanza();
+                        stanza = new Stanza();
                         stanza.setEmptyElement(true);
                         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
                         stanza.setName("legion:starttls");
@@ -467,7 +468,7 @@ public class ClientCommunicator extends Communicator
                         byte[] response = this.saslClient.evaluateChallenge(Base64.decode(currentStanza.getValue()));
                         if(!this.saslClient.isComplete())
                         {
-                            XmlStanza stanza = new XmlStanza();
+                            Stanza stanza = new Stanza();
                             stanza.setName("legion:response");
                             stanza.setSequenceId(this.localStanzaSequenceId++);
                             stanza.setEventType(XMLStreamConstants.CHARACTERS);
@@ -520,7 +521,7 @@ public class ClientCommunicator extends Communicator
                 if(!this.isCloseRequested)
                 {
                     this.isCloseRequested = true;
-                    XmlStanza stanza = new XmlStanza();
+                    Stanza stanza = new Stanza();
                     stanza.setName("legion:stream");
                     stanza.setSequenceId(this.localStanzaSequenceId++);
                     stanza.setEventType(XMLStreamConstants.END_ELEMENT);
@@ -551,11 +552,11 @@ public class ClientCommunicator extends Communicator
                     if(id != null && id.matches("\\d+"))
                     {
                         DatasetReceiver retriever = this.databaseRetrievers.remove(Long.parseLong(id));
-                        List<XmlStanza> datasets = this.cachedStanzas.remove(Long.parseLong(id));
+                        List<Stanza> datasets = this.cachedStanzas.remove(Long.parseLong(id));
 
                         if(retriever != null && datasets != null)
                         {
-                            retriever.setAll(XmlMarshaller.unmarshal(datasets));
+                            retriever.setAll(StanzaMarshaller.unmarshal(datasets));
                         }
                     }
                 }
@@ -666,7 +667,7 @@ public class ClientCommunicator extends Communicator
             initialResponse = this.saslClient.evaluateChallenge(new byte[0]);
         }
 
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setName("legion:auth");
         stanza.setSequenceId(this.localStanzaSequenceId++);
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
@@ -793,7 +794,7 @@ public class ClientCommunicator extends Communicator
             this.groupRights = new ArrayList<>();
             this.serverSideAuthenficated = false;
 
-            XmlStanza stanza = new XmlStanza();
+            Stanza stanza = new Stanza();
             stanza.setName("legion:deAuth");
             stanza.setSequenceId(this.localStanzaSequenceId++);
             stanza.setEventType(XMLStreamConstants.START_ELEMENT);
@@ -809,7 +810,7 @@ public class ClientCommunicator extends Communicator
                                HashMap<String, Object> parameters) throws IOException
     {
         this.databaseRetrievers.put(this.localStanzaSequenceId, retriever);
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setName("legion:query");
         stanza.setSequenceId(this.localStanzaSequenceId++);
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
@@ -819,7 +820,7 @@ public class ClientCommunicator extends Communicator
         stanza.putAttribute("where", this.createWhereStringFromMap(parameters));
         this.write(stanza);
 
-        stanza = new XmlStanza();
+        stanza = new Stanza();
         stanza.setName("legion:query");
         stanza.setEventType(XMLStreamConstants.END_ELEMENT);
         this.write(stanza);
@@ -828,20 +829,20 @@ public class ClientCommunicator extends Communicator
     public <T> void setDataset(T dataset, DatasetReceiver<T> retriever) throws IOException
     {
         this.databaseRetrievers.put(this.localStanzaSequenceId, retriever);
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setName("legion:query");
         stanza.setSequenceId(this.localStanzaSequenceId);
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.putAttribute("action", "set");
         this.write(stanza);
 
-        List<XmlStanza> stanzas = XmlMarshaller.marshal(dataset, this.localStanzaSequenceId++);
-        for(XmlStanza datasetStanza : stanzas)
+        List<Stanza> stanzas = StanzaMarshaller.marshal(dataset, this.localStanzaSequenceId++);
+        for(Stanza datasetStanza : stanzas)
         {
             this.write(datasetStanza);
         }
 
-        stanza = new XmlStanza();
+        stanza = new Stanza();
         stanza.setName("legion:query");
         stanza.setEventType(XMLStreamConstants.END_ELEMENT);
         this.write(stanza);
@@ -850,20 +851,20 @@ public class ClientCommunicator extends Communicator
     public <T> void removeDataset(T dataset, DatasetReceiver<T> retriever) throws IOException
     {
         this.databaseRetrievers.put(this.localStanzaSequenceId, retriever);
-        XmlStanza stanza = new XmlStanza();
+        Stanza stanza = new Stanza();
         stanza.setName("legion:query");
         stanza.setSequenceId(this.localStanzaSequenceId++);
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.putAttribute("action", "delete");
         this.write(stanza);
 
-        List<XmlStanza> stanzas = XmlMarshaller.marshal(dataset, this.localStanzaSequenceId++);
-        for(XmlStanza datasetStanza : stanzas)
+        List<Stanza> stanzas = StanzaMarshaller.marshal(dataset, this.localStanzaSequenceId++);
+        for(Stanza datasetStanza : stanzas)
         {
             this.write(datasetStanza);
         }
 
-        stanza = new XmlStanza();
+        stanza = new Stanza();
         stanza.setName("legion:query");
         stanza.setEventType(XMLStreamConstants.END_ELEMENT);
         this.write(stanza);

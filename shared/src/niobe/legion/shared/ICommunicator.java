@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (ICommunicator.java) is part of Niobe Legion (module niobe-legion-shared).
  *
@@ -22,17 +22,17 @@ package niobe.legion.shared;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import niobe.legion.shared.data.XmlStanza;
+import niobe.legion.shared.data.Stanza;
 
 public interface ICommunicator
 {
-    void consumeStartElement(XmlStanza currentStanza) throws IOException;
+    void consumeStartElement(Stanza currentStanza) throws IOException;
 
-    void consumeCharacters(XmlStanza currentStanza) throws IOException;
+    void consumeCharacters(Stanza currentStanza) throws IOException;
 
-    void consumeEndElement(XmlStanza currentStanza) throws IOException;
+    void consumeEndElement(Stanza currentStanza) throws IOException;
 
-    void write(XmlStanza stanza) throws IOException;
+    void write(Stanza stanza) throws IOException;
 
     String getNamespace();
 
