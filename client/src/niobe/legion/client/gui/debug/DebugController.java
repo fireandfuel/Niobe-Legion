@@ -58,7 +58,6 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
     {
         if(currentStanza != null && currentStanza.getName() != null)
         {
-
             StringBuilder message = new StringBuilder(type + " <" + currentStanza.getName());
 
             if(!currentStanza.hasNoAttributes())
@@ -77,6 +76,11 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
             if("legion:proceedtls".equals(currentStanza.getName()))
             {
                 message.append("-- Start TLS connection\n");
+            }
+
+            if("legion:proceedcompression".equals(currentStanza.getName()))
+            {
+                message.append("-- Start compressed connection\n");
             }
 
             Platform.runLater(() -> messages.appendText(message.toString()));

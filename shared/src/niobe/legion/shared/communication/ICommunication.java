@@ -20,22 +20,22 @@
 
 package niobe.legion.shared.communication;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import javax.xml.stream.XMLStreamConstants;
 import niobe.legion.shared.data.Stanza;
 
 public interface ICommunication extends XMLStreamConstants
 {
-    void initInputReader(DataInputStream in) throws CommunicationException;
+    void initInputReader(InputStream in) throws CommunicationException;
 
     /**
      * write a stanza instantly via communication implementation
      *
      * @param stanza the stanza to write
      */
-    void write(DataOutputStream out, Stanza stanza) throws IOException;
+    void write(OutputStream out, Stanza stanza) throws IOException;
 
     /**
      * should be blocking

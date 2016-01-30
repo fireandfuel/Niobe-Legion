@@ -92,7 +92,7 @@ public class ClientCommunicator extends Communicator
     public static final int CLIENT_AUTH_ERR = 1;
     protected final static String CLIENT_NAME = "legion_client";
     protected final static String CLIENT_VERSION = "0";
-    private final static List<String> CLIENT_FEATURES = Arrays.asList("starttls");
+    private final static List<String> CLIENT_FEATURES = new ArrayList<String>(Arrays.asList("starttls"));
 
     final String keyStoreFile;
     final String keyStorePassword;
@@ -107,6 +107,7 @@ public class ClientCommunicator extends Communicator
 
     private boolean clientAcceptedFromServer;
     private boolean tlsEstablished;
+    private boolean compressionActive;
     private String serverName;
     private String serverVersion;
     private List<String> serverFeatures = new ArrayList<String>();
@@ -119,7 +120,8 @@ public class ClientCommunicator extends Communicator
     List<GroupRightEntity> groupRights;
 
     public ClientCommunicator(Socket socket, String authMechanisms, String blacklistedServersRegex,
-                              final String keyStoreFile, final String keyStorePassword, final String[] cipherSuites)
+                              final String keyStoreFile, final String keyStorePassword, final String[] cipherSuites,
+                              final List<String> additionalFeatures)
     {
         super(socket, new XmlCommunication());
         this.authMechanisms = authMechanisms.split(" ");
@@ -127,6 +129,13 @@ public class ClientCommunicator extends Communicator
         this.keyStoreFile = keyStoreFile;
         this.keyStorePassword = keyStorePassword;
         this.cipherSuites = cipherSuites;
+
+        if(additionalFeatures != null)
+        {
+            additionalFeatures.stream()
+                    .filter(feature -> !"starttls".equals(feature) && !ClientCommunicator.CLIENT_FEATURES
+                            .contains(feature)).forEach(ClientCommunicator.CLIENT_FEATURES::add);
+        }
 
         if(Client.isDebug())
         {
@@ -243,13 +252,18 @@ public class ClientCommunicator extends Communicator
         switch(stanzaName)
         {
             case "legion:stream":
-                this.sendClient();
+                if(!this.clientAcceptedFromServer)
+                {
+                    this.sendClient();
+                } else
+                {
+                    // skip server/client checks
+                    proceedConnection();
+                }
+                break;
             case "legion:server":
                 this.serverName = currentStanza.getAttribute("name");
                 this.serverVersion = currentStanza.getAttribute("version");
-
-
-
                 break;
             case "legion:proceedtls":
                 if(this.clientAcceptedFromServer && !this.tlsEstablished && this.keyStorePassword != null &&
@@ -294,6 +308,53 @@ public class ClientCommunicator extends Communicator
                     } else
                     {
                         this.decline("proceedtls", "there is no valid server certificate selected");
+                    }
+                }
+                break;
+            case "legion:proceedcompression":
+                if(this.clientAcceptedFromServer && !this.compressionActive)
+                {
+                    String algorithm = currentStanza.getAttribute("algorithm");
+                    if(algorithm != null)
+                    {
+                        switch(algorithm)
+                        {
+                            case "gzip":
+                            case "xz":
+                                if(ClientCommunicator.CLIENT_FEATURES
+                                        .contains("compressed_stream_" + algorithm) && this.serverFeatures
+                                        .contains("compressed_stream_" + algorithm))
+                                {
+                                    try
+                                    {
+                                        this.compressionActive = this
+                                                .replaceStreamsWithCompressedStreams(true, algorithm);
+                                        if(this.compressionActive)
+                                        {
+                                            this.openStream();
+                                            this.resetReader();
+                                        } else
+                                        {
+                                            this.decline("startcompression", "can not start compression");
+                                        }
+                                    } catch(Exception e)
+                                    {
+                                        Logger.exception(LegionLogger.STDERR, e);
+                                        this.decline("starttls", "can not start compression");
+                                    }
+                                } else
+                                {
+                                    this.decline("startcompression",
+                                                 "compression feature \"compressed_stream_" + algorithm + "\" is not enabled");
+                                }
+                                break;
+                            default:
+                                this.decline("startcompression", "unknown compression algorithm \"" + algorithm + "\"");
+                                break;
+                        }
+                    } else
+                    {
+                        this.decline("startcompression", "no compression algorithm selected");
                     }
                 }
                 break;
@@ -439,24 +500,7 @@ public class ClientCommunicator extends Communicator
                     stanza.setValue(this.serverName + ":" + this.serverVersion);
                     this.accept(stanza);
 
-                    if(ClientCommunicator.CLIENT_FEATURES.contains("starttls") &&
-                            this.serverFeatures.contains("starttls") && !tlsEstablished)
-                    {
-                        stanza = new Stanza();
-                        stanza.setEmptyElement(true);
-                        stanza.setEventType(XMLStreamConstants.START_ELEMENT);
-                        stanza.setName("legion:starttls");
-                        this.write(stanza);
-                    } else
-                    {
-                        if(Client.getFxController().getCurrentController() instanceof ConnectController)
-                        {
-                            Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Login.fxml");
-                        } else if(!(Client.getFxController().getCurrentController() instanceof LoginController))
-                        {
-                            Client.showRelogin();
-                        }
-                    }
+                    proceedConnection();
                 }
 
                 break;
@@ -576,19 +620,56 @@ public class ClientCommunicator extends Communicator
         }
     }
 
+    private void proceedConnection() throws IOException
+    {
+        Stanza stanza;
+        if(ClientCommunicator.CLIENT_FEATURES.contains("starttls") &&
+                this.serverFeatures.contains("starttls") && !tlsEstablished)
+        {
+            stanza = new Stanza();
+            stanza.setEmptyElement(true);
+            stanza.setEventType(XMLStreamConstants.START_ELEMENT);
+            stanza.setName("legion:starttls");
+            this.write(stanza);
+        } else if(ClientCommunicator.CLIENT_FEATURES.contains("compressed_stream_xz") &&
+                this.serverFeatures.contains("compressed_stream_xz") && !compressionActive)
+        {
+            stanza = new Stanza();
+            stanza.setEmptyElement(true);
+            stanza.setEventType(XMLStreamConstants.START_ELEMENT);
+            stanza.setName("legion:startcompression");
+            stanza.putAttribute("algorithm", "xz");
+            this.write(stanza);
+        } else if(ClientCommunicator.CLIENT_FEATURES.contains("compressed_stream_gzip") &&
+                this.serverFeatures.contains("compressed_stream_gzip") && !compressionActive)
+        {
+            stanza = new Stanza();
+            stanza.setEmptyElement(true);
+            stanza.setEventType(XMLStreamConstants.START_ELEMENT);
+            stanza.setName("legion:startcompression");
+            stanza.putAttribute("algorithm", "gzip");
+            this.write(stanza);
+        } else if(Client.getFxController().getCurrentController() instanceof ConnectController)
+        {
+            Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Login.fxml");
+        } else if(!(Client.getFxController().getCurrentController() instanceof LoginController))
+        {
+            Client.showRelogin();
+        }
+    }
+
     private void connectionFailed(String reason)
     {
         final ConnectController connectController = (Client.getFxController()
-                .getCurrentController() instanceof ConnectController) ? (ConnectController) Client
-                .getFxController().getCurrentController() : null;
+                .getCurrentController() instanceof ConnectController) ? (ConnectController) Client.getFxController()
+                .getCurrentController() : null;
         if(connectController != null)
         {
             Platform.runLater(() -> {
                 connectController.getProgressStatusProperty().unbind();
                 connectController.getProgressStatusProperty().setValue(0);
                 connectController.getProgressLabelProperty().unbind();
-                connectController.getProgressLabelProperty()
-                        .setValue(Client.getLocalisation(reason));
+                connectController.getProgressLabelProperty().setValue(Client.getLocalisation(reason));
             });
         }
     }

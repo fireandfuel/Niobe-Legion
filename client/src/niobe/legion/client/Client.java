@@ -28,6 +28,9 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -66,6 +69,7 @@ public class Client extends Application
     static String authMechanisms = "";
     static String blacklistedServersRegex = "";
     static String modulePath = "";
+    static List<String> additionalFeatures = null;
 
     static boolean debug;
     static Locale locale;
@@ -251,6 +255,12 @@ public class Client extends Application
                 Client.keyStoreFile = properties.getProperty("keystore_file", null);
                 Client.keyStorePassword = properties.getProperty("keystore_password", null);
 
+                String additionalFeaturesString = properties.getProperty("additional_features");
+                if(additionalFeaturesString != null && !additionalFeaturesString.isEmpty())
+                {
+                    additionalFeatures = new ArrayList<String>(Arrays.asList(additionalFeaturesString.split(" ")));
+                }
+
                 String cipherSuitesString = properties.getProperty("cipher_suites");
                 if(cipherSuitesString != null && !cipherSuitesString.isEmpty())
                 {
@@ -358,7 +368,8 @@ public class Client extends Application
                                                           Client.blacklistedServersRegex,
                                                           Client.keyStoreFile,
                                                           Client.keyStorePassword,
-                                                          Client.cipherSuites);
+                                                          Client.cipherSuites,
+                                                          Client.additionalFeatures);
                     trials = 1;
                 } catch(IOException | NumberFormatException e)
                 {

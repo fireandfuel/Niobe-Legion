@@ -20,9 +20,9 @@
 
 package niobe.legion.shared.communication;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -39,7 +39,7 @@ public class XmlCommunication implements ICommunication
     private XMLStreamReader reader;
 
     @Override
-    public void initInputReader(DataInputStream in) throws CommunicationException
+    public void initInputReader(InputStream in) throws CommunicationException
     {
         try
         {
@@ -51,7 +51,7 @@ public class XmlCommunication implements ICommunication
     }
 
     @Override
-    public void write(DataOutputStream out, Stanza message) throws IOException
+    public void write(OutputStream out, Stanza message) throws IOException
     {
         if(out != null)
         {
@@ -131,7 +131,6 @@ public class XmlCommunication implements ICommunication
 
             out.flush();
         }
-
     }
 
     @Override

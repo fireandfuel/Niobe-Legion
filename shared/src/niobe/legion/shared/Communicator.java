@@ -23,6 +23,8 @@ package niobe.legion.shared;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -42,6 +44,7 @@ import javax.net.ssl.SSLSocket;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import niobe.legion.shared.communication.CommunicationException;
+import niobe.legion.shared.communication.CompressedCommunication;
 import niobe.legion.shared.communication.ICommunication;
 import niobe.legion.shared.data.IRight;
 import niobe.legion.shared.data.LegionRight;
@@ -79,8 +82,8 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     protected long localStanzaSequenceId = Math.abs(Utils.random.nextLong());
     protected boolean isCloseRequested;
 
-    private DataInputStream in;
-    private DataOutputStream out;
+    private InputStream in;
+    private OutputStream out;
 
     private LinkedList<Stanza> stanzaStack = new LinkedList<Stanza>();
 
@@ -163,6 +166,19 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     {
         this.in = new DataInputStream(this.sslSocket.getInputStream());
         this.out = new DataOutputStream(this.sslSocket.getOutputStream());
+    }
+
+    protected final boolean replaceStreamsWithCompressedStreams(boolean clientMode, String algorithm) throws IOException
+    {
+        if(algorithm != null)
+        {
+            this.communication = new CompressedCommunication(this.communication,
+                                                             (!clientMode ? this.in : null),
+                                                             (clientMode ? this.out : null),
+                                                             algorithm);
+            return true;
+        }
+        return false;
     }
 
     @Override

@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (Server.java) is part of Niobe Legion (module niobe-legion-server).
  *
@@ -29,6 +29,7 @@ import java.net.Socket;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -58,6 +59,7 @@ public class Server
     private final ExecutorService connectionPool;
     private final BlockingQueue<Runnable> connectionList;
 
+    private static List<String> additionalFeatures;
 
     private ServerSocket serverSocket;
 
@@ -113,7 +115,8 @@ public class Server
                                                                            blacklistedClientsRegex,
                                                                            keyStoreFile,
                                                                            keyStorePassword,
-                                                                           cipherSuites);
+                                                                           cipherSuites,
+                                                                           additionalFeatures);
                         COMMUNICATORS.add(communicator);
                         connectionPool.execute(communicator);
                     } else
@@ -164,6 +167,12 @@ public class Server
                 minConnections = properties.getProperty("sql_min_connections", "1");
                 maxConnections = properties.getProperty("sql_max_connections", "1");
                 blacklistedClientsRegex = properties.getProperty("blacklisted_clients_regex", "");
+
+                String additionalFeaturesString = properties.getProperty("additional_features");
+                if(additionalFeaturesString != null && !additionalFeaturesString.isEmpty())
+                {
+                    additionalFeatures = new ArrayList<String>(Arrays.asList(additionalFeaturesString.split(" ")));
+                }
 
                 String cipherSuitesString = properties.getProperty("cipher_suites");
                 if(cipherSuitesString != null && !cipherSuitesString.isEmpty())

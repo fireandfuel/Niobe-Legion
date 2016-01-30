@@ -152,13 +152,15 @@ public class ServerCommunicator extends Communicator
 
     private boolean serverAcceptedFromClient;
     private boolean tlsEstablished;
+    private boolean compressionActive;
     private String clientName;
     private String clientVersion;
     private List<String> clientFeatures = new ArrayList<String>();
     private List<String> clientAuthMechanisms = new ArrayList<String>();
 
     public ServerCommunicator(Socket socket, String authMechanisms, String blacklistedClientsRegex,
-                              final String keyStoreFile, final String keyStorePassword, final String[] cipherSuites)
+                              final String keyStoreFile, final String keyStorePassword, final String[] cipherSuites,
+                              List<String> additionalFeatures)
     {
         super(socket, new XmlCommunication());
 
@@ -175,6 +177,12 @@ public class ServerCommunicator extends Communicator
             {
                 ServerCommunicator.SERVER_FEATURES.add("starttls");
             }
+        }
+        if(additionalFeatures != null)
+        {
+            additionalFeatures.stream()
+                    .filter(feature -> !"starttls".equals(feature) && !ServerCommunicator.SERVER_FEATURES
+                            .contains(feature)).forEach(ServerCommunicator.SERVER_FEATURES::add);
         }
     }
 
@@ -255,7 +263,6 @@ public class ServerCommunicator extends Communicator
                 this.write(stanza);
                 break;
             case "legion:client":
-
                 this.clientName = currentStanza.getAttribute("name");
                 this.clientVersion = currentStanza.getAttribute("version");
 
@@ -305,6 +312,58 @@ public class ServerCommunicator extends Communicator
                     }
                 }
                 break;
+            case "legion:startcompression":
+                if(this.serverAcceptedFromClient && !compressionActive)
+                {
+                    String algorithm = currentStanza.getAttribute("algorithm");
+                    if(algorithm != null)
+                    {
+                        switch(algorithm)
+                        {
+                            case "gzip":
+                            case "xz":
+                                if(ServerCommunicator.SERVER_FEATURES
+                                        .contains("compressed_stream_" + algorithm) && this.clientFeatures
+                                        .contains("compressed_stream_" + algorithm))
+                                {
+                                    stanza = new Stanza();
+                                    stanza.setEventType(XMLStreamConstants.START_ELEMENT);
+                                    stanza.setEmptyElement(true);
+                                    stanza.setName("legion:proceedcompression");
+                                    stanza.setSequenceId(this.localStanzaSequenceId++);
+                                    stanza.putAttribute("algorithm", algorithm);
+                                    this.write(stanza);
+                                    try
+                                    {
+                                        this.compressionActive = this
+                                                .replaceStreamsWithCompressedStreams(false, algorithm);
+                                        if(this.compressionActive)
+                                        {
+                                            this.resetReader();
+                                        } else
+                                        {
+                                            this.decline("startcompression", "can not start compression");
+                                        }
+                                    } catch(Exception e)
+                                    {
+                                        Logger.exception(LegionLogger.STDERR, e);
+                                        this.decline("starttls", "can not start compression");
+                                    }
+                                } else
+                                {
+                                    this.decline("startcompression",
+                                                 "compression feature \"compressed_stream_" + algorithm + "\" is not enabled");
+                                }
+                                break;
+                            default:
+                                this.decline("startcompression", "unknown compression algorithm \"" + algorithm + "\"");
+                                break;
+                        }
+                    } else
+                    {
+                        this.decline("startcompression", "no compression algorithm selected");
+                    }
+                }
             case "legion:auth":
                 if(this.serverAcceptedFromClient)
                 {
@@ -396,8 +455,7 @@ public class ServerCommunicator extends Communicator
                             .equals(currentStanza.getAttribute("action"))) &&
                             currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
                     {
-                        this.cachedStanzas
-                                .put(Long.parseLong(currentStanza.getSequenceId()), new ArrayList<Stanza>());
+                        this.cachedStanzas.put(Long.parseLong(currentStanza.getSequenceId()), new ArrayList<Stanza>());
                     } else if("get".equals(currentStanza.getAttribute("action")) &&
                             currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
                     {
@@ -731,7 +789,8 @@ public class ServerCommunicator extends Communicator
                                 }.start();
                             } else if("delete".equals(currentStanza.getAttribute("action")))
                             {
-                                StanzaMarshaller.unmarshal(stanzas).stream().filter(dataset -> dataset instanceof IEntity)
+                                StanzaMarshaller.unmarshal(stanzas).stream()
+                                        .filter(dataset -> dataset instanceof IEntity)
                                         .forEach(dataset -> this.deleteDataset((IEntity) dataset));
                             }
                         }
