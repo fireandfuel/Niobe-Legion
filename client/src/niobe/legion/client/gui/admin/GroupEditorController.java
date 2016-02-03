@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (GroupEditorController.java) is part of Niobe Legion (module niobe-legion-client).
  *
@@ -49,9 +49,8 @@ public class GroupEditorController implements ICloseableDialogController, Datase
 {
     private final static FxDatasetTreeColumn[] columns = new FxDatasetTreeColumn[]{new FxDatasetTreeColumn<String>(
             "displayName",
-            Client.getLocalisation("name")), new FxDatasetTreeColumn<Boolean>("active",
-                                                                              Client.getLocalisation("activated"),
-                                                                              true)};
+            Client.getLocalisation("name"),
+            300), new FxDatasetTreeColumn<Boolean>("active", Client.getLocalisation("activated"), true, 50)};
 
     @FXML
     private TextField groupName;

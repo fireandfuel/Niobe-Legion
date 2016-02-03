@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (GroupAdminController.java) is part of Niobe Legion (module niobe-legion-client).
  *
@@ -39,9 +39,11 @@ public class GroupAdminController implements DatasetReceiver<GroupEntity>
 {
     private static final FxDatasetColumn[] columns = new FxDatasetColumn[]{new FxDatasetColumn<Long>("id",
                                                                                                      Client.getLocalisation(
-                                                                                                             "id")), new FxDatasetColumn<String>(
+                                                                                                             "id"),
+                                                                                                     50), new FxDatasetColumn<String>(
             "name",
-            Client.getLocalisation("name"))};
+            Client.getLocalisation("name"),
+            400)};
 
     private ObservableList<FxDatasetWrapper<GroupEntity>> groups = FXCollections
             .observableList(new ArrayList<FxDatasetWrapper<GroupEntity>>());
@@ -78,7 +80,9 @@ public class GroupAdminController implements DatasetReceiver<GroupEntity>
                 "/niobe/legion/client/fxml/tab/admin/GroupEditor.fxml",
                 Client.getLocalisation("newGroup"),
                 Modality.WINDOW_MODAL,
-                true);
+                true,
+                600,
+                400);
         controller.setDatasetRetriever(this);
     }
 
@@ -90,7 +94,9 @@ public class GroupAdminController implements DatasetReceiver<GroupEntity>
                 "/niobe/legion/client/fxml/tab/admin/GroupEditor.fxml",
                 Client.getLocalisation("editGroup"),
                 Modality.WINDOW_MODAL,
-                true);
+                true,
+                600,
+                400);
         controller.setData(wrapper);
         controller.setDatasetRetriever(this);
     }

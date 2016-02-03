@@ -175,7 +175,7 @@ public class Client extends Application
                         "/niobe/legion/client/fxml/connect/Relogin.fxml",
                         Client.getLocalisation("loginAuthentication"),
                         Modality.APPLICATION_MODAL,
-                        false);
+                        false, 250, 125);
             } catch(IOException e)
             {
                 Logger.exception(LegionLogger.STDERR, e);

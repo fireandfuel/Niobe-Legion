@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (MainController.java) is part of Niobe Legion (module niobe-legion-client).
  *
@@ -209,6 +209,14 @@ public class MainController
     public ICloseableDialogController showHeavyWeightDialog(final String maskURI, final String title, Modality modality,
                                                             boolean closeable) throws IOException
     {
+        return this.showHeavyWeightDialog(maskURI, title, modality, closeable, -1, -1);
+    }
+
+    public ICloseableDialogController showHeavyWeightDialog(final String maskURI, final String title, Modality modality,
+                                                            boolean closeable,
+                                                            int width,
+                                                            int height) throws IOException
+    {
         if(Platform.isFxApplicationThread())
         {
             final Stage dialog = new Stage();
@@ -219,7 +227,7 @@ public class MainController
             }
             dialog.setTitle(title);
             dialog.initStyle(StageStyle.TRANSPARENT);
-            dialog.setResizable(false);
+            dialog.setResizable(true);
 
             URL location;
             if(System.getProperty("os.name").toLowerCase().contains("mac"))
@@ -232,6 +240,14 @@ public class MainController
 
             FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
             Scene scene = loader.load();
+            if(width > -1)
+            {
+                dialog.setWidth(width);
+            }
+            if(height > -1)
+            {
+                dialog.setHeight(height);
+            }
             DialogController controller = loader.getController();
             controller.setTitle(title);
             ICloseableDialogController childrenController = controller.loadMask(maskURI, closeable);

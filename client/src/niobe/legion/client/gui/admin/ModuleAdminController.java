@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (ModuleAdminController.java) is part of Niobe Legion (module niobe-legion-client).
  *
@@ -38,13 +38,18 @@ public class ModuleAdminController implements DatasetReceiver<ModuleEntity>
 {
     private static final FxDatasetColumn[] columns = new FxDatasetColumn[]{new FxDatasetColumn<Long>("id",
                                                                                                      Client.getLocalisation(
-                                                                                                             "id")), new FxDatasetColumn<String>(
+                                                                                                             "id"),
+                                                                                                     50), new FxDatasetColumn<String>(
             "name",
-            Client.getLocalisation("name")), new FxDatasetColumn<Long>("qualified_name",
-                                                                       Client.getLocalisation("qualifiedName")), new FxDatasetColumn<String>(
-            "version",
-            Client.getLocalisation("version")), new FxDatasetColumn<String>("activated",
-                                                                            Client.getLocalisation("activated"))};
+            Client.getLocalisation("name"),
+            200), new FxDatasetColumn<Long>("qualified_name",
+                                            Client.getLocalisation("qualifiedName"),
+                                            200), new FxDatasetColumn<String>("version",
+                                                                              Client.getLocalisation("version"),
+                                                                              100), new FxDatasetColumn<String>(
+            "activated",
+            Client.getLocalisation("activated"),
+            50)};
 
     private ObservableList<FxDatasetWrapper<ModuleEntity>> modules = FXCollections
             .observableList(new ArrayList<FxDatasetWrapper<ModuleEntity>>());

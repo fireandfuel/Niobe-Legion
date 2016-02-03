@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (FxDatasetTreeColumn.java) is part of Niobe Legion (module niobe-legion-client).
  *
@@ -28,27 +28,48 @@ public class FxDatasetTreeColumn<C> extends TreeTableColumn<FxDatasetWrapper, C>
 {
     public FxDatasetTreeColumn(final String key, final String name)
     {
-        this(key, name, null);
+        this(key, name, null, -1);
+    }
+
+    public FxDatasetTreeColumn(final String key, final String name, int width)
+    {
+        this(key, name, null, width);
     }
 
     public FxDatasetTreeColumn(final String key, final String name, final boolean editable)
     {
-        this(key, name, editable, null);
+        this(key, name, editable, null, -1);
+    }
+
+    public FxDatasetTreeColumn(final String key, final String name, final boolean editable, int widht)
+    {
+        this(key, name, editable, null, widht);
     }
 
     public FxDatasetTreeColumn(final String key, final String name,
                                final Callback<Integer, ObservableValue<Boolean>> getSelectedProperty)
     {
+        this(key, name, getSelectedProperty, -1);
+    }
+
+    public FxDatasetTreeColumn(final String key, final String name,
+                               final Callback<Integer, ObservableValue<Boolean>> getSelectedProperty, int width)
+    {
         super(name);
         this.setCellValueFactory(column -> (ObservableValue<C>) column.getValue().getValue().getProperty(key));
 
         this.setCellFactory(param -> new FxDatasetTreeCell<FxDatasetWrapper, C>(getSelectedProperty));
+
+        if(width > -1)
+        {
+            this.setPrefWidth(width);
+        }
     }
 
     public FxDatasetTreeColumn(final String key, final String name, final boolean editable,
-                               final Callback<Integer, ObservableValue<Boolean>> getSelectedProperty)
+                               final Callback<Integer, ObservableValue<Boolean>> getSelectedProperty, int width)
     {
-        this(key, name, getSelectedProperty);
+        this(key, name, getSelectedProperty, width);
 
         this.setEditable(editable);
     }

@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (UserAdminController.java) is part of Niobe Legion (module niobe-legion-client).
  *
@@ -39,10 +39,10 @@ public class UserAdminController implements DatasetReceiver<UserEntity>
 {
     private static final FxDatasetColumn[] columns = new FxDatasetColumn[]{new FxDatasetColumn<Long>("id",
                                                                                                      Client.getLocalisation(
-                                                                                                             "id")), new FxDatasetColumn<String>(
+                                                                                                             "id"), 50), new FxDatasetColumn<String>(
             "name",
-            Client.getLocalisation("name")), new FxDatasetColumn<String>("group::name",
-                                                                         Client.getLocalisation("group"))};
+            Client.getLocalisation("name"), 200), new FxDatasetColumn<String>("group::name",
+                                                                         Client.getLocalisation("group"), 200)};
 
     private ObservableList<FxDatasetWrapper<UserEntity>> users = FXCollections
             .observableList(new ArrayList<FxDatasetWrapper<UserEntity>>());
@@ -79,7 +79,9 @@ public class UserAdminController implements DatasetReceiver<UserEntity>
                 "/niobe/legion/client/fxml/tab/admin/UserEditor.fxml",
                 Client.getLocalisation("newUser"),
                 Modality.WINDOW_MODAL,
-                true);
+                true,
+                600,
+                400);
         controller.setDatasetRetriever(this);
     }
 
@@ -91,7 +93,9 @@ public class UserAdminController implements DatasetReceiver<UserEntity>
                 "/niobe/legion/client/fxml/tab/admin/UserEditor.fxml",
                 Client.getLocalisation("editUser"),
                 Modality.WINDOW_MODAL,
-                true);
+                true,
+                600,
+                400);
         controller.setData(wrapper);
         controller.setDatasetRetriever(this);
     }
