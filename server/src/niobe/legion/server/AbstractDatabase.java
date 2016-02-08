@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (AbstractDatabase.java) is part of Niobe Legion (module niobe-legion-server).
  *
@@ -207,11 +207,18 @@ public abstract class AbstractDatabase
         }
 
         this.entityManagerFactory = Persistence.createEntityManagerFactory(persistenceName, properties);
+    }
 
+    protected final void createEntityManager()
+    {
+        if(this.entityManager != null)
+        {
+            this.closeEntityManager();
+        }
         this.entityManager = this.entityManagerFactory.createEntityManager();
     }
 
-    public final void beginTransaction()
+    protected final void beginTransaction()
     {
         if(this.entityManager != null)
         {
@@ -238,6 +245,15 @@ public abstract class AbstractDatabase
         }
     }
 
+    protected final void closeEntityManager()
+    {
+        if(this.entityManager != null)
+        {
+            this.entityManager.close();
+            this.entityManager = null;
+        }
+    }
+
     public final <T> T getResult(final String queryName, final Class<T> clazz, Map.Entry... parameters)
     {
         return (T) this.getResult(queryName, clazz, parametersToMap(parameters));
@@ -245,6 +261,7 @@ public abstract class AbstractDatabase
 
     public final <T> T getResult(final String queryName, final Class<T> clazz, Map<String, Object> parameters)
     {
+        this.createEntityManager();
         return (T) this.getResult(this.entityManager.createNamedQuery(queryName, clazz), parameters);
     }
 
@@ -267,12 +284,16 @@ public abstract class AbstractDatabase
         {
             e.printStackTrace();
             this.rollbackTransaction();
+        } finally
+        {
+            this.closeEntityManager();
         }
         return (T) result;
     }
 
     public final <T> List<T> getResults(final Class<T> clazz)
     {
+        this.createEntityManager();
         CriteriaQuery criteriaQuery = this.entityManager.getCriteriaBuilder().createQuery(clazz);
         criteriaQuery.from(clazz);
 
@@ -281,6 +302,7 @@ public abstract class AbstractDatabase
 
     public final <T> List<T> getResults(final Class<T> clazz, final String parameters)
     {
+        this.createEntityManager();
         Query query = this.entityManager.createNativeQuery(parameters, clazz);
 
         List<T> results = null;
@@ -295,6 +317,9 @@ public abstract class AbstractDatabase
         {
             e.printStackTrace();
             this.rollbackTransaction();
+        } finally
+        {
+            this.closeEntityManager();
         }
         return results;
     }
@@ -306,8 +331,8 @@ public abstract class AbstractDatabase
 
     public final <T> List<T> getResults(final String queryName, final Class<T> clazz, Map<String, Object> parameters)
     {
+        this.createEntityManager();
         return this.getResults(this.entityManager.createNamedQuery(queryName, clazz), parameters);
-
     }
 
     private <T> List<T> getResults(final TypedQuery<T> query, final Map<String, Object> parameters)
@@ -329,6 +354,9 @@ public abstract class AbstractDatabase
         {
             e.printStackTrace();
             this.rollbackTransaction();
+        } finally
+        {
+            this.closeEntityManager();
         }
         return results;
     }
@@ -337,6 +365,7 @@ public abstract class AbstractDatabase
     {
         try
         {
+            this.createEntityManager();
             this.beginTransaction();
             // object may contain a list or array of objects which are already known to entityManager
             object = this.entityManager.merge(object);
@@ -347,6 +376,9 @@ public abstract class AbstractDatabase
         {
             e.printStackTrace();
             this.rollbackTransaction();
+        } finally
+        {
+            this.closeEntityManager();
         }
         return null;
     }
@@ -356,6 +388,7 @@ public abstract class AbstractDatabase
         T result = object;
         try
         {
+            this.createEntityManager();
             this.beginTransaction();
             result = this.entityManager.merge(object);
             this.commitTransaction();
@@ -363,6 +396,9 @@ public abstract class AbstractDatabase
         {
             e.printStackTrace();
             this.rollbackTransaction();
+        } finally
+        {
+            this.closeEntityManager();
         }
 
         return result;
@@ -372,6 +408,7 @@ public abstract class AbstractDatabase
     {
         try
         {
+            this.createEntityManager();
             this.beginTransaction();
             this.entityManager.remove(object);
             this.commitTransaction();
@@ -379,6 +416,9 @@ public abstract class AbstractDatabase
         {
             e.printStackTrace();
             this.rollbackTransaction();
+        } finally
+        {
+            this.closeEntityManager();
         }
     }
 
