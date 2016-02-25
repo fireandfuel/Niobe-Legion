@@ -37,6 +37,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
@@ -52,6 +56,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javax.xml.stream.XMLStreamException;
 import niobe.legion.client.Client;
+import niobe.legion.client.gui.about.AboutController;
+import niobe.legion.client.gui.platform.osx.MenuToolkit;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 
@@ -74,27 +80,14 @@ public class MainController
     @FXML
     private void initialize() throws IOException
     {
+        setupMenuBar();
+
         this.userButton.setPadding(new Insets(0));
         this.userButton.setOnAction(event -> {
             Popup popup = new Popup();
             Button button = new Button(Client.getLocalisation("logout"));
             button.setOnAction(buttonEvent -> {
-
-                this.showLightweightDialog(Client.getLocalisation("logoutQuestion"), ButtonType.YES, ButtonType.NO)
-                        .addListener((observable, oldValue, newValue) -> {
-                            if(newValue == ButtonType.YES)
-                            {
-                                try
-                                {
-                                    Client.getCommunicator().logout();
-                                } catch(IOException e)
-                                {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-
-
+                this.logout();
             });
             button.setFocusTraversable(false);
             popup.setAutoFix(true);
@@ -501,6 +494,95 @@ public class MainController
         }
     }
 
+    private void setupMenuBar()
+    {
+        MenuToolkit toolkit = null;
+
+        if(System.getProperty("os.name").toLowerCase().contains("mac"))
+        {
+            toolkit = MenuToolkit.toolkit();
+        }
+
+        MenuBar bar = new MenuBar();
+
+        // Application Menu
+        // TBD: services menu
+        Menu appMenu = new Menu(Client.APP_NAME); // Name for appMenu can't be set at
+        // Runtime
+        MenuItem aboutItem = new MenuItem(String.format(Client.getLocalisation("about"), Client.APP_NAME));
+        aboutItem.setOnAction(event -> {
+            Stage stage = new Stage(StageStyle.TRANSPARENT);
+
+            FXMLLoader loader = new FXMLLoader(this.getClass()
+                                                       .getResource("/niobe/legion/client/fxml/about/AboutOSX.fxml"),
+                                               Client.getLocalBundle());
+
+            try
+            {
+                Scene scene = loader.load();
+                AboutController controller = loader.getController();
+
+                scene.getStylesheets()
+                        .add(this.getClass().getResource("/niobe/legion/client/css/theme.css").toExternalForm());
+                scene.setFill(null);
+                stage.setTitle(String.format(Client.getLocalisation("about"), Client.APP_NAME));
+                controller.setTitle(stage.getTitle());
+                stage.setScene(scene);
+                controller.setStage(stage);
+                stage.setWidth(600);
+                stage.setHeight(400);
+                ResizeDragListener.addResizeListener(stage);
+                stage.show();
+            } catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+
+        });
+        MenuItem prefsItem = new MenuItem(Client.getLocalisation("preferencesMenuItem"));
+        if(toolkit != null)
+        {
+            appMenu.getItems().addAll(aboutItem,
+                                      new SeparatorMenuItem(),
+                                      prefsItem,
+                                      new SeparatorMenuItem(),
+                                      toolkit.createHideMenuItem(Client.APP_NAME),
+                                      toolkit.createHideOthersMenuItem(),
+                                      toolkit.createUnhideAllMenuItem(),
+                                      new SeparatorMenuItem(),
+                                      toolkit.createQuitMenuItem(Client.APP_NAME));
+        }
+
+        // User Menu
+        Menu userMenu = new Menu(Client.getLocalisation("userMenu"));
+        MenuItem changePasswordItem = new MenuItem(Client.getLocalisation("changePasswordMenuItem"));
+        changePasswordItem.setDisable(true);
+        MenuItem logoutItem = new MenuItem(Client.getLocalisation("logout"));
+        logoutItem.setOnAction(event -> this.logout());
+        logoutItem.setDisable(true);
+        userMenu.getItems().addAll(changePasswordItem, new SeparatorMenuItem(), logoutItem);
+
+        if(toolkit != null)
+        {
+            // Window Menu
+            // TBD standard window menu items
+            Menu windowMenu = new Menu(Client.getLocalisation("windowMenu"));
+            windowMenu.getItems().addAll(toolkit.createMinimizeMenuItem(),
+                                         toolkit.createZoomMenuItem(),
+                                         toolkit.createCycleWindowsItem(),
+                                         new SeparatorMenuItem(),
+                                         toolkit.createBringAllToFrontItem());
+
+            // Help Menu
+            Menu helpMenu = new Menu(Client.getLocalisation("helpMenu"));
+
+            bar.getMenus().addAll(appMenu, userMenu, windowMenu, helpMenu);
+
+            toolkit.autoAddWindowMenuItems(windowMenu);
+            toolkit.setGlobalMenuBar(bar);
+        }
+    }
+
     @FXML
     private void maximize()
     {
@@ -520,5 +602,22 @@ public class MainController
     private void close() throws IOException, XMLStreamException
     {
         Client.close();
+    }
+
+    private void logout()
+    {
+        this.showLightweightDialog(Client.getLocalisation("logoutQuestion"), ButtonType.YES, ButtonType.NO)
+                .addListener((observable, oldValue, newValue) -> {
+                    if(newValue == ButtonType.YES)
+                    {
+                        try
+                        {
+                            Client.getCommunicator().logout();
+                        } catch(IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                });
     }
 }
