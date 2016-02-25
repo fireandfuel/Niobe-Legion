@@ -42,15 +42,22 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import niobe.legion.client.gui.MainController;
+import niobe.legion.client.gui.ResizeDragListener;
+import niobe.legion.client.gui.about.AboutController;
 import niobe.legion.client.gui.connect.CertificateController;
 import niobe.legion.client.gui.connect.ConnectController;
 import niobe.legion.client.gui.connect.ReconnectController;
 import niobe.legion.client.gui.connect.ReloginController;
 import niobe.legion.client.gui.locale.EncodedControl;
+import niobe.legion.client.gui.platform.osx.MenuToolkit;
 import niobe.legion.client.module.ClientModuleLoader;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
@@ -60,6 +67,7 @@ import org.apache.logging.log4j.core.LoggerContext;
 public class Client extends Application
 {
     public static final int MAX_CONNECT_TRIALS = 10;
+    public static String APP_NAME = "Niobe Legion Client";
 
     static String port = "";
     static String server = "";
@@ -175,7 +183,9 @@ public class Client extends Application
                         "/niobe/legion/client/fxml/connect/Relogin.fxml",
                         Client.getLocalisation("loginAuthentication"),
                         Modality.APPLICATION_MODAL,
-                        false, 250, 125);
+                        false,
+                        250,
+                        125);
             } catch(IOException e)
             {
                 Logger.exception(LegionLogger.STDERR, e);
@@ -301,6 +311,7 @@ public class Client extends Application
 
             // load Main pane
             URL location;
+
             if(System.getProperty("os.name").toLowerCase().contains("mac"))
             {
                 location = this.getClass().getResource("/niobe/legion/client/fxml/MainOSX.fxml");
@@ -323,17 +334,105 @@ public class Client extends Application
             scene.getStylesheets()
                     .add(this.getClass().getResource("/niobe/legion/client/css/theme.css").toExternalForm());
             scene.setFill(null);
-            stage.setTitle("Legion Client");
+            stage.setTitle(APP_NAME);
             stage.initStyle(StageStyle.TRANSPARENT);
             stage.setScene(scene);
             Client.javaFxController.setStage(stage);
             stage.show();
+
+            setupMenuBar();
 
             // try to start communicator
             Client.getCommunicator();
         } catch(IOException e)
         {
             Logger.exception(LegionLogger.STDERR, e);
+        }
+    }
+
+    private void setupMenuBar()
+    {
+        MenuToolkit toolkit = null;
+
+        if(System.getProperty("os.name").toLowerCase().contains("mac"))
+        {
+            toolkit = MenuToolkit.toolkit();
+        }
+
+        MenuBar bar = new MenuBar();
+
+        // Application Menu
+        // TBD: services menu
+        Menu appMenu = new Menu(APP_NAME); // Name for appMenu can't be set at
+        // Runtime
+        MenuItem aboutItem = new MenuItem(String.format(Client.getLocalisation("about"), APP_NAME));
+        aboutItem.setOnAction(event -> {
+            Stage stage = new Stage(StageStyle.TRANSPARENT);
+
+            FXMLLoader loader = new FXMLLoader(this.getClass()
+                                                       .getResource("/niobe/legion/client/fxml/about/AboutOSX.fxml"),
+                                               Client.localeBundle);
+
+            try
+            {
+                Scene scene = loader.load();
+                AboutController controller = loader.getController();
+
+                scene.getStylesheets()
+                        .add(this.getClass().getResource("/niobe/legion/client/css/theme.css").toExternalForm());
+                scene.setFill(null);
+                stage.setTitle(String.format(Client.getLocalisation("about"), APP_NAME));
+                controller.setTitle(stage.getTitle());
+                stage.setScene(scene);
+                controller.setStage(stage);
+                stage.setWidth(600);
+                stage.setHeight(400);
+                ResizeDragListener.addResizeListener(stage);
+                stage.show();
+            } catch(IOException e)
+            {
+                e.printStackTrace();
+            }
+
+        });
+        MenuItem prefsItem = new MenuItem(Client.getLocalisation("preferencesMenuItem"));
+        if(toolkit != null)
+        {
+            appMenu.getItems().addAll(aboutItem,
+                                      new SeparatorMenuItem(),
+                                      prefsItem,
+                                      new SeparatorMenuItem(),
+                                      toolkit.createHideMenuItem(APP_NAME),
+                                      toolkit.createHideOthersMenuItem(),
+                                      toolkit.createUnhideAllMenuItem(),
+                                      new SeparatorMenuItem(),
+                                      toolkit.createQuitMenuItem(APP_NAME));
+        }
+
+        // User Menu
+        Menu userMenu = new Menu(Client.getLocalisation("userMenu"));
+        MenuItem changePasswordItem = new MenuItem(Client.getLocalisation("changePasswordMenuItem"));
+        MenuItem logoutItem = new MenuItem(Client.getLocalisation("logout"));
+        userMenu.getItems().addAll(changePasswordItem, new SeparatorMenuItem(), logoutItem);
+
+        if(toolkit != null)
+        {
+            // Window Menu
+            // TBD standard window menu items
+            Menu windowMenu = new Menu(Client.getLocalisation("windowMenu"));
+            windowMenu.getItems().addAll(toolkit.createMinimizeMenuItem(),
+                                         toolkit.createZoomMenuItem(),
+                                         toolkit.createCycleWindowsItem(),
+                                         new SeparatorMenuItem(),
+                                         toolkit.createBringAllToFrontItem());
+
+            // Help Menu
+            Menu helpMenu = new Menu(Client.getLocalisation("helpMenu"));
+
+            bar.getMenus().addAll(appMenu, userMenu, windowMenu, helpMenu);
+
+            toolkit.autoAddWindowMenuItems(windowMenu);
+            toolkit.setGlobalMenuBar(bar);
         }
     }
 
@@ -447,6 +546,17 @@ public class Client extends Application
     public static String getLocalisation(String key)
     {
         return Client.localeBundle.getString(key);
+    }
+
+    public static String getLocalisation(String key, Object... args)
+    {
+        String property = getLocalisation(key);
+        if(property == null)
+        {
+            return "$key$";
+        }
+
+        return String.format(Client.locale, property, args);
     }
 
 }

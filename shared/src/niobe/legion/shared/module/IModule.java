@@ -61,4 +61,9 @@ public interface IModule
      * @return the rights the module sets at the host
      */
     IRight[] getRights();
+
+    /**
+     * @return the full license text
+     */
+    String getLicenseText();
 }

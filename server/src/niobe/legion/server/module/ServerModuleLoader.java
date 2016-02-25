@@ -23,7 +23,6 @@ package niobe.legion.server.module;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +64,7 @@ public class ServerModuleLoader extends ModuleLoader<ServerModuleInstance>
                                                                     IllegalAccessException, IOException
     {
         instance.setState(ModuleInstance.LOADING);
-        URLClassLoader loader = new URLClassLoader(new URL[]{instance.getModuleFile().toURI().toURL()});
+        URLClassLoader loader = new URLClassLoader(instance.buildClassLoaderURLs());
 
         Class<?> clazz = loader.loadClass(instance.getModuleClass());
 
@@ -130,13 +129,14 @@ public class ServerModuleLoader extends ModuleLoader<ServerModuleInstance>
                                                                              attributes.getValue("Module-Author"),
                                                                              attributes.getValue("Module-Description"),
                                                                              jarFile,
-                                                                             attributes.getValue("Module-Class"));
+                                                                             attributes.getValue("Module-Class"),
+                                                                             attributes.getValue("Module-Libraries"));
 
                     if(instance.getName() != null && !instance.getName().isEmpty() && instance.getVersion() != null &&
                             !instance.getVersion().isEmpty() && instance.getModuleClass() != null &&
                             !instance.getModuleClass().isEmpty())
                     {
-                        moduleInstances.add(instance);
+                        MODULE_INSTANCES.add(instance);
                     }
                 }
             }

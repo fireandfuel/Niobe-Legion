@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ProgressIndicator?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.VBox?>
 <!--
   ~ Niobe Legion - a versatile client / server framework
   ~     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
@@ -24,12 +20,16 @@
   ~     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="niobe.legion.client.gui.connect.ConnectController">
-	<center>
-		<VBox fillWidth="false" alignment="CENTER" spacing="15.0">
-			<ProgressIndicator fx:id="progress" progress="-1.0"/>
-			<Label fx:id="progressLabel" textAlignment="CENTER"/>
-		</VBox>
-	</center>
+    <center>
+        <VBox fillWidth="false" alignment="CENTER" spacing="15.0">
+            <ProgressIndicator fx:id="progress" progress="-1.0"/>
+            <Label fx:id="progressLabel" textAlignment="CENTER"/>
+        </VBox>
+    </center>
 </BorderPane>
 

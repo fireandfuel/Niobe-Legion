@@ -29,14 +29,18 @@ public class ModuleDependencyItem<MI extends ModuleInstance>
     private MI moduleInstance;
 
     private boolean visited;
-
+    private int priority;
     private List<ModuleDependencyItem<MI>> parents = new ArrayList<ModuleDependencyItem<MI>>();
-
     private List<ModuleDependencyItem<MI>> children = new ArrayList<ModuleDependencyItem<MI>>();
 
     public ModuleDependencyItem(MI moduleInstance)
     {
         this.moduleInstance = moduleInstance;
+    }
+
+    public MI getModuleInstance()
+    {
+        return this.moduleInstance;
     }
 
     public String getName()
@@ -107,5 +111,15 @@ public class ModuleDependencyItem<MI extends ModuleInstance>
     public void setVisited(boolean visited)
     {
         this.visited = visited;
+    }
+
+    public int getPriority()
+    {
+        return this.priority;
+    }
+
+    public void setPriority(int priority)
+    {
+        this.priority = priority;
     }
 }

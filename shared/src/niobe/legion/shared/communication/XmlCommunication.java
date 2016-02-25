@@ -202,4 +202,10 @@ public class XmlCommunication implements ICommunication
     {
         this.currentStanza = currentStanza;
     }
+
+    @Override
+    public String toString()
+    {
+        return "xml communication";
+    }
 }

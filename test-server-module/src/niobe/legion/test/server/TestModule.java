@@ -76,4 +76,10 @@ public class TestModule implements IServerModule
     {
         return new IRight[]{new TestRight("test", null)};
     }
+
+    @Override
+    public String getLicenseText()
+    {
+        return null;
+    }
 }

@@ -25,22 +25,24 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.PriorityQueue;
+import java.util.TreeMap;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 
 public abstract class ModuleLoader<MI extends ModuleInstance>
 {
     protected final static int MODULE_API_LEVEL = 1;
-    protected final List<MI> moduleInstances = new ArrayList<MI>();
+    protected final List<MI> MODULE_INSTANCES = new ArrayList<MI>();
 
     private String hostModuleName;
     private String hostModuleVersion;
     private final String modulePath;
-
 
     private final List<ModuleDependencyItem<MI>> moduleDependencyItems;
 
@@ -65,7 +67,7 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
             }
         }
 
-        moduleInstances.stream().filter(this::checkRequirements).forEach(instance -> {
+        MODULE_INSTANCES.stream().filter(this::checkRequirements).forEach(instance -> {
             try
             {
                 this.initModule(instance);
@@ -114,7 +116,7 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
         if(depends.isPresent())
         {
             Logger.error(LegionLogger.MODULE,
-                         "Dependency check for plugin " + module.getName() + " failed. It depends on " + depends +
+                         "Dependency check for plugin " + module.getName() + " failed. It depends on " + depends.get() +
                                  " !");
             module.setState(ModuleInstance.MISSING_DEPENDENCIES);
             return false;
@@ -122,13 +124,36 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
         if(conflict.isPresent())
         {
             Logger.error(LegionLogger.MODULE,
-                         "Conflict check for plugin " + module.getName() + " failed. It conflicts with " + conflict +
+                         "Conflict check for plugin " + module.getName() + " failed. It conflicts with " + conflict
+                                 .get() +
                                  " !");
             module.setState(ModuleInstance.IN_CONFLICT);
             return false;
         }
 
+        if(!this.checkLibaries(module.getModuleLibaries(), this.modulePath))
+        {
+            Logger.error(LegionLogger.MODULE, "Library check for plugin " + module.getName() + " failed!");
+            module.setState(ModuleInstance.MISSING_LIBRARIES);
+            return false;
+        }
+
         return true;
+    }
+
+    private boolean checkLibaries(String[] moduleLibaries, String rootFolder)
+    {
+        if(rootFolder != null)
+        {
+            File root = new File(rootFolder);
+            if(root.exists())
+            {
+                if(moduleLibaries.length == 0) return true;
+
+                return Stream.of(moduleLibaries).allMatch(lib -> new File(root, "lib/" + lib).exists());
+            }
+        }
+        return false;
     }
 
     /**
@@ -173,7 +198,7 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
             versionRegex = null;
         }
 
-        Optional<String> found = moduleInstances.stream().filter(module -> module.getName().equals(name) &&
+        Optional<String> found = MODULE_INSTANCES.stream().filter(module -> module.getName().equals(name) &&
                 versionRegex != null &&
                 module.getVersion().matches(versionRegex) &&
                 module.getState() != ModuleInstance.MISSING_DEPENDENCIES &&
@@ -191,24 +216,41 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
 
     public List<String> getModuleNames()
     {
-        List<String> moduleNames = moduleInstances.stream().map(ModuleInstance::getName).collect(Collectors.toList());
+        List<String> moduleNames = MODULE_INSTANCES.stream().map(ModuleInstance::getName).collect(Collectors.toList());
 
         return moduleNames;
     }
 
-    private PriorityQueue<MI> buildLoadingQueue()
+    protected ArrayBlockingQueue<List<MI>> buildStartingQueue()
     {
-        return null;
-    }
+        Map<Integer, List<MI>> priorityMap = new TreeMap<Integer, List<MI>>();
 
-    private PriorityQueue<List<MI>> buildStartingQueue()
-    {
-        return null;
+        if(moduleDependencyItems.isEmpty())
+        {
+            buildDependencies();
+        }
+
+        moduleDependencyItems.forEach(item -> {
+            int priority = item.getPriority();
+            if(!priorityMap.containsKey(priority))
+            {
+                priorityMap.put(priority, new ArrayList<MI>());
+            }
+            priorityMap.get(priority).add(item.getModuleInstance());
+        });
+
+        ArrayBlockingQueue<List<MI>> queue = new ArrayBlockingQueue<List<MI>>(priorityMap.size());
+        priorityMap.forEach((priority, list) -> {
+            queue.add(list);
+        });
+
+        return queue;
     }
 
     protected void buildDependencies()
     {
-        moduleInstances.forEach(module -> moduleDependencyItems.add(new ModuleDependencyItem<MI>(module)));
+        moduleDependencyItems.clear();
+        MODULE_INSTANCES.forEach(module -> moduleDependencyItems.add(new ModuleDependencyItem<MI>(module)));
 
         moduleDependencyItems.forEach(this::setDependencyItem);
     }
@@ -222,13 +264,17 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
             {
                 item.addChild(miModuleDependencyItem);
                 miModuleDependencyItem.addParent(item);
+                if(item.getPriority() <= miModuleDependencyItem.getPriority())
+                {
+                    item.setPriority(miModuleDependencyItem.getPriority() + 1);
+                }
             }
         });
     }
 
     protected void startModules()
     {
-        this.moduleInstances.forEach(MI::start);
+        this.MODULE_INSTANCES.forEach(MI::start);
     }
 
     public void startModule(String moduleName)
@@ -255,12 +301,12 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
         if(instance.isPresent())
         {
             instance.get().unload();
-            moduleInstances.remove(instance.get());
+            MODULE_INSTANCES.remove(instance.get());
         }
     }
 
     private Optional<MI> getModule(String moduleName)
     {
-        return moduleInstances.stream().filter(instance -> moduleName.equals(instance.getName())).findFirst();
+        return MODULE_INSTANCES.stream().filter(instance -> moduleName.equals(instance.getName())).findFirst();
     }
 }

@@ -70,4 +70,10 @@ public class TestModule implements IClientModule
     {
         return new IRight[]{new TestRight("test", null)};
     }
+
+    @Override
+    public String getLicenseText()
+    {
+        return null;
+    }
 }

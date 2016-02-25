@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -985,6 +986,62 @@ public class ClientCommunicator extends Communicator
             }
         }
         return false;
+    }
+
+    public static String getClientNameAndVersion()
+    {
+        return CLIENT_NAME + " Version " + CLIENT_VERSION;
+    }
+
+    public static String getClientFeatures()
+    {
+        return CLIENT_FEATURES.stream().filter(feature -> feature != null).collect(Collectors.joining(", "));
+    }
+
+    public String getServerAddress()
+    {
+        String connectedTo = "";
+
+        if(sslSocket != null)
+        {
+            connectedTo = sslSocket.getInetAddress().getHostAddress() + ":" + sslSocket.getPort();
+            if(sslSocket.getInetAddress().getCanonicalHostName() != null && !sslSocket.getInetAddress()
+                    .getCanonicalHostName().isEmpty() && !sslSocket.getInetAddress().getHostAddress()
+                    .equals(sslSocket.getInetAddress().getCanonicalHostName()))
+            {
+                connectedTo += " - host name: " + sslSocket.getInetAddress().getCanonicalHostName();
+            }
+        } else if(socket != null)
+        {
+            connectedTo = socket.getInetAddress().toString() + ":" + socket.getPort();
+            if(socket.getInetAddress().getCanonicalHostName() != null && !socket.getInetAddress().getCanonicalHostName()
+                    .isEmpty() && !socket.getInetAddress().getHostAddress()
+                    .equals(socket.getInetAddress().getCanonicalHostName()))
+            {
+                connectedTo += " - host name: " + socket.getInetAddress().getCanonicalHostName();
+            }
+        }
+        return connectedTo;
+    }
+
+    public String getServerNameAndVersion()
+    {
+        if(serverName != null && serverVersion != null)
+        {
+            return this.serverName + " Version " + this.serverVersion;
+        } else
+        {
+            return "unknown / not set";
+        }
+    }
+
+    public String getServerFeatures()
+    {
+        if(this.serverFeatures != null)
+        {
+            return this.serverFeatures.stream().filter(feature -> feature != null).collect(Collectors.joining(", "));
+        }
+        return "";
     }
 
     @Override

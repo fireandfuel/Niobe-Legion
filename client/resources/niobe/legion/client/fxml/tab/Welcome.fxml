@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.layout.BorderPane?>
 <!--
   ~ Niobe Legion - a versatile client / server framework
   ~     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
@@ -23,10 +20,13 @@
   ~     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.layout.BorderPane?>
 <Tab xmlns:fx="http://javafx.com/fxml" text="%welcome">
-	<BorderPane>
-		<center>
-			<Label text="%welcome"/>
-		</center>
-	</BorderPane>
+    <BorderPane>
+        <center>
+            <Label text="%welcome"/>
+        </center>
+    </BorderPane>
 </Tab>

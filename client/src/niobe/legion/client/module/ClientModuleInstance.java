@@ -28,9 +28,9 @@ import niobe.legion.shared.module.ModuleRightManager;
 public class ClientModuleInstance extends ModuleInstance
 {
     public ClientModuleInstance(String dependencies, String conflicts, String name, String version, String contact,
-                                String description, File moduleFile, String moduleClass)
+                                String description, File moduleFile, String moduleClass, String moduleLibraries)
     {
-        super(dependencies, conflicts, name, version, contact, description, moduleFile, moduleClass);
+        super(dependencies, conflicts, name, version, contact, description, moduleFile, moduleClass, moduleLibraries);
     }
 
     @Override

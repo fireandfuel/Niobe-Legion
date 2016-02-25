@@ -585,6 +585,14 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return false;
     }
 
+    public String getCommunicationType(){
+        if(this.communication != null)
+        {
+            return this.communication.toString();
+        }
+        return "not set";
+    }
+
     public void resetReader() throws CommunicationException
     {
         this.communication.initInputReader(this.in);

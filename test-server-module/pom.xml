@@ -28,12 +28,24 @@
 	<groupId>niobe.legion</groupId>
 	<version>0.1</version>
 	<name>Niobe Legion Test Client Module</name>
+	<description>A sample server test module for Niobe Legion framework</description>
+	<url>https://github.com/fireandfuel/Niobe-Legion</url>
+
+	<developers>
+		<developer>
+			<id>Nicolai J. (fireandfuel)</id>
+			<email>fireandfuel@hotmail.de</email>
+		</developer>
+	</developers>
+
+	<scm>
+		<url>https://github.com/fireandfuel/Niobe-Legion</url>
+	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
-		<project.build.creator>fireandfuel (fireandfuel@hotmail.de)</project.build.creator>
 	</properties>
 
 	<parent>

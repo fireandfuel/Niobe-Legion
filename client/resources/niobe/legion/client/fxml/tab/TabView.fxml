@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.TabPane?>
 <!--
   ~ Niobe Legion - a versatile client / server framework
   ~     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
@@ -21,7 +20,8 @@
   ~     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import javafx.scene.control.TabPane?>
 <TabPane xmlns:fx="http://javafx.com/fxml" fx:controller="niobe.legion.client.gui.tab.TabViewController"
-		 fx:id="tabPane">
+         fx:id="tabPane">
 
 </TabPane>

@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Tooltip?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.Scene?>
-<?import javafx.scene.shape.SVGPath?>
 <!--
   ~ Niobe Legion - a versatile client / server framework
   ~     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
@@ -29,45 +20,54 @@
   ~     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.Scene?>
+<?import javafx.scene.shape.SVGPath?>
 <Scene xmlns:fx="http://javafx.com/fxml" fx:controller="niobe.legion.client.gui.DialogController">
-	<AnchorPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml">
-		<BorderPane AnchorPane.bottomAnchor="0.0"
-					AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-					AnchorPane.topAnchor="0.0">
-			<top>
-				<AnchorPane fx:id="draggableTopPane">
-					<BorderPane AnchorPane.bottomAnchor="0.0"
-								AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0"
-								AnchorPane.topAnchor="0.0">
-						<left>
-							<HBox alignment="CENTER_LEFT" spacing="2">
-								<Button fx:id="close" onAction="#close" prefHeight="24"
-										prefWidth="24" minHeight="24" minWidth="24" maxHeight="24"
-										maxWidth="24" focusTraversable="false">
-									<tooltip>
-										<Tooltip text="%close"/>
-									</tooltip>
-									<graphic>
-										<SVGPath
-												content="M0 2 L7 8 L0 14 L 2 16 L8 9 L14 16 L16 14 L9 8 L 16 2 L14 0 L8 7 L2 0 L 0 2"
-												stroke="WHITE" fill="WHITE" strokeWidth="1"/>
-									</graphic>
-								</Button>
-							</HBox>
-						</left>
-						<center>
-							<HBox alignment="CENTER" spacing="2">
-								<ImageView fx:id="icon" fitHeight="16.0" fitWidth="16.0"/>
-								<Label fx:id="topLabel" text="%windowTitle" alignment="CENTER" textAlignment="CENTER"/>
-							</HBox>
-						</center>
-					</BorderPane>
-				</AnchorPane>
-			</top>
-			<center>
-				<AnchorPane fx:id="mainPane"/>
-			</center>
-		</BorderPane>
-	</AnchorPane>
+    <AnchorPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml">
+        <BorderPane AnchorPane.bottomAnchor="0.0"
+                    AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                    AnchorPane.topAnchor="0.0">
+            <top>
+                <AnchorPane fx:id="draggableTopPane">
+                    <BorderPane AnchorPane.bottomAnchor="0.0"
+                                AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0"
+                                AnchorPane.topAnchor="0.0">
+                        <left>
+                            <HBox alignment="CENTER_LEFT" spacing="2">
+                                <Button fx:id="close" onAction="#close" prefHeight="24"
+                                        prefWidth="24" minHeight="24" minWidth="24" maxHeight="24"
+                                        maxWidth="24" focusTraversable="false">
+                                    <tooltip>
+                                        <Tooltip text="%close"/>
+                                    </tooltip>
+                                    <graphic>
+                                        <SVGPath
+                                                content="M0 2 L7 8 L0 14 L 2 16 L8 9 L14 16 L16 14 L9 8 L 16 2 L14 0 L8 7 L2 0 L 0 2"
+                                                stroke="WHITE" fill="WHITE" strokeWidth="1"/>
+                                    </graphic>
+                                </Button>
+                            </HBox>
+                        </left>
+                        <center>
+                            <HBox alignment="CENTER" spacing="2">
+                                <ImageView fx:id="icon" fitHeight="16.0" fitWidth="16.0"/>
+                                <Label fx:id="topLabel" text="%windowTitle" alignment="CENTER" textAlignment="CENTER"/>
+                            </HBox>
+                        </center>
+                    </BorderPane>
+                </AnchorPane>
+            </top>
+            <center>
+                <AnchorPane fx:id="mainPane"/>
+            </center>
+        </BorderPane>
+    </AnchorPane>
 </Scene>
 

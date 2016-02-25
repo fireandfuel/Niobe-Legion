@@ -133,4 +133,10 @@ public class CompressedCommunication implements ICommunication
     {
         this.parent.setCurrentStanza(currentStanza);
     }
+
+    @Override
+    public String toString()
+    {
+        return this.algorithm + " compressed " + this.parent.toString();
+    }
 }
