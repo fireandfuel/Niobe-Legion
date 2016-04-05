@@ -85,14 +85,13 @@ public class MainController
         this.userButton.setPadding(new Insets(0));
         this.userButton.setOnAction(event -> {
             Popup popup = new Popup();
-            Button button = new Button(Client.getLocalisation("logout"));
-            button.setOnAction(buttonEvent -> {
-                this.logout();
-            });
-            button.setFocusTraversable(false);
+            Button logout = new Button(Client.getLocalisation("logout"));
+            logout.setOnAction(buttonEvent -> this.logout());
+            logout.setFocusTraversable(false);
+
             popup.setAutoFix(true);
             popup.setAutoHide(true);
-            popup.getContent().add(button);
+            popup.getContent().addAll(logout);
 
             Bounds bounds = this.userButton.localToScreen(this.userButton.getBoundsInLocal());
             popup.show(this.userButton, bounds.getMinX(), bounds.getMinY() + this.userButton.getHeight());
@@ -510,35 +509,7 @@ public class MainController
         Menu appMenu = new Menu(Client.APP_NAME); // Name for appMenu can't be set at
         // Runtime
         MenuItem aboutItem = new MenuItem(String.format(Client.getLocalisation("about"), Client.APP_NAME));
-        aboutItem.setOnAction(event -> {
-            Stage stage = new Stage(StageStyle.TRANSPARENT);
-
-            FXMLLoader loader = new FXMLLoader(this.getClass()
-                                                       .getResource("/niobe/legion/client/fxml/about/AboutOSX.fxml"),
-                                               Client.getLocalBundle());
-
-            try
-            {
-                Scene scene = loader.load();
-                AboutController controller = loader.getController();
-
-                scene.getStylesheets()
-                        .add(this.getClass().getResource("/niobe/legion/client/css/theme.css").toExternalForm());
-                scene.setFill(null);
-                stage.setTitle(String.format(Client.getLocalisation("about"), Client.APP_NAME));
-                controller.setTitle(stage.getTitle());
-                stage.setScene(scene);
-                controller.setStage(stage);
-                stage.setWidth(600);
-                stage.setHeight(400);
-                ResizeDragListener.addResizeListener(stage);
-                stage.show();
-            } catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-
-        });
+        aboutItem.setOnAction(event -> this.showAbout());
         MenuItem prefsItem = new MenuItem(Client.getLocalisation("preferencesMenuItem"));
         if(toolkit != null)
         {
@@ -619,5 +590,36 @@ public class MainController
                         }
                     }
                 });
+    }
+
+    @FXML
+    private void showAbout()
+    {
+        Stage stage = new Stage(StageStyle.TRANSPARENT);
+
+        FXMLLoader loader = new FXMLLoader(this.getClass()
+                                                   .getResource("/niobe/legion/client/fxml/about/AboutOSX.fxml"),
+                                           Client.getLocalBundle());
+
+        try
+        {
+            Scene scene = loader.load();
+            AboutController controller = loader.getController();
+
+            scene.getStylesheets()
+                    .add(this.getClass().getResource("/niobe/legion/client/css/theme.css").toExternalForm());
+            scene.setFill(null);
+            stage.setTitle(String.format(Client.getLocalisation("about"), Client.APP_NAME));
+            controller.setTitle(stage.getTitle());
+            stage.setScene(scene);
+            controller.setStage(stage);
+            stage.setWidth(600);
+            stage.setHeight(400);
+            ResizeDragListener.addResizeListener(stage);
+            stage.show();
+        } catch(IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 }

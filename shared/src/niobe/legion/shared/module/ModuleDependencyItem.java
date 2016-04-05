@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (ModuleDependencyItem.java) is part of Niobe Legion (module niobe-legion-shared).
  *
@@ -28,10 +28,10 @@ public class ModuleDependencyItem<MI extends ModuleInstance>
 {
     private MI moduleInstance;
 
-    private boolean visited;
     private int priority;
-    private List<ModuleDependencyItem<MI>> parents = new ArrayList<ModuleDependencyItem<MI>>();
-    private List<ModuleDependencyItem<MI>> children = new ArrayList<ModuleDependencyItem<MI>>();
+    private boolean visited;
+    private List<ModuleDependencyItem<MI>> dependsOn = new ArrayList<ModuleDependencyItem<MI>>();
+    private List<ModuleDependencyItem<MI>> dependencyOf = new ArrayList<ModuleDependencyItem<MI>>();
 
     public ModuleDependencyItem(MI moduleInstance)
     {
@@ -63,54 +63,54 @@ public class ModuleDependencyItem<MI extends ModuleInstance>
         return this.moduleInstance.getState();
     }
 
-    public void addParent(ModuleDependencyItem<MI> parent)
+    public void addDependsOn(ModuleDependencyItem<MI> parent)
     {
-        this.parents.add(parent);
+        this.dependsOn.add(parent);
     }
 
-    public void removeParent(ModuleDependencyItem<MI> parent)
+    public void removeDependsOn(ModuleDependencyItem<MI> parent)
     {
-        this.parents.remove(parent);
+        this.dependsOn.remove(parent);
     }
 
-    public boolean containsParent(ModuleDependencyItem<MI> parent)
+    public boolean dependsOn(ModuleDependencyItem<MI> parent)
     {
-        return this.parents.contains(parent);
+        return this.dependsOn.stream().anyMatch(item -> item.equals(parent) || item.dependsOn(parent));
     }
 
-    public Stream<ModuleDependencyItem<MI>> getParents()
+    public Stream<ModuleDependencyItem<MI>> getDependsOn()
     {
-        return this.parents.stream();
+        return this.dependsOn.stream();
     }
 
-    public void addChild(ModuleDependencyItem<MI> child)
+    public boolean isDependsOnEmpty()
     {
-        this.children.add(child);
+        return dependsOn.isEmpty();
     }
 
-    public void removeChild(ModuleDependencyItem<MI> child)
+    public void addDependencyOf(ModuleDependencyItem<MI> child)
     {
-        this.children.remove(child);
+        this.dependencyOf.add(child);
     }
 
-    public boolean containsChild(ModuleDependencyItem<MI> child)
+    public void removeDependencyOf(ModuleDependencyItem<MI> child)
     {
-        return this.children.contains(child);
+        this.dependencyOf.remove(child);
     }
 
-    public Stream<ModuleDependencyItem<MI>> getChildren()
+    public boolean isDependencyOf(ModuleDependencyItem<MI> child)
     {
-        return this.children.stream();
+        return this.dependencyOf.stream().anyMatch(item -> item.equals(child) || item.isDependencyOf(child));
     }
 
-    public boolean isVisited()
+    public Stream<ModuleDependencyItem<MI>> getDependencyOf()
     {
-        return visited;
+        return this.dependencyOf.stream();
     }
 
-    public void setVisited(boolean visited)
+    public boolean isDependencyOfEmpty()
     {
-        this.visited = visited;
+        return dependencyOf.isEmpty();
     }
 
     public int getPriority()
@@ -121,5 +121,15 @@ public class ModuleDependencyItem<MI extends ModuleInstance>
     public void setPriority(int priority)
     {
         this.priority = priority;
+    }
+
+    public boolean isVisited()
+    {
+        return visited;
+    }
+
+    public void setVisited(boolean visited)
+    {
+        this.visited = visited;
     }
 }

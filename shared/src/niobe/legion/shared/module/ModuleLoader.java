@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (ModuleLoader.java) is part of Niobe Legion (module niobe-legion-shared).
  *
@@ -67,19 +67,25 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
             }
         }
 
-        MODULE_INSTANCES.stream().filter(this::checkRequirements).forEach(instance -> {
-            try
-            {
-                this.initModule(instance);
-            } catch(ClassNotFoundException | InstantiationException | IllegalAccessException
-                    | IOException e)
-            {
-                instance.setState(ModuleInstance.UNINITIALIZED);
-                Logger.exception(LegionLogger.MODULE, e);
-            }
-        });
+        buildDependencies(MODULE_INSTANCES.stream().filter(this::checkRequirements).collect(Collectors.toList()));
 
-        this.startModules();
+        ArrayBlockingQueue<List<MI>> initQueue = buildDependencyQueue();
+        if(initQueue != null)
+        {
+            initQueue.forEach(instances -> instances.parallelStream().forEach(instance -> {
+                try
+                {
+                    this.initModule(instance);
+                    this.startModule(instance);
+                } catch(ClassNotFoundException | InstantiationException | IllegalAccessException
+                        | IOException e)
+                {
+                    instance.setState(ModuleInstance.UNINITIALIZED);
+                    Logger.exception(LegionLogger.MODULE, e);
+                }
+            }));
+        }
+
     }
 
     protected abstract void initModule(MI instance) throws ClassNotFoundException, InstantiationException,
@@ -131,7 +137,7 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
             return false;
         }
 
-        if(!this.checkLibaries(module.getModuleLibaries(), this.modulePath))
+        if(!this.checkLibraries(module.getModuleLibraries(), this.modulePath))
         {
             Logger.error(LegionLogger.MODULE, "Library check for plugin " + module.getName() + " failed!");
             module.setState(ModuleInstance.MISSING_LIBRARIES);
@@ -141,16 +147,16 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
         return true;
     }
 
-    private boolean checkLibaries(String[] moduleLibaries, String rootFolder)
+    private boolean checkLibraries(String[] moduleLibraries, String rootFolder)
     {
         if(rootFolder != null)
         {
             File root = new File(rootFolder);
             if(root.exists())
             {
-                if(moduleLibaries.length == 0) return true;
+                if(moduleLibraries.length == 0) return true;
 
-                return Stream.of(moduleLibaries).allMatch(lib -> new File(root, "lib/" + lib).exists());
+                return Stream.of(moduleLibraries).allMatch(lib -> new File(root, "lib/" + lib).exists());
             }
         }
         return false;
@@ -221,23 +227,28 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
         return moduleNames;
     }
 
-    protected ArrayBlockingQueue<List<MI>> buildStartingQueue()
+    protected ArrayBlockingQueue<List<MI>> buildDependencyQueue()
     {
         Map<Integer, List<MI>> priorityMap = new TreeMap<Integer, List<MI>>();
 
-        if(moduleDependencyItems.isEmpty())
-        {
-            buildDependencies();
-        }
-
         moduleDependencyItems.forEach(item -> {
             int priority = item.getPriority();
-            if(!priorityMap.containsKey(priority))
+            if(item.getModuleInstance().getState() == ModuleInstance.UNINITIALIZED || item.getModuleInstance()
+                    .getState() == ModuleInstance.INITIALIZED || item.getModuleInstance()
+                    .getState() == ModuleInstance.RUNNING)
             {
-                priorityMap.put(priority, new ArrayList<MI>());
+                if(!priorityMap.containsKey(priority))
+                {
+                    priorityMap.put(priority, new ArrayList<MI>());
+                }
+                priorityMap.get(priority).add(item.getModuleInstance());
             }
-            priorityMap.get(priority).add(item.getModuleInstance());
         });
+
+        if(priorityMap.isEmpty())
+        {
+            return null;
+        }
 
         ArrayBlockingQueue<List<MI>> queue = new ArrayBlockingQueue<List<MI>>(priorityMap.size());
         priorityMap.forEach((priority, list) -> {
@@ -247,12 +258,71 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
         return queue;
     }
 
-    protected void buildDependencies()
+    protected void buildDependencies(List<MI> modules)
     {
         moduleDependencyItems.clear();
-        MODULE_INSTANCES.forEach(module -> moduleDependencyItems.add(new ModuleDependencyItem<MI>(module)));
+        modules.forEach(module -> {
+            if(module.getState() == ModuleInstance.UNINITIALIZED || module
+                    .getState() == ModuleInstance.INITIALIZED || module.getState() == ModuleInstance.RUNNING)
+            {
+                moduleDependencyItems.add(new ModuleDependencyItem<MI>(module));
+            }
+        });
 
         moduleDependencyItems.forEach(this::setDependencyItem);
+        moduleDependencyItems.stream().forEach(this::searchForCycles);
+        moduleDependencyItems.stream().filter(item -> item.isDependsOnEmpty())
+                .forEach(item -> this.prioritizeDependency(item, 0));
+    }
+
+    private void searchForCycles(ModuleDependencyItem<MI> moduleDependencyItem)
+    {
+        this.searchForCycles(moduleDependencyItem, moduleDependencyItem);
+        moduleDependencyItems.forEach(item -> item.setVisited(false));
+    }
+
+    private boolean searchForCycles(ModuleDependencyItem<MI> moduleDependencyItem, ModuleDependencyItem<MI> searched)
+    {
+        if(!moduleDependencyItem.isVisited() && moduleDependencyItem.getState() != ModuleInstance.DEPENDENCY_CYCLE)
+        {
+            moduleDependencyItem.setVisited(true);
+            moduleDependencyItem.getDependsOn().forEach(child -> {
+                try
+                {
+                    this.searchForCycles(child, searched);
+                } catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+            });
+        } else if(searched == moduleDependencyItem)
+        {
+            this.setState(moduleDependencyItem, ModuleInstance.DEPENDENCY_CYCLE);
+            return false;
+        }
+        return true;
+    }
+
+    private void setState(ModuleDependencyItem<MI> moduleDependencyItem, int state)
+    {
+        if(moduleDependencyItem.getModuleInstance().getState() != state)
+        {
+            moduleDependencyItem.getModuleInstance().setState(state);
+
+            if(!moduleDependencyItem.isDependencyOfEmpty())
+            {
+                moduleDependencyItem.getDependencyOf().forEach(module -> this.setState(module, state));
+            }
+        }
+    }
+
+    private void prioritizeDependency(ModuleDependencyItem<MI> item, int priority)
+    {
+        if(item.getPriority() <= priority)
+        {
+            item.setPriority(priority);
+            item.getDependencyOf().forEach(dependencyItem -> this.prioritizeDependency(dependencyItem, priority + 1));
+        }
     }
 
     private void setDependencyItem(ModuleDependencyItem<MI> item)
@@ -262,19 +332,22 @@ public abstract class ModuleLoader<MI extends ModuleInstance>
         moduleDependencyItems.stream().forEach(miModuleDependencyItem -> {
             if(dependencies.contains(miModuleDependencyItem.getName() + "$" + miModuleDependencyItem.getVersion()))
             {
-                item.addChild(miModuleDependencyItem);
-                miModuleDependencyItem.addParent(item);
-                if(item.getPriority() <= miModuleDependencyItem.getPriority())
+                if(item != miModuleDependencyItem)
                 {
-                    item.setPriority(miModuleDependencyItem.getPriority() + 1);
+                    item.addDependsOn(miModuleDependencyItem);
+                    miModuleDependencyItem.addDependencyOf(item);
+                } else
+                {
+                    Logger.warn(LegionLogger.MODULE, "Module '" + item.getName() + "' Version '" + item.getVersion() +
+                            "' refers itself as dependency");
                 }
             }
         });
     }
 
-    protected void startModules()
+    protected void startModule(MI moduleInstance)
     {
-        this.MODULE_INSTANCES.forEach(MI::start);
+        moduleInstance.start();
     }
 
     public void startModule(String moduleName)

@@ -3,7 +3,7 @@
 	-fx-font-family: Verdana, sans-serif;
 }
 
-#iconfy, #maximize, #close, #userButton {
+#iconfy, #maximize, #close, #userButton, #iconButton {
 	-fx-padding: 5.0 16.0 5.0 16.0;
 	-fx-border-color: #e2e2e2;
 	-fx-border-width: 0.0;
@@ -15,12 +15,12 @@
 	-fx-text-fill: #d8d8d8;
 }
 
-#iconfy:hover, #maximize:hover, #close:hover, #userButton:hover {
+#iconfy:hover, #maximize:hover, #close:hover, #userButton:hover, #iconButton:hover {
 	-fx-background-color: rgb(150.0, 0.0, 0.0);
 	-fx-background-insets: -1;
 }
 
-#iconfy:focused, #maximize:focused, #close:focused, #userButton:focused {
+#iconfy:focused, #maximize:focused, #close:focused, #userButton:focused, #iconButton:focused {
 	-fx-border-style: null;
 }
 

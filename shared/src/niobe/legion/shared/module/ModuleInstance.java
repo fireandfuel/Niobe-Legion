@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (ModuleInstance.java) is part of Niobe Legion (module niobe-legion-shared).
  *
@@ -55,6 +55,7 @@ public abstract class ModuleInstance
     public final static int DATABASE_CONFLICT = -3;
     public final static int TERMINATED = -4;
     public final static int MISSING_LIBRARIES = -5;
+    public final static int DEPENDENCY_CYCLE = -6;
 
     private final String[] dependencies;
     private final String[] conflicts;
@@ -182,7 +183,7 @@ public abstract class ModuleInstance
     /**
      * @return the moduleLibraries
      */
-    public String[] getModuleLibaries()
+    public String[] getModuleLibraries()
     {
         return this.moduleLibraries;
     }
@@ -250,9 +251,8 @@ public abstract class ModuleInstance
 
     public synchronized void setState(int state)
     {
-        if(this.state == ModuleInstance.UNINITIALIZED && (state == ModuleInstance.MISSING_DEPENDENCIES ||
-                state == ModuleInstance.IN_CONFLICT ||
-                state == ModuleInstance.DATABASE_CONFLICT))
+        if(this.state == UNINITIALIZED && (state == MISSING_DEPENDENCIES || state == IN_CONFLICT ||
+                state == DATABASE_CONFLICT || state == DEPENDENCY_CYCLE))
         {
             this.state = state;
         }
@@ -262,6 +262,8 @@ public abstract class ModuleInstance
     {
         switch(this.state)
         {
+            case DEPENDENCY_CYCLE:
+                return "cyclic dependencies";
             case MISSING_LIBRARIES:
                 return "missing libraries";
             case TERMINATED:
@@ -290,7 +292,8 @@ public abstract class ModuleInstance
     public IRight[] getRights()
     {
         if(this.module == null || this.state == MISSING_DEPENDENCIES || this.state == IN_CONFLICT ||
-                this.state == UNINITIALIZED || this.state == DATABASE_CONFLICT || this.state == TERMINATED)
+                this.state == UNINITIALIZED || this.state == DATABASE_CONFLICT || this.state == TERMINATED ||
+                this.state == MISSING_LIBRARIES || this.state == DEPENDENCY_CYCLE)
         {
             return null;
         }
