@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client;
@@ -29,6 +29,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
@@ -66,6 +67,7 @@ import niobe.legion.client.gui.connect.CertificateController;
 import niobe.legion.client.gui.connect.ConnectController;
 import niobe.legion.client.gui.connect.LoginController;
 import niobe.legion.client.gui.debug.DebugController;
+import niobe.legion.client.sasl.LegionSaslClientProvider;
 import niobe.legion.shared.Base64;
 import niobe.legion.shared.Communicator;
 import niobe.legion.shared.communication.XmlCommunication;
@@ -119,6 +121,11 @@ public class ClientCommunicator extends Communicator
     String userName;
     String groupName;
     List<GroupRightEntity> groupRights;
+
+    static
+    {
+        Security.addProvider(new LegionSaslClientProvider());
+    }
 
     public ClientCommunicator(Socket socket, String authMechanisms, String blacklistedServersRegex,
                               final String keyStoreFile, final String keyStorePassword, final String[] cipherSuites,

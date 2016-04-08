@@ -1,8 +1,8 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (LegionSaslFactory.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (LegionSaslClientFactory.java) is part of Niobe Legion (module niobe-legion-client).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,20 +15,19 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.shared.sasl;
+package niobe.legion.client.sasl;
 
 import java.util.Map;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslClientFactory;
 import javax.security.sasl.SaslException;
-import javax.security.sasl.SaslServer;
-import javax.security.sasl.SaslServerFactory;
+import niobe.legion.shared.sasl.LegionSaslBaseFactory;
 
-public class LegionSaslFactory implements SaslClientFactory, SaslServerFactory
+public class LegionSaslClientFactory extends LegionSaslBaseFactory implements SaslClientFactory
 {
 
     @Override
@@ -73,53 +72,5 @@ public class LegionSaslFactory implements SaslClientFactory, SaslServerFactory
             }
         }
         return null;
-    }
-
-    @Override
-    public SaslServer createSaslServer(String mechanism, String protocol, String serverName, Map<String, ?> props,
-                                       CallbackHandler callbackHandler) throws SaslException
-    {
-        switch(mechanism)
-        {
-            case "SCRAM-MD5":
-                return new ScramServer("MD5", props, callbackHandler);
-            case "SCRAM-SHA-1":
-                return new ScramServer("SHA-1", props, callbackHandler);
-            case "SCRAM-SHA-224":
-                return new ScramServer("SHA-224", props, callbackHandler);
-            case "SCRAM-SHA-256":
-                return new ScramServer("SHA-256", props, callbackHandler);
-            case "SCRAM-SHA-384":
-                return new ScramServer("SHA-384", props, callbackHandler);
-            case "SCRAM-SHA-512":
-                return new ScramServer("SHA-512", props, callbackHandler);
-            case "SCRAM-KECCAK-224":
-                return new ScramServer("KECCAK-224", props, callbackHandler);
-            case "SCRAM-KECCAK-256":
-                return new ScramServer("KECCAK-256", props, callbackHandler);
-            case "SCRAM-KECCAK-288":
-                return new ScramServer("KECCAK-288", props, callbackHandler);
-            case "SCRAM-KECCAK-384":
-                return new ScramServer("KECCAK-384", props, callbackHandler);
-            case "SCRAM-KECCAK-512":
-                return new ScramServer("KECCAK-512", props, callbackHandler);
-            case "SCRAM-RipeMD128":
-                return new ScramServer("RipeMD128", props, callbackHandler);
-            case "SCRAM-RipeMD160":
-                return new ScramServer("RipeMD160", props, callbackHandler);
-            case "SCRAM-Whirlpool":
-                return new ScramServer("Whirlpool", props, callbackHandler);
-            case "ANONYMOUS":
-                return new AnonymousSaslServer();
-            case "PLAIN":
-                return new PlainSaslServer(callbackHandler);
-        }
-        return null;
-    }
-
-    @Override
-    public String[] getMechanismNames(Map<String, ?> props)
-    {
-        return new String[]{"SCRAM-MD5", "SCRAM-SHA-1", "SCRAM-SHA-224", "SCRAM-SHA-256", "SCRAM-SHA-384", "SCRAM-SHA-512", "SCRAM-KECCAK-224", "SCRAM-KECCAK-256", "SCRAM-KECCAK-288", "SCRAM-KECCAK-384", "SCRAM-KECCAK-512", "SCRAM-RipeMD128", "SCRAM-RipeMD160", "SCRAM-Whirlpool", "ANONYMOUS", "PLAIN"};
     }
 }

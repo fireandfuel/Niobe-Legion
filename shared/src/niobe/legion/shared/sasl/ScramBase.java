@@ -1,6 +1,6 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
  * This file (ScramBase.java) is part of Niobe Legion (module niobe-legion-shared).
  *
@@ -15,11 +15,12 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.shared.sasl;
 
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -38,9 +39,10 @@ import javax.xml.bind.DatatypeConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
- * @author Christian Schudt, fireandfuel
+ * @author Christian Schudt https://bitbucket.org/sco0ter/babbler
+ * @author fireandfuel
  */
-public class ScramBase
+public abstract class ScramBase
 {
     static
     {
@@ -48,31 +50,17 @@ public class ScramBase
     }
 
     private static final byte[] INT1 = new byte[]{0, 0, 0, 1};
-
-    private static final byte[] CLIENT_KEY = "Client Key".getBytes();
-
-    private static final byte[] SERVER_KEY = "Server Key".getBytes();
+    private static final byte[] CLIENT_KEY = "Client Key".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] SERVER_KEY = "Server Key".getBytes(StandardCharsets.UTF_8);
 
     protected final CallbackHandler callbackHandler;
-
     private final String hmacAlgorithm;
-
     private final String hashAlgorithm;
-
-    protected boolean isComplete;
-
+    protected boolean complete;
     protected String clientFirstMessageBare;
-
     protected String serverFirstMessage;
-
-    protected String clientFinalMessageWithoutProof;
-
     protected String nonce;
-
-    protected String gs2Header;
-
     protected String channelBinding;
-
     private String mechanism;
 
     protected ScramBase(String hashAlgorithm, Map<String, ?> props, CallbackHandler callbackHandler) throws
@@ -415,5 +403,26 @@ public class ScramBase
     public String getMechanismName()
     {
         return this.mechanism;
+    }
+
+    public final boolean isComplete() {
+        return complete;
+    }
+
+    public final byte[] unwrap(byte[] incoming, int offset, int len) throws SaslException {
+        throw new SaslException("Unwrap not supported");
+    }
+
+    public final byte[] wrap(byte[] outgoing, int offset, int len) throws SaslException {
+        throw new SaslException("Wrap not supported");
+    }
+
+    public Object getNegotiatedProperty(String propName)
+    {
+        return null;
+    }
+
+    public void dispose() throws SaslException
+    {
     }
 }

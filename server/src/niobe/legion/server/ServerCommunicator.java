@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.server;
@@ -30,6 +30,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+import niobe.legion.server.sasl.LegionSaslServerProvider;
 import niobe.legion.shared.Base64;
 import niobe.legion.shared.Communicator;
 import niobe.legion.shared.communication.XmlCommunication;
@@ -86,6 +88,11 @@ public class ServerCommunicator extends Communicator
     SaslServer saslServer;
     UserEntity user;
     String blacklistedClientsRegex;
+
+    static
+    {
+        Security.addProvider(new LegionSaslServerProvider());
+    }
 
     final CallbackHandler saslServerHandler = (Callback[] callbacks) -> {
         NameCallback ncb = null;

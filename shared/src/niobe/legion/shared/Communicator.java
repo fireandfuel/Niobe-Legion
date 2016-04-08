@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.shared;
@@ -31,7 +31,6 @@ import java.net.SocketException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Security;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
@@ -53,7 +52,6 @@ import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupRightEntity;
 import niobe.legion.shared.module.ModuleRightManager;
-import niobe.legion.shared.sasl.LegionSaslProvider;
 
 public abstract class Communicator implements XMLStreamConstants, ICommunicator, Runnable
 {
@@ -63,8 +61,6 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     public static final String DEBUG_NAMESPACE = "debug";
     public static final String DEBUG_NAMESPACE_URI = "https://github.com/fireandfuel/Niobe-Legion/debug";
 
-    private static final LegionSaslProvider SASL_PROVIDER = new LegionSaslProvider();
-
     private final HashMap<String, ICommunicator> moduleCommunicators = new HashMap<String, ICommunicator>();
     protected final HashMap<Long, List<Stanza>> cachedStanzas = new HashMap<Long, List<Stanza>>();
 
@@ -72,12 +68,6 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     protected SSLSocket sslSocket;
 
     private ICommunication communication;
-
-    static
-    {
-        Security.addProvider(Communicator.SASL_PROVIDER);
-    }
-
 
     protected long localStanzaSequenceId = Math.abs(Utils.random.nextLong());
     protected boolean isCloseRequested;

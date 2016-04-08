@@ -1,8 +1,8 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ScramServer.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (ScramServer.java) is part of Niobe Legion (module niobe-legion-server).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,10 +15,10 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.shared.sasl;
+package niobe.legion.server.sasl;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -38,9 +38,11 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import javax.xml.bind.DatatypeConverter;
 import niobe.legion.shared.Utils;
+import niobe.legion.shared.sasl.ScramBase;
 
 /**
- * @author Christian Schudt
+ * @author Christian Schudt https://bitbucket.org/sco0ter/babbler
+ * @author fireandfuel
  */
 class ScramServer extends ScramBase implements SaslServer
 {
@@ -48,8 +50,6 @@ class ScramServer extends ScramBase implements SaslServer
     private static final int ITERATION_COUNT = 4096;
 
     private static final Pattern USER_VALIDATION = Pattern.compile("=(?!2C|3D)");
-
-    private boolean isComplete;
 
     private char[] password;
 
@@ -208,7 +208,7 @@ class ScramServer extends ScramBase implements SaslServer
                 byte[] recoveredClientKey = ScramBase.xor(clientSignature, clientProof);
                 if(Arrays.equals(this.h(recoveredClientKey), this.computeStoredKey(clientKey)))
                 {
-                    this.isComplete = true;
+                    this.complete = true;
                     byte[] serverKey = this.computeServerKey(saltedPassword);
                     // return ServerSignature
                     String serverFinalMessage = "v=" + DatatypeConverter
@@ -239,37 +239,8 @@ class ScramServer extends ScramBase implements SaslServer
     }
 
     @Override
-    public boolean isComplete()
-    {
-        return this.isComplete;
-    }
-
-    @Override
     public String getAuthorizationID()
     {
         return this.authorizationId;
-    }
-
-    @Override
-    public byte[] unwrap(byte[] incoming, int offset, int len) throws SaslException
-    {
-        return new byte[0];
-    }
-
-    @Override
-    public byte[] wrap(byte[] outgoing, int offset, int len) throws SaslException
-    {
-        return new byte[0];
-    }
-
-    @Override
-    public Object getNegotiatedProperty(String propName)
-    {
-        return null;
-    }
-
-    @Override
-    public void dispose() throws SaslException
-    {
     }
 }

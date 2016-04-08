@@ -1,8 +1,8 @@
 /*
  * Niobe Legion - a versatile client / server framework
- *     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ScramClient.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (ScramClient.java) is part of Niobe Legion (module niobe-legion-client).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,16 +15,16 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.shared.sasl;
+package niobe.legion.client.sasl;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.Arrays;
 import java.util.Map;
 import javax.security.auth.callback.Callback;
@@ -35,11 +35,13 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import javax.xml.bind.DatatypeConverter;
+import niobe.legion.shared.sasl.ScramBase;
 
 /**
- * The implementation of the SCRAM-SHA-1 SASL mechanism.
+ * The implementation of the SCRAM SASL mechanism.
  *
- * @author Christian Schudt
+ * @author Christian Schudt https://bitbucket.org/sco0ter/babbler
+ * @author fireandfuel
  * @see <a href="http://tools.ietf.org/search/rfc5802">Salted Challenge Response
  * Authentication Mechanism (SCRAM)</a>
  */
@@ -49,15 +51,11 @@ final class ScramClient extends ScramBase implements SaslClient
     private static final String GS2_CBIND_FLAG = "n";
 
     private final String gs2Header;
-
     private String authorizationId;
-
     private char[] passwd;
-
     private String username;
-
     private String cnonce;
-
+    private byte[] serverSignature;
     private Integer iterationCount;
     private byte[] salt;
 
@@ -144,66 +142,60 @@ final class ScramClient extends ScramBase implements SaslClient
                     throw new SaslException("SCRAM: Username must not be empty.");
                 }
                 this.username = ScramClient.replaceUsername(this.username);
-
+                this.cnonce = ScramBase.generateNonce();
+                this.clientFirstMessageBare = ScramBase.createClientFirstMessageBare(this.username, this.cnonce);
+                // First, the client sends the "client-first-message"
+                String clientFirstMessage = this.gs2Header + this.clientFirstMessageBare;
+                return clientFirstMessage.getBytes(StandardCharsets.UTF_8);
             } catch(IOException e)
             {
                 throw new SaslException("SCRAM: Error acquiring user name or password.", e);
             } catch(UnsupportedCallbackException e)
             {
                 throw new SaslException("SCRAM: Cannot perform callback to acquire username or password", e);
-            }
-
-            try
-            {
-                this.cnonce = ScramBase.generateNonce();
             } catch(NoSuchAlgorithmException e)
             {
                 throw new SaslException("SCRAM: Failed to generate nonce.", e);
             }
-            this.clientFirstMessageBare = ScramBase.createClientFirstMessageBare(this.username, this.cnonce);
-            // First, the client sends the "client-first-message"
-            String clientFirstMessage = this.gs2Header + this.clientFirstMessageBare;
-            return clientFirstMessage.getBytes();
         } else
         {
-
-            // The server sends the salt and the iteration count to the client,
-            // which then computes
-            // the following values and sends a ClientProof to the server
-
-            String serverMessage = new String(challenge);
-            Map<Character, String> attributes = ScramBase.getAttributes(serverMessage);
-            // check if server sends ServerSignature
-            if(attributes.containsKey('v'))
+            try
             {
-                // The client authenficates the server by computing the
-                // ServerSignature and
-                // comparing it with the value sent by server.
-                try
-                {
-                    byte[] saltedPassword = this.computeSaltedPassword(this.passwd, this.salt, this.iterationCount);
-                    byte[] serverKey = this.computeServerKey(saltedPassword);
-                    byte[] calculatedServerSignature = this
-                            .computeServerSignature(serverKey, this.computeAuthMessage());
-                    String serverSignatureBase64 = attributes.get('v');
+                // The server sends the salt and the iteration count to the client,
+                // which then computes
+                // the following values and sends a ClientProof to the server
 
-                    if(serverSignatureBase64 == null)
-                    {
-                        throw new SaslException("SCRAM: server signature was null in the server response.");
-                    }
+                String serverMessage = new String(challenge);
+                Map<Character, String> attributes = ScramBase.getAttributes(serverMessage);
 
-                    if(Arrays.equals(calculatedServerSignature,
-                                     DatatypeConverter.parseBase64Binary(serverSignatureBase64)))
-                    {
-                        this.isComplete = true;
-                        return new byte[0];
-                    }
-                } catch(NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException e)
+                // e: This attribute specifies an error that occurred during
+                // authentication exchange.  It is sent by the server in its final
+                // message and can help diagnose the reason for the authentication
+                // exchange failure.
+                String error = attributes.get('e');
+                if(error != null)
                 {
-                    throw new SaslException(e.getMessage(), e);
+                    throw new SaslException(error);
                 }
-            } else
-            {
+
+                // v: This attribute specifies a base64-encoded ServerSignature.  It
+                // is sent by the server in its final message, and is used by the
+                // client to verify that the server has access to the user's
+                // authentication information.
+                String verifier = attributes.get('v');
+                if(verifier != null)
+                {
+                    // The client authenficates the server by computing the
+                    // ServerSignature and
+                    // comparing it with the value sent by server.
+                    if(!Arrays.equals(this.serverSignature, DatatypeConverter.parseBase64Binary(verifier)))
+                    {
+                        throw new SaslException("SCRAM: Verification failed");
+                    }
+
+                    this.complete = true;
+                    return null;
+                }
                 this.serverFirstMessage = serverMessage;
 
                 this.nonce = attributes.get('r');
@@ -234,59 +226,32 @@ final class ScramClient extends ScramBase implements SaslClient
 
                 try
                 {
-                    this.channelBinding = DatatypeConverter.printBase64Binary(this.gs2Header.getBytes());
-                    byte[] clientKey = this
-                            .computeClientKey(this.computeSaltedPassword(this.passwd, this.salt, this.iterationCount));
+                    this.channelBinding = DatatypeConverter
+                            .printBase64Binary(this.gs2Header.getBytes(StandardCharsets.UTF_8));
+                    byte[] saltedPassword = this.computeSaltedPassword(this.passwd, this.salt, this.iterationCount);
+                    String authMessage = this.computeAuthMessage();
+                    byte[] clientKey = this.computeClientKey(saltedPassword);
                     byte[] clientSignature = this.computeClientSignature(clientKey, this.computeAuthMessage());
-                    // ClientProof := ClientKey XOR ClientSignature
+                    // ClientProof     := ClientKey XOR ClientSignature
                     byte[] clientProof = ScramBase.xor(clientKey, clientSignature);
-                    this.clientFinalMessageWithoutProof = "c=" + this.channelBinding + ",r=" + this.nonce;
-                    // The client then responds by sending a
-                    // "client-final-message"
-                    // with the
-                    // same nonce and a ClientProof computed using the selected
-                    // hash
+                    byte[] serverKey = this.computeServerKey(saltedPassword);
+                    this.serverSignature = this.hmac(serverKey, authMessage.getBytes(StandardCharsets.UTF_8));
+                    String clientFinalMessageWithoutProof = "c=" + channelBinding + ",r=" + nonce;
+                    // The client then responds by sending a "client-final-message" with the
+                    // same nonce and a ClientProof computed using the selected hash
                     // function as explained earlier.
-                    String clientFinalMessage = this.clientFinalMessageWithoutProof + ",p=" +
-                            DatatypeConverter.printBase64Binary(clientProof);
-                    return clientFinalMessage.getBytes();
-
-                } catch(NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException e)
+                    String clientFinalMessage = clientFinalMessageWithoutProof + ",p=" + DatatypeConverter
+                            .printBase64Binary(clientProof);
+                    return clientFinalMessage.getBytes(StandardCharsets.UTF_8);
+                } catch(GeneralSecurityException e)
                 {
                     throw new SaslException(e.getMessage(), e);
                 }
+            } catch(SaslException e)
+            {
+                complete = true;
+                throw e;
             }
         }
-        return new byte[0];
-    }
-
-    @Override
-    public boolean isComplete()
-    {
-        return this.isComplete;
-    }
-
-    @Override
-    public byte[] unwrap(byte[] incoming, int offset, int len) throws SaslException
-    {
-        return new byte[0];
-    }
-
-    @Override
-    public byte[] wrap(byte[] outgoing, int offset, int len) throws SaslException
-    {
-        return new byte[0];
-    }
-
-    @Override
-    public Object getNegotiatedProperty(String propName)
-    {
-        return null;
-    }
-
-    @Override
-    public void dispose() throws SaslException
-    {
-
     }
 }
