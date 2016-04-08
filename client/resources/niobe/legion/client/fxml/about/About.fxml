@@ -17,7 +17,7 @@
   ~     GNU Lesser General Public License for more details.
   ~
   ~     You should have received a copy of the GNU Lesser General Public License
-  ~     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+  ~     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <?import javafx.scene.control.Button?>
@@ -30,7 +30,6 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.Scene?>
 <?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.web.WebView?>
