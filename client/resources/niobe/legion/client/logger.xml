@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Niobe Legion - a versatile client / server framework
-  ~     Copyright (C) 2013-2015 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+  ~     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
   ~
   ~ This file (logger.xml) is part of Niobe Legion (module niobe-legion-client).
   ~
@@ -16,7 +16,7 @@
   ~     GNU Lesser General Public License for more details.
   ~
   ~     You should have received a copy of the GNU Lesser General Public License
-  ~     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+  ~     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <Configuration strict="true" name="LegionClientConfig">
@@ -25,7 +25,7 @@
 		<Property name="stderr_file">logs/client/error.log</Property>
 		<Property name="recv_file">logs/client/recv.log</Property>
 		<Property name="send_file">logs/client/send.log</Property>
-		<Property name="tls_file">logs/server/tls.log</Property>
+		<Property name="tls_file">logs/client/tls.log</Property>
 		<Property name="auth_file">logs/client/auth.log</Property>
 		<Property name="module_file">logs/client/module.log</Property>
 	</Properties>
