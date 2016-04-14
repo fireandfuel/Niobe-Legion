@@ -22,23 +22,29 @@ package niobe.legion.client.gui.debug;
 
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
 import javax.xml.stream.XMLStreamConstants;
 import niobe.legion.client.Client;
 import niobe.legion.client.gui.ICloseableDialogController;
+import niobe.legion.client.gui.latency.LatencyService;
 import niobe.legion.shared.Communicator;
 import niobe.legion.shared.ICommunicator;
 import niobe.legion.shared.data.Stanza;
 
 public class DebugController implements ICommunicator, ICloseableDialogController, XMLStreamConstants
 {
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("'Ping: '0.##'ms'");
 
     @FXML
     private TextArea messages;
+    @FXML
+    private Label latencyLabel;
 
     private Stage stage;
 
@@ -46,6 +52,9 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
     private void initialize()
     {
         this.messages.setText("-- Connected " + LocalDateTime.now().toString() + "\n");
+
+        LatencyService service = LatencyService.getInstance();
+        service.setOnSucceeded(event -> this.latencyLabel.setText(DECIMAL_FORMAT.format(service.getValue())));
     }
 
     @Override
@@ -185,7 +194,7 @@ public class DebugController implements ICommunicator, ICloseableDialogControlle
     @FXML
     public void ping() throws IOException
     {
-        Client.getCommunicator().ping();
+        Client.getCommunicator().ping(null);
     }
 
     public void writeMessage(String message)

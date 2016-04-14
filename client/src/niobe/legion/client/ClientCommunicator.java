@@ -91,22 +91,22 @@ import niobe.legion.shared.model.marshal.StanzaMarshaller;
  */
 public class ClientCommunicator extends Communicator
 {
-    public static final int SERVER_AUTH_ERR = 0;
-    public static final int CLIENT_AUTH_ERR = 1;
-    protected final static String CLIENT_NAME = "legion_client";
-    protected final static String CLIENT_VERSION = "0";
+    private static final int SERVER_AUTH_ERR = 0;
+    private static final int CLIENT_AUTH_ERR = 1;
+    final static String CLIENT_NAME = "legion_client";
+    final static String CLIENT_VERSION = "0";
     private final static List<String> CLIENT_FEATURES = new ArrayList<String>(Arrays.asList("starttls"));
 
-    final String keyStoreFile;
-    final String keyStorePassword;
-    final String[] cipherSuites;
+    private final String keyStoreFile;
+    private final String keyStorePassword;
+    private final String[] cipherSuites;
 
     private final String[] authMechanisms;
     private final HashMap<Long, DatasetReceiver> databaseRetrievers = new HashMap<Long, DatasetReceiver>();
 
-    SaslClient saslClient;
-    boolean serverSideAuthenficated;
-    String blacklistedServersRegex;
+    private SaslClient saslClient;
+    private boolean serverSideAuthenficated;
+    private String blacklistedServersRegex;
 
     private boolean clientAcceptedFromServer;
     private boolean tlsEstablished;
@@ -118,9 +118,9 @@ public class ClientCommunicator extends Communicator
     private List<String> serverAuthMechanisms = new ArrayList<String>();
     private static DebugController debugController;
 
-    String userName;
-    String groupName;
-    List<GroupRightEntity> groupRights;
+    private String userName;
+    private String groupName;
+    private List<GroupRightEntity> groupRights;
 
     static
     {

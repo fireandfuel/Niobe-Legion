@@ -61,6 +61,8 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     public static final String DEBUG_NAMESPACE = "debug";
     public static final String DEBUG_NAMESPACE_URI = "https://github.com/fireandfuel/Niobe-Legion/debug";
 
+    private static ICommunicator DEBUG_COMMUNICATOR;
+
     private final HashMap<String, ICommunicator> moduleCommunicators = new HashMap<String, ICommunicator>();
     protected final HashMap<Long, List<Stanza>> cachedStanzas = new HashMap<Long, List<Stanza>>();
 
@@ -77,7 +79,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 
     private LinkedList<Stanza> stanzaStack = new LinkedList<Stanza>();
 
-    protected static ICommunicator DEBUG_COMMUNICATOR;
+    private Object pingResponder;
 
     protected Communicator(Socket socket, ICommunication communication)
     {
@@ -196,6 +198,13 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
                                 } else if("legion:pong".equals(currentStanza.getName()))
                                 {
                                     // ping successful
+                                    if(this.pingResponder != null)
+                                    {
+                                        synchronized(pingResponder)
+                                        {
+                                            pingResponder.notify();
+                                        }
+                                    }
                                 } else
                                 {
                                     if(DEBUG_COMMUNICATOR != null)
@@ -374,12 +383,12 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         this.write(stanza);
     }
 
-    public final boolean isAcceptAt(int index)
+    protected final boolean isAcceptAt(int index)
     {
         return this.isStackAt(index, "legion:accept");
     }
 
-    public final void decline(String type, String reason) throws IOException
+    protected final void decline(String type, String reason) throws IOException
     {
         Stanza stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.CHARACTERS);
@@ -389,8 +398,9 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         this.write(stanza);
     }
 
-    public final void ping() throws IOException
+    public final void ping(Object sync) throws IOException
     {
+        this.pingResponder = sync;
         Stanza stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setEmptyElement(true);
@@ -398,7 +408,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         this.write(stanza);
     }
 
-    protected final void pong() throws IOException
+    public final void pong() throws IOException
     {
         Stanza stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
@@ -407,12 +417,12 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         this.write(stanza);
     }
 
-    public final boolean isDeclineAt(int index)
+    protected final boolean isDeclineAt(int index)
     {
         return this.isStackAt(index, "legion:decline");
     }
 
-    public final boolean isStackAt(int index, String name)
+    protected final boolean isStackAt(int index, String name)
     {
         if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null)
         {
@@ -421,7 +431,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return false;
     }
 
-    public final boolean isParameterAt(int index, String name)
+    protected final boolean isParameterAt(int index, String name)
     {
         if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null)
         {
@@ -430,7 +440,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return false;
     }
 
-    public final String getNameAt(int index)
+    protected final String getNameAt(int index)
     {
         if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null)
         {
@@ -439,7 +449,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return null;
     }
 
-    public final int getEventTypeAt(int index)
+    protected final int getEventTypeAt(int index)
     {
         if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null)
         {
@@ -448,7 +458,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return -1;
     }
 
-    public final String getValueAt(int index)
+    protected final String getValueAt(int index)
     {
         if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null &&
                 this.stanzaStack.get(index).getEventType() == XMLStreamConstants.CHARACTERS)
@@ -458,7 +468,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return null;
     }
 
-    public final List<String> getParameterKeysAt(int index)
+    protected final List<String> getParameterKeysAt(int index)
     {
         if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null)
         {
@@ -467,7 +477,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return null;
     }
 
-    public final String getParameterValueAt(int index, String key)
+    protected final String getParameterValueAt(int index, String key)
     {
         if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null &&
                 this.stanzaStack.get(index).containsAttributeKey(key))
@@ -477,7 +487,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return null;
     }
 
-    public final int getPosInStack(String name)
+    protected final int getPosInStack(String name)
     {
         for(int i = 0; i < this.stanzaStack.size(); i++)
         {
@@ -583,7 +593,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return "not set";
     }
 
-    public void resetReader() throws CommunicationException
+    protected void resetReader() throws CommunicationException
     {
         this.communication.initInputReader(this.in);
     }
