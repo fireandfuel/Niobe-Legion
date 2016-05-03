@@ -354,7 +354,7 @@ public class StanzaMarshaller implements XMLStreamConstants
                         objectClass == Float.class || objectClass == Boolean.class ||
                         objectClass == LocalDate.class || objectClass == LocalTime.class ||
                         objectClass == LocalDateTime.class || objectClass == String.class ||
-                        objectClass == Byte.class || objectClass == Short.class || object instanceof Character)
+                        objectClass == Byte.class || objectClass == Short.class || objectClass == Character.class)
                 {
                     String value = stanza.getValue();
 
