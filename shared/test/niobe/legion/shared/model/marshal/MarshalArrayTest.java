@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.shared.model.marshal;
@@ -46,8 +46,9 @@ public class MarshalArrayTest implements XMLStreamConstants
             {
                 case 0:
                     Assert.assertEquals("legion:dataset", stanza.getName());
-                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
                     Assert.assertEquals("boolean[]", stanza.getAttribute("class"));
+                    Assert.assertEquals("3", stanza.getAttribute("arrayCount"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
@@ -116,8 +117,9 @@ public class MarshalArrayTest implements XMLStreamConstants
             {
                 case 0:
                     Assert.assertEquals("legion:dataset", stanza.getName());
-                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
                     Assert.assertEquals("byte[]", stanza.getAttribute("class"));
+                    Assert.assertEquals("3", stanza.getAttribute("arrayCount"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
@@ -186,8 +188,9 @@ public class MarshalArrayTest implements XMLStreamConstants
             {
                 case 0:
                     Assert.assertEquals("legion:dataset", stanza.getName());
-                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
                     Assert.assertEquals("short[]", stanza.getAttribute("class"));
+                    Assert.assertEquals("3", stanza.getAttribute("arrayCount"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
@@ -256,8 +259,9 @@ public class MarshalArrayTest implements XMLStreamConstants
             {
                 case 0:
                     Assert.assertEquals("legion:dataset", stanza.getName());
-                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
                     Assert.assertEquals("int[]", stanza.getAttribute("class"));
+                    Assert.assertEquals("3", stanza.getAttribute("arrayCount"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
@@ -326,8 +330,9 @@ public class MarshalArrayTest implements XMLStreamConstants
             {
                 case 0:
                     Assert.assertEquals("legion:dataset", stanza.getName());
-                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
                     Assert.assertEquals("float[]", stanza.getAttribute("class"));
+                    Assert.assertEquals("3", stanza.getAttribute("arrayCount"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
@@ -396,8 +401,9 @@ public class MarshalArrayTest implements XMLStreamConstants
             {
                 case 0:
                     Assert.assertEquals("legion:dataset", stanza.getName());
-                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
                     Assert.assertEquals("double[]", stanza.getAttribute("class"));
+                    Assert.assertEquals("3", stanza.getAttribute("arrayCount"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
@@ -466,8 +472,9 @@ public class MarshalArrayTest implements XMLStreamConstants
             {
                 case 0:
                     Assert.assertEquals("legion:dataset", stanza.getName());
-                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
                     Assert.assertEquals("long[]", stanza.getAttribute("class"));
+                    Assert.assertEquals("3", stanza.getAttribute("arrayCount"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
@@ -536,8 +543,9 @@ public class MarshalArrayTest implements XMLStreamConstants
             {
                 case 0:
                     Assert.assertEquals("legion:dataset", stanza.getName());
-                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
                     Assert.assertEquals("char[]", stanza.getAttribute("class"));
+                    Assert.assertEquals("3", stanza.getAttribute("arrayCount"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
@@ -606,8 +614,9 @@ public class MarshalArrayTest implements XMLStreamConstants
             {
                 case 0:
                     Assert.assertEquals("legion:dataset", stanza.getName());
-                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
                     Assert.assertEquals("java.lang.String[]", stanza.getAttribute("class"));
+                    Assert.assertEquals("3", stanza.getAttribute("arrayCount"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
