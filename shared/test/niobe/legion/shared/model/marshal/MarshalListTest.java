@@ -59,7 +59,8 @@ public class MarshalListTest implements XMLStreamConstants
                 case 7:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -130,7 +131,8 @@ public class MarshalListTest implements XMLStreamConstants
                 case 7:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -201,7 +203,8 @@ public class MarshalListTest implements XMLStreamConstants
                 case 7:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -272,7 +275,8 @@ public class MarshalListTest implements XMLStreamConstants
                 case 7:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -343,7 +347,8 @@ public class MarshalListTest implements XMLStreamConstants
                 case 7:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -414,7 +419,8 @@ public class MarshalListTest implements XMLStreamConstants
                 case 7:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -485,7 +491,8 @@ public class MarshalListTest implements XMLStreamConstants
                 case 7:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -555,7 +562,8 @@ public class MarshalListTest implements XMLStreamConstants
                 case 7:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -626,7 +634,8 @@ public class MarshalListTest implements XMLStreamConstants
                 case 7:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:

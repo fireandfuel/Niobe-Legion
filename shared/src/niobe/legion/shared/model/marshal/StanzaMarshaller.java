@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import javax.xml.stream.XMLStreamConstants;
 import niobe.legion.shared.data.Stanza;
@@ -118,38 +119,46 @@ public class StanzaMarshaller implements XMLStreamConstants
         if(object.getClass().isArray()) // Check if object is an array
         {
             // array needs the count of elements to initialize while unmarshalling
-            // marshal the children of array
+            // use the canonical class name instead of the primitive type name
             switch(className)
             {
                 case "boolean[]":
+                    result.putAttribute("class", Boolean.class.getCanonicalName() + "[]");
                     result.putAttribute("arrayCount", Integer.toString(((boolean[]) object).length));
                     results.addAll(getEntry((boolean[]) object, sequenceId));
                     break;
                 case "byte[]":
+                    result.putAttribute("class", Byte.class.getCanonicalName() + "[]");
                     result.putAttribute("arrayCount", Integer.toString(((byte[]) object).length));
                     results.addAll(getEntry((byte[]) object, sequenceId));
                     break;
                 case "short[]":
+                    result.putAttribute("class", Short.class.getCanonicalName() + "[]");
                     result.putAttribute("arrayCount", Integer.toString(((short[]) object).length));
                     results.addAll(getEntry((short[]) object, sequenceId));
                     break;
                 case "int[]":
+                    result.putAttribute("class", Integer.class.getCanonicalName() + "[]");
                     result.putAttribute("arrayCount", Integer.toString(((int[]) object).length));
                     results.addAll(getEntry((int[]) object, sequenceId));
                     break;
                 case "float[]":
+                    result.putAttribute("class", Float.class.getCanonicalName() + "[]");
                     result.putAttribute("arrayCount", Integer.toString(((float[]) object).length));
                     results.addAll(getEntry((float[]) object, sequenceId));
                     break;
                 case "double[]":
+                    result.putAttribute("class", Double.class.getCanonicalName() + "[]");
                     result.putAttribute("arrayCount", Integer.toString(((double[]) object).length));
                     results.addAll(getEntry((double[]) object, sequenceId));
                     break;
                 case "long[]":
+                    result.putAttribute("class", Long.class.getCanonicalName() + "[]");
                     result.putAttribute("arrayCount", Integer.toString(((long[]) object).length));
                     results.addAll(getEntry((long[]) object, sequenceId));
                     break;
                 case "char[]":
+                    result.putAttribute("class", Character.class.getCanonicalName() + "[]");
                     result.putAttribute("arrayCount", Integer.toString(((char[]) object).length));
                     results.addAll(getEntry((char[]) object, sequenceId));
                     break;
@@ -264,6 +273,10 @@ public class StanzaMarshaller implements XMLStreamConstants
         while(xml.size() > 0)
         {
             int closeIndex = searchCloseEntryIndexInStack(0, xml);
+            if(closeIndex == 0)
+            {
+                return null;
+            }
             List<Stanza> subList = new ArrayList<Stanza>(xml.subList(0, closeIndex));
             xml.removeAll(subList);
             Object result = unmarshalStanzas(subList);
@@ -291,7 +304,7 @@ public class StanzaMarshaller implements XMLStreamConstants
         }
 
         Object object = null;
-        StanzaColumn stanzaColumnn = null;
+        StanzaColumn stanzaColumn = null;
 
         int index = 0;
         while(index < xml.size())
@@ -307,20 +320,20 @@ public class StanzaMarshaller implements XMLStreamConstants
                     }
                     break;
                 case "legion:column":
-                    stanzaColumnn = unmarshalColumn(object, stanza);
+                    stanzaColumn = unmarshalColumn(object, stanza);
                     break;
                 case "legion:entry":
                     if(stanza.getEventType() == START_ELEMENT)
                     {
                         // get the index of next close xml stanza (end stanza of this opening stanza)
-                        int closeEntryIndex = searchCloseEntryIndexInStack(index + 1, xml);
+                        int closeEntryIndex = searchCloseEntryIndexInStack(index, xml);
 
                         // get the child object xml stanzas
-                        List<Stanza> childrenList = new ArrayList<Stanza>(xml.subList(index + 1, closeEntryIndex));
+                        List<Stanza> childrenList = new ArrayList<Stanza>(xml.subList(index + 1, closeEntryIndex - 1));
                         // remove add child object xml stanzas from the object xml stanza list
                         xml.removeAll(childrenList);
 
-                        unmarshalEntry(object, stanza, childrenList, stanzaColumnn);
+                        unmarshalEntry(object, stanza, childrenList, stanzaColumn);
                     }
                     break;
             }
@@ -344,7 +357,43 @@ public class StanzaMarshaller implements XMLStreamConstants
                 // instantiate the array
                 int arrayCount = (stanza.getAttribute("arrayCount") != null) ? Integer
                         .parseInt(stanza.getAttribute("arrayCount")) : 0;
-                object = Array.newInstance(Class.forName(className), arrayCount);
+
+                Class<?> objectClass = Class.forName(className);
+
+                if(objectClass.isPrimitive() || objectClass == Integer.class ||
+                        objectClass == Long.class || objectClass == Double.class ||
+                        objectClass == Float.class || objectClass == Boolean.class ||
+                        objectClass == Byte.class || objectClass == Short.class || objectClass == Character.class)
+                {
+                    if(objectClass == Boolean.class)
+                    {
+                        object = new boolean[arrayCount];
+                    } else if(objectClass == Byte.class)
+                    {
+                        object = new byte[arrayCount];
+                    } else if(objectClass == Short.class)
+                    {
+                        object = new short[arrayCount];
+                    } else if(objectClass == Integer.class)
+                    {
+                        object = new int[arrayCount];
+                    } else if(objectClass == Long.class)
+                    {
+                        object = new long[arrayCount];
+                    } else if(objectClass == Float.class)
+                    {
+                        object = new float[arrayCount];
+                    } else if(objectClass == Double.class)
+                    {
+                        object = new double[arrayCount];
+                    } else if(objectClass == Character.class)
+                    {
+                        object = new char[arrayCount];
+                    }
+                } else
+                {
+                    object = Array.newInstance(Class.forName(className), arrayCount);
+                }
             } else
             {
                 Class<?> objectClass = Class.forName(className);
@@ -590,11 +639,12 @@ public class StanzaMarshaller implements XMLStreamConstants
         boolean isArrayColumn = stanzaColumn != null ? stanzaColumn.isArrayColumn : false;
         int arrayIndex = 0;
 
+        // unmarshal the child object
+        Object result = unmarshalStanzas(stanzas);
+
         // if a column is selected
         if(columnClass != null && columnName != null)
         {
-            // unmarshal the child object
-            Object result = unmarshalStanzas(stanzas);
             if(result != null)
             {
                 try
@@ -769,7 +819,14 @@ public class StanzaMarshaller implements XMLStreamConstants
                 }
             }
         }
+        else if(object.getClass().isArray())
+        {
+            String indexString = entryStanza.getAttribute("index");
+            if(indexString != null && indexString.matches("\\d"))
+            {
 
+            }
+        }
     }
 
     /**
@@ -833,8 +890,8 @@ public class StanzaMarshaller implements XMLStreamConstants
                 Stanza peek = stack.peek();
                 // if top of the stack is a start stanza and name of stanza equals stanza on the top of the stack
                 if(peek.getEventType() == START_ELEMENT && peek.getName().equals(stanza.getName()))
-                // pop (remove first) from the top of the stanza stack
                 {
+                    // pop (remove first) from the top of the stanza stack
                     stack.pop();
                 }
             }
@@ -970,6 +1027,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     private static <T> List<Stanza> getStreamEntry(Stream<T> stream, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
         // for every element of the stream
         stream.forEach(value -> {
@@ -977,6 +1035,7 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value
@@ -1000,6 +1059,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     private static List<Stanza> getEntry(boolean[] array, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
         for(boolean value : array)
         {
@@ -1007,6 +1067,7 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value
@@ -1029,6 +1090,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     private static List<Stanza> getEntry(byte[] array, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
         for(byte value : array)
         {
@@ -1036,6 +1098,7 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value
@@ -1058,6 +1121,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     private static List<Stanza> getEntry(short[] array, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
         for(short value : array)
         {
@@ -1065,6 +1129,7 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value
@@ -1087,6 +1152,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     private static List<Stanza> getEntry(int[] array, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
         for(int value : array)
         {
@@ -1094,6 +1160,7 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value
@@ -1116,6 +1183,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     private static List<Stanza> getEntry(float[] array, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
         for(float value : array)
         {
@@ -1123,6 +1191,7 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value
@@ -1145,6 +1214,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     private static List<Stanza> getEntry(double[] array, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
         for(double value : array)
         {
@@ -1152,6 +1222,7 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value
@@ -1174,6 +1245,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     private static List<Stanza> getEntry(long[] array, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
         for(long value : array)
         {
@@ -1181,6 +1253,7 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value
@@ -1203,6 +1276,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     private static List<Stanza> getEntry(char[] array, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
         for(char value : array)
         {
@@ -1210,6 +1284,7 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value

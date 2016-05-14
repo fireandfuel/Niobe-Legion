@@ -109,10 +109,16 @@ public class MarshalObjectTest implements XMLStreamConstants
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 5:
-                case 10:
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(1, stanza.getAttributeKeys().size());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+                case 10:
+                    Assert.assertEquals("legion:entry", stanza.getName());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertEquals("0",stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 6:
