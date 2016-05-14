@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui;
@@ -80,7 +80,7 @@ public class MainController
     @FXML
     private void initialize() throws IOException
     {
-        setupMenuBar();
+        Platform.runLater(() -> setupMenuBar());
 
         this.userButton.setPadding(new Insets(0));
         this.userButton.setOnAction(event -> {
