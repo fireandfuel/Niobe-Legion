@@ -637,15 +637,14 @@ public class StanzaMarshaller implements XMLStreamConstants
         Class<?> columnClass = stanzaColumn != null ? stanzaColumn.columnClass : null;
         String columnName = stanzaColumn != null ? stanzaColumn.columnName : null;
         boolean isArrayColumn = stanzaColumn != null ? stanzaColumn.isArrayColumn : false;
-        int arrayIndex = 0;
 
         // unmarshal the child object
         Object result = unmarshalStanzas(stanzas);
 
         // if a column is selected
-        if(columnClass != null && columnName != null)
+        if(result != null)
         {
-            if(result != null)
+            if(columnClass != null && columnName != null)
             {
                 try
                 {
@@ -653,11 +652,16 @@ public class StanzaMarshaller implements XMLStreamConstants
                     {
                         // get object's field as array
                         Object[] array = get(object.getClass(), columnName, object);
-
-                        // add child object to the array
-                        if(array != null && arrayIndex < array.length)
+                        String arrayIndexString = entryStanza.getAttribute("index");
+                        if(arrayIndexString != null && arrayIndexString.matches("\\d+"))
                         {
-                            array[arrayIndex++] = result;
+                            int arrayIndex = Integer.parseInt(arrayIndexString);
+
+                            // add child object to the array
+                            if(array != null && arrayIndex < array.length)
+                            {
+                                array[arrayIndex] = result;
+                            }
                         }
                     } else if(Collection.class.isAssignableFrom(columnClass))
                     {
@@ -739,77 +743,141 @@ public class StanzaMarshaller implements XMLStreamConstants
             {
                 try
                 {
-                    if(result != null)
+                    if(object.getClass().isArray())
                     {
-                        if(object.getClass().isArray())
+                        String arrayIndexString = entryStanza.getAttribute("index");
+                        if(arrayIndexString != null && arrayIndexString.matches("\\d+"))
                         {
-                            Object[] array = (Object[]) object;
+                            int arrayIndex = Integer.parseInt(arrayIndexString);
 
-                            // add child object to the array
-                            if(array != null && arrayIndex < array.length)
+                            switch(object.getClass().getCanonicalName())
                             {
-                                array[arrayIndex++] = result;
+                                case "boolean[]":
+                                    boolean[] booleans = (boolean[]) object;
+                                    if(arrayIndex < booleans.length)
+                                    {
+                                        booleans[arrayIndex] = (boolean) result;
+                                    }
+                                    break;
+                                case "byte[]":
+                                    byte[] bytes = (byte[]) object;
+                                    if(arrayIndex < bytes.length)
+                                    {
+                                        bytes[arrayIndex] = (byte) result;
+                                    }
+                                    break;
+                                case "short[]":
+                                    short[] shorts = (short[]) object;
+                                    if(arrayIndex < shorts.length)
+                                    {
+                                        shorts[arrayIndex] = (short) result;
+                                    }
+                                    break;
+                                case "int[]":
+                                    int[] ints = (int[]) object;
+                                    if(arrayIndex < ints.length)
+                                    {
+                                        ints[arrayIndex] = (int) result;
+                                    }
+                                    break;
+                                case "long[]":
+                                    long[] longs = (long[]) object;
+                                    if(arrayIndex < longs.length)
+                                    {
+                                        longs[arrayIndex] = (long) result;
+                                    }
+                                    break;
+                                case "float[]":
+                                    float[] floats = (float[]) object;
+                                    if(arrayIndex < floats.length)
+                                    {
+                                        floats[arrayIndex] = (float) result;
+                                    }
+                                    break;
+                                case "double[]":
+                                    double[] doubles = (double[]) object;
+                                    if(arrayIndex < doubles.length)
+                                    {
+                                        doubles[arrayIndex] = (double) result;
+                                    }
+                                    break;
+                                case "char[]":
+                                    char[] chars = (char[]) object;
+                                    if(arrayIndex < chars.length)
+                                    {
+                                        chars[arrayIndex] = (char) result;
+                                    }
+                                    break;
+                                default:
+                                    Object[] array = (Object[]) object;
+                                    // add child object to the array
+                                    if(arrayIndex < array.length)
+                                    {
+                                        array[arrayIndex] = result;
+                                    }
+                                    break;
                             }
-                        } else if(object instanceof Collection)
-                        {
-                            Collection collection = (Collection) object;
 
-                            // add child object to the list
-                            if(collection != null && checkCollectionClass(collection.getClass()))
+                        }
+                    } else if(object instanceof Collection)
+                    {
+                        Collection collection = (Collection) object;
+
+                        // add child object to the list
+                        if(checkCollectionClass(collection.getClass()))
+                        {
+                            collection.add(result);
+                        }
+                    } else if(object instanceof Map)
+                    {
+                        Map map = (Map) object;
+
+                        if(checkMapClass(map.getClass()))
+                        {
+                            // instantiate the key object
+                            Object key = entryStanza.getAttribute("key");
+                            String keyClassName = entryStanza.getAttribute("keyClass");
+                            Class<?> keyClass = (keyClassName != null) ? Class.forName(keyClassName) : null;
+
+                            if(keyClass == Integer.class)
                             {
-                                collection.add(result);
+                                key = Integer.parseInt((String) key);
+                            } else if(keyClass == Byte.class)
+                            {
+                                key = Byte.parseByte((String) key);
+                            } else if(keyClass == Short.class)
+                            {
+                                key = Short.parseShort((String) key);
+                            } else if(keyClass == Character.class)
+                            {
+                                key = ((String) key).charAt(0);
+                            } else if(keyClass == Long.class)
+                            {
+                                key = Long.parseLong((String) key);
+                            } else if(keyClass == Float.class)
+                            {
+                                key = Float.parseFloat((String) key);
+                            } else if(keyClass == Double.class)
+                            {
+                                key = Double.parseDouble((String) key);
+                            } else if(keyClass == Boolean.class)
+                            {
+                                key = Boolean.parseBoolean((String) key);
+                            } else if(keyClass == LocalDate.class)
+                            {
+                                key = LocalDate.parse((String) key);
+                            } else if(keyClass == LocalTime.class)
+                            {
+                                key = LocalTime.parse((String) key);
+                            } else if(keyClass == LocalDateTime.class)
+                            {
+                                key = LocalDateTime.parse((String) key);
                             }
-                        } else if(object instanceof Map)
-                        {
-                            Map map = (Map) object;
 
-                            if(map != null && checkMapClass(map.getClass()))
+                            // put child object with key to map
+                            if(key != null && keyClass != null)
                             {
-                                // instantiate the key object
-                                Object key = entryStanza.getAttribute("key");
-                                String keyClassName = entryStanza.getAttribute("keyClass");
-                                Class<?> keyClass = (keyClassName != null) ? Class.forName(keyClassName) : null;
-
-                                if(keyClass == Integer.class)
-                                {
-                                    key = Integer.parseInt((String) key);
-                                } else if(keyClass == Byte.class)
-                                {
-                                    key = Byte.parseByte((String) key);
-                                } else if(keyClass == Short.class)
-                                {
-                                    key = Short.parseShort((String) key);
-                                } else if(columnClass == Character.class)
-                                {
-                                    key = ((String) key).charAt(0);
-                                } else if(keyClass == Long.class)
-                                {
-                                    key = Long.parseLong((String) key);
-                                } else if(keyClass == Float.class)
-                                {
-                                    key = Float.parseFloat((String) key);
-                                } else if(keyClass == Double.class)
-                                {
-                                    key = Double.parseDouble((String) key);
-                                } else if(keyClass == Boolean.class)
-                                {
-                                    key = Boolean.parseBoolean((String) key);
-                                } else if(keyClass == LocalDate.class)
-                                {
-                                    key = LocalDate.parse((String) key);
-                                } else if(keyClass == LocalTime.class)
-                                {
-                                    key = LocalTime.parse((String) key);
-                                } else if(keyClass == LocalDateTime.class)
-                                {
-                                    key = LocalDateTime.parse((String) key);
-                                }
-
-                                // put child object with key to map
-                                if(map != null && key != null && keyClass != null)
-                                {
-                                    map.put(key, result);
-                                }
+                                map.put(key, result);
                             }
                         }
                     }
@@ -817,14 +885,6 @@ public class StanzaMarshaller implements XMLStreamConstants
                 {
                     e.printStackTrace();
                 }
-            }
-        }
-        else if(object.getClass().isArray())
-        {
-            String indexString = entryStanza.getAttribute("index");
-            if(indexString != null && indexString.matches("\\d"))
-            {
-
             }
         }
     }

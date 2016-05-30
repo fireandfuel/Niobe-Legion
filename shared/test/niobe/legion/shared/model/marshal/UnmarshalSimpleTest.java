@@ -34,7 +34,7 @@ import org.junit.Test;
 public class UnmarshalSimpleTest implements XMLStreamConstants
 {
     @Test
-    public void testBooleanUmmarshal()
+    public void testBooleanUnmarshal()
     {
         Stanza stanza = new Stanza();
         stanza.setName("legion:dataset");
