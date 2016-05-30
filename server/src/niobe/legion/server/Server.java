@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.server;
@@ -39,8 +39,11 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.xml.stream.XMLStreamException;
+import niobe.legion.server.communicator.ServerCommunicator;
+import niobe.legion.server.communicator.ServerCommunicatorThreadFactory;
+import niobe.legion.server.database.LegionDatabase;
 import niobe.legion.server.module.ServerModuleLoader;
-import niobe.legion.shared.Communicator;
+import niobe.legion.shared.communicator.Communicator;
 import niobe.legion.shared.logger.LegionLogger;
 import niobe.legion.shared.logger.Logger;
 import org.apache.logging.log4j.LogManager;

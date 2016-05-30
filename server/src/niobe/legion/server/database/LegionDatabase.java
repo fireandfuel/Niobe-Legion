@@ -15,10 +15,10 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.server;
+package niobe.legion.server.database;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;

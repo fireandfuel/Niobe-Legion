@@ -15,10 +15,10 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.server;
+package niobe.legion.server.communicator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,9 +59,11 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-import niobe.legion.server.sasl.LegionSaslServerProvider;
+import niobe.legion.server.database.LegionDatabase;
+import niobe.legion.server.Server;
+import niobe.legion.server.communicator.sasl.LegionSaslServerProvider;
 import niobe.legion.shared.Base64;
-import niobe.legion.shared.Communicator;
+import niobe.legion.shared.communicator.Communicator;
 import niobe.legion.shared.communication.XmlCommunication;
 import niobe.legion.shared.data.IRight;
 import niobe.legion.shared.data.LegionRight;
@@ -76,8 +78,8 @@ import niobe.legion.shared.model.marshal.StanzaMarshaller;
 
 public class ServerCommunicator extends Communicator
 {
-    protected final static String SERVER_NAME = "legion_server";
-    protected final static String SERVER_VERSION = "0";
+    public final static String SERVER_NAME = "legion_server";
+    public final static String SERVER_VERSION = "0";
     private final static List<String> SERVER_FEATURES = new ArrayList<String>();
 
     final String keyStoreFile;

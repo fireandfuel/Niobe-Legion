@@ -15,10 +15,10 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.client.sasl;
+package niobe.legion.client.communicator.sasl;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -35,7 +35,7 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import javax.xml.bind.DatatypeConverter;
-import niobe.legion.shared.sasl.ScramBase;
+import niobe.legion.shared.communicator.sasl.ScramBase;
 
 /**
  * The implementation of the SCRAM SASL mechanism.

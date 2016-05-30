@@ -15,10 +15,10 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.shared;
+package niobe.legion.shared.communicator;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 import javax.net.ssl.SSLSocket;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+import niobe.legion.shared.Utils;
 import niobe.legion.shared.communication.CommunicationException;
 import niobe.legion.shared.communication.CompressedCommunication;
 import niobe.legion.shared.communication.ICommunication;

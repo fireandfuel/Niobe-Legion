@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.debug;
@@ -33,8 +33,8 @@ import javax.xml.stream.XMLStreamConstants;
 import niobe.legion.client.Client;
 import niobe.legion.client.gui.ICloseableDialogController;
 import niobe.legion.client.gui.latency.LatencyService;
-import niobe.legion.shared.Communicator;
-import niobe.legion.shared.ICommunicator;
+import niobe.legion.shared.communicator.Communicator;
+import niobe.legion.shared.communicator.ICommunicator;
 import niobe.legion.shared.data.Stanza;
 
 public class DebugController implements ICommunicator, ICloseableDialogController, XMLStreamConstants

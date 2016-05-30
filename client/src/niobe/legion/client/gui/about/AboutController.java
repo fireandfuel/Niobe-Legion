@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.about;
@@ -32,7 +32,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import niobe.legion.client.Client;
-import niobe.legion.client.ClientCommunicator;
+import niobe.legion.client.communicator.ClientCommunicator;
 import niobe.legion.client.gui.ICloseableDialogController;
 
 public class AboutController implements ICloseableDialogController

@@ -15,17 +15,17 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.server.sasl;
+package niobe.legion.server.communicator.sasl;
 
 import java.util.Map;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import javax.security.sasl.SaslServerFactory;
-import niobe.legion.shared.sasl.LegionSaslBaseFactory;
+import niobe.legion.shared.communicator.sasl.LegionSaslBaseFactory;
 
 public class LegionSaslServerFactory extends LegionSaslBaseFactory implements SaslServerFactory
 {

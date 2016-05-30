@@ -15,10 +15,10 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.client;
+package niobe.legion.client.communicator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -63,13 +63,15 @@ import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+import niobe.legion.client.Client;
+import niobe.legion.client.DatasetReceiver;
 import niobe.legion.client.gui.connect.CertificateController;
 import niobe.legion.client.gui.connect.ConnectController;
 import niobe.legion.client.gui.connect.LoginController;
 import niobe.legion.client.gui.debug.DebugController;
-import niobe.legion.client.sasl.LegionSaslClientProvider;
+import niobe.legion.client.communicator.sasl.LegionSaslClientProvider;
 import niobe.legion.shared.Base64;
-import niobe.legion.shared.Communicator;
+import niobe.legion.shared.communicator.Communicator;
 import niobe.legion.shared.communication.XmlCommunication;
 import niobe.legion.shared.data.IRight;
 import niobe.legion.shared.data.LegionRight;
@@ -93,8 +95,8 @@ public class ClientCommunicator extends Communicator
 {
     private static final int SERVER_AUTH_ERR = 0;
     private static final int CLIENT_AUTH_ERR = 1;
-    final static String CLIENT_NAME = "legion_client";
-    final static String CLIENT_VERSION = "0";
+    public final static String CLIENT_NAME = "legion_client";
+    public final static String CLIENT_VERSION = "0";
     private final static List<String> CLIENT_FEATURES = new ArrayList<String>(Arrays.asList("starttls"));
 
     private final String keyStoreFile;

@@ -15,12 +15,12 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.server.module;
 
-import niobe.legion.server.AbstractDatabase;
+import niobe.legion.server.database.AbstractDatabase;
 import niobe.legion.shared.module.IModule;
 
 /**

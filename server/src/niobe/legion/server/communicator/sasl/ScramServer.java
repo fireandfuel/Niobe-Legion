@@ -15,10 +15,10 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.server.sasl;
+package niobe.legion.server.communicator.sasl;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -38,7 +38,7 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import javax.xml.bind.DatatypeConverter;
 import niobe.legion.shared.Utils;
-import niobe.legion.shared.sasl.ScramBase;
+import niobe.legion.shared.communicator.sasl.ScramBase;
 
 /**
  * @author Christian Schudt https://bitbucket.org/sco0ter/babbler
