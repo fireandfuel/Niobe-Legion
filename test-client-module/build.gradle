@@ -1,0 +1,83 @@
+/*
+ * Niobe Legion - a versatile client / server framework
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *
+ * This file (build.gradle) is part of Niobe Legion (module niobe-legion-test-client-module).
+ *
+ *     Niobe Legion is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU Lesser General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     Niobe Legion is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU Lesser General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Lesser General Public License
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+description = 'Niobe Legion Test Client Module'
+
+// url = "https://github.com/fireandfuel/Niobe-Legion"
+
+//licenses {
+//    license {
+//        name = "GNU General Public License (GPL), Version 3"
+//        url = "http://www.gnu.org/licenses/gpl"
+//    }
+//}
+
+//developers{
+//    developer {
+//        id = "Nicolai J. (fireandfuel)"
+//        email = "fireandfuel@hotmail.de"
+//    }
+//}
+
+dependencies {
+    compile project(':niobe-legion-client')
+    compile project(':niobe-legion-shared')
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '1.10.19'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+        resources {
+            srcDir 'resources'
+        }
+    }
+    test {
+        java {
+            srcDir 'src'
+            srcDir 'test'
+        }
+        resources {
+            srcDir 'resources'
+        }
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Module-Name': 'legion-test-client-module',
+                'Module-Version': '1.0',
+                'Module-Author': 'fireandfuel (fireandfuel@hotmail.de)',
+                'Module-Dependencies': 'legion-client$0',
+                'Module-Conflicts': 'legion-test-client-module$0',
+                'Module-Class': 'niobe.legion.test.client.TestModule',
+                'Module-API-Level': '1'
+    }
+}
+
+task copyDependencies(type: Copy) {
+    from configurations.compile
+    into file("$rootDir/package/$project.name/lib")
+}
+
+jar.dependsOn(tasks.getByName("copyDependencies"))

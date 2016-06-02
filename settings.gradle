@@ -1,0 +1,32 @@
+/*
+ * Niobe Legion - a versatile client / server framework
+ *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
+ *
+ * This file (settings.gradle) is part of Niobe Legion (module niobe-legion).
+ *
+ *     Niobe Legion is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU Lesser General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     Niobe Legion is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU Lesser General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Lesser General Public License
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+rootProject.name = 'niobe-legion'
+include ':niobe-legion-client'
+include ':niobe-legion-shared'
+include ':niobe-legion-server'
+include ':niobe-legion-test-client-module'
+include ':niobe-legion-test-server-module'
+
+project(':niobe-legion-client').projectDir = "$rootDir/client" as File
+project(':niobe-legion-shared').projectDir = "$rootDir/shared" as File
+project(':niobe-legion-server').projectDir = "$rootDir/server" as File
+project(':niobe-legion-test-client-module').projectDir = "$rootDir/test-client-module" as File
+project(':niobe-legion-test-server-module').projectDir = "$rootDir/test-server-module" as File
