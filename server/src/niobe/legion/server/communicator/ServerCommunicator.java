@@ -1067,6 +1067,6 @@ public class ServerCommunicator extends Communicator
     @Override
     protected void socketUnexpectedClosed()
     {
-        // DO NOTHING
+        Server.getCommunicators().remove(this);
     }
 }

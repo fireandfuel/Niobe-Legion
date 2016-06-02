@@ -84,9 +84,9 @@ public class Server
                                                     new ThreadPoolExecutor.AbortPolicy());
         } else
         {
-            connectionList = new ArrayBlockingQueue<Runnable>(Math.max(maxConnections, 10));
-            connectionPool = new ThreadPoolExecutor(Math.min(maxConnections, 10),
-                                                    Math.max(maxConnections, 10),
+            maxConnections = (short) Math.max(maxConnections, 1);
+            connectionList = new ArrayBlockingQueue<Runnable>(maxConnections);
+            connectionPool = new ThreadPoolExecutor(maxConnections, maxConnections,
                                                     60L,
                                                     TimeUnit.SECONDS,
                                                     this.connectionList,
@@ -109,22 +109,41 @@ public class Server
             {
                 if(this.serverSocket != null)
                 {
-                    Socket socket = this.serverSocket.accept();
-                    if(socket != null)
+                    Socket socket = null;
+                    try
                     {
-                        Logger.info(LegionLogger.STDOUT, "Accept new Connection");
-                        Communicator communicator = new ServerCommunicator(socket,
-                                                                           authMechanism,
-                                                                           blacklistedClientsRegex,
-                                                                           keyStoreFile,
-                                                                           keyStorePassword,
-                                                                           cipherSuites,
-                                                                           additionalFeatures);
-                        COMMUNICATORS.add(communicator);
-                        connectionPool.execute(communicator);
-                    } else
+                        socket = this.serverSocket.accept();
+                        if(socket != null)
+                        {
+                            synchronized(this)
+                            {
+                                Logger.info(LegionLogger.STDOUT, "Accept new Connection");
+                                Communicator communicator = new ServerCommunicator(socket,
+                                                                                   authMechanism,
+                                                                                   blacklistedClientsRegex,
+                                                                                   keyStoreFile,
+                                                                                   keyStorePassword,
+                                                                                   cipherSuites,
+                                                                                   additionalFeatures);
+                                connectionPool.execute(communicator);
+                                COMMUNICATORS.add(communicator);
+                            }
+                        }
+                    } catch(IOException e)
                     {
-                        break;
+                        e.printStackTrace();
+                        Logger.exception(LegionLogger.STDERR, e);
+                        if(socket != null)
+                        {
+                            try
+                            {
+                                socket.close();
+                            } catch(IOException e2)
+                            {
+                                e2.printStackTrace();
+                                Logger.exception(LegionLogger.STDERR, e2);
+                            }
+                        }
                     }
                 }
             }
@@ -132,7 +151,16 @@ public class Server
         {
             e.printStackTrace();
             Logger.exception(LegionLogger.STDERR, e);
-            System.exit(0);
+        } finally
+        {
+            try
+            {
+                this.serverSocket.close();
+            } catch(IOException e)
+            {
+                e.printStackTrace();
+                Logger.exception(LegionLogger.STDERR, e);
+            }
         }
     }
 
