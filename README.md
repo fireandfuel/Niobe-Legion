@@ -1,4 +1,5 @@
-Niobe Legion Framework
+Niobe Legion Framework 
+[![Build Status](https://travis-ci.org/fireandfuel/Niobe-Legion.svg?branch=master)](https://travis-ci.org/fireandfuel/Niobe-Legion)
 ======================
 
 A versatile server/client framework written in Java Programming Language.
@@ -25,11 +26,11 @@ Requirements:
 Build:
 
 - Oracle JDK 1.8 Update 40 or later
-- Maven 3.X or later
+- Gradle 2.X or later
 - [MetroProgressIndicator 1.0](https://github.com/fireandfuel/MetroProgressIndicator)
 - (optional) your favourite Java IDE
 
-Deploy it: Use usual maven way.
+Deploy it: Use usual gradle way.
 
 Run:
 
