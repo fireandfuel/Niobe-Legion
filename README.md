@@ -1,8 +1,8 @@
-Niobe Legion Framework 
-[![Build Status](https://travis-ci.org/fireandfuel/Niobe-Legion.svg?branch=master)](https://travis-ci.org/fireandfuel/Niobe-Legion)
+Niobe Legion Framework
 ======================
 
 A versatile server/client framework written in Java Programming Language.
+[![Build Status](https://travis-ci.org/fireandfuel/Niobe-Legion.svg?branch=master)](https://travis-ci.org/fireandfuel/Niobe-Legion)
 
 Key features:
 -------------
@@ -44,3 +44,4 @@ Client: set up your client.ini, start it with: java -jar niobe-legion-client-[Ve
 (or simply double click on the file)
 
 License: LGPL v3.0
+
