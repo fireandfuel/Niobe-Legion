@@ -37,7 +37,8 @@ description = 'Niobe Legion Client'
 
 dependencies {
     compile project(':niobe-legion-shared')
-    compile group: 'niobe.metro', name: 'metro-progress-indicator', version: '1.0'
+    // MetroProgressIndicator on jitpack.io
+    compile 'com.github.fireandfuel:MetroProgressIndicator:-SNAPSHOT'
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '1.10.19'
 }
