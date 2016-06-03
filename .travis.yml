@@ -1,6 +1,13 @@
 language: java
+
 jdk:
   - oraclejdk8
-  - openjdk8
+
+# use the latest jdk
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+
 script:
   - ./gradlew test
