@@ -67,6 +67,13 @@ sourceSets {
     }
 }
 
+// copy META-INF/persistence.xml to the classes directory (otherwise it won't run inside an IDE like IntelliJ IDEA)
+sourceSets.main.output.resourcesDir = sourceSets.main.output.classesDir
+// gradle < 2.13:
+// compileJava.dependsOn(processResources)
+// gradle >= 2.13:
+compileJava.doLast { tasks.processResources.execute() }
+
 jar {
     manifest {
         attributes 'Class-Path': configurations.runtime.files.collect { "lib/$it.name" }.join(' ')
@@ -74,7 +81,7 @@ jar {
 }
 
 task copyDependencies(type: Copy) {
-    from configurations.compile
+    from configurations.compile, configurations.runtime
     into file("$rootDir/package/$project.name/lib")
 }
 

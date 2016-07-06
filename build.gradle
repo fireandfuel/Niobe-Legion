@@ -36,6 +36,19 @@ description = 'Niobe Legion Package'
 //    }
 //}
 
+apply plugin: 'java'
+
+sourceSets {
+    test {
+        java {
+            srcDir 'test'
+        }
+        resources {
+            srcDir 'resources'
+        }
+    }
+}
+
 allprojects {
     apply plugin: 'maven'
 

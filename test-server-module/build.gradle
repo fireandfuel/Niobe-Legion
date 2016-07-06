@@ -80,7 +80,7 @@ jar {
 }
 
 task copyDependencies(type: Copy) {
-    from configurations.compile
+    from configurations.compile, configurations.runtime
     into file("$rootDir/package/$project.name/lib")
 }
 
