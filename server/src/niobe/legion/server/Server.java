@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (Server.java) is part of Niobe Legion (module niobe-legion-server).
+ * This file (Server.java) is part of Niobe Legion (module niobe-legion-server_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -35,6 +35,7 @@ import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -129,7 +130,7 @@ public class Server
                                 COMMUNICATORS.add(communicator);
                             }
                         }
-                    } catch(IOException e)
+                    } catch(IOException | RejectedExecutionException e)
                     {
                         e.printStackTrace();
                         Logger.exception(LegionLogger.STDERR, e);
@@ -155,7 +156,8 @@ public class Server
         {
             try
             {
-                this.serverSocket.close();
+                serverSocket.close();
+                connectionPool.shutdown();
             } catch(IOException e)
             {
                 e.printStackTrace();

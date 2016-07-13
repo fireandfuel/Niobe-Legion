@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ClientCommunicator.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (ClientCommunicator.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -96,7 +96,7 @@ public class ClientCommunicator extends Communicator
     private static final int SERVER_AUTH_ERR = 0;
     private static final int CLIENT_AUTH_ERR = 1;
     public final static String CLIENT_NAME = "legion_client";
-    public final static String CLIENT_VERSION = "0";
+    public final static String CLIENT_VERSION = "1.0";
     private final static List<String> CLIENT_FEATURES = new ArrayList<String>(Arrays.asList("starttls"));
 
     private final String keyStoreFile;

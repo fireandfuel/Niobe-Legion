@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ServerCommunicator.java) is part of Niobe Legion (module niobe-legion-server).
+ * This file (ServerCommunicator.java) is part of Niobe Legion (module niobe-legion-server_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -79,7 +79,7 @@ import niobe.legion.shared.model.marshal.StanzaMarshaller;
 public class ServerCommunicator extends Communicator
 {
     public final static String SERVER_NAME = "legion_server";
-    public final static String SERVER_VERSION = "0";
+    public final static String SERVER_VERSION = "1.0";
     private final static List<String> SERVER_FEATURES = new ArrayList<String>();
 
     final String keyStoreFile;

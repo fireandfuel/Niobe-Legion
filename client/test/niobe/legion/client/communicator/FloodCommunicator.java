@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (FloodCommunicator.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (FloodCommunicator.java) is part of Niobe Legion (module niobe-legion-client_test).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -18,11 +18,15 @@
  *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package niobe.legion.client;
+package niobe.legion.client.communicator;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
@@ -30,9 +34,18 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-import niobe.legion.client.communicator.ClientCommunicator;
+import niobe.legion.client.Client;
+import niobe.legion.client.FloodingClient;
 import niobe.legion.client.gui.connect.ConnectController;
 import niobe.legion.client.gui.connect.LoginController;
 import niobe.legion.shared.communication.XmlCommunication;
@@ -48,6 +61,8 @@ public class FloodCommunicator extends Communicator
 {
     private final static List<String> CLIENT_FEATURES = new ArrayList<String>(Arrays.asList("starttls",
                                                                                             "compressed_stream_gzip"));
+    private static final String CLIENT_NAME = "legion_test_flood_client";
+    private static final String CLIENT_VERSION = "1.0";
 
     private boolean clientAcceptedFromServer;
     private boolean tlsEstablished;
@@ -60,7 +75,7 @@ public class FloodCommunicator extends Communicator
     private final String keyStorePassword = "";
     private final String[] cipherSuites = null;
 
-    protected FloodCommunicator(Socket socket)
+    public FloodCommunicator(Socket socket)
     {
         super(socket, new XmlCommunication());
     }
@@ -74,7 +89,7 @@ public class FloodCommunicator extends Communicator
             super.run();
         } catch(IOException e)
         {
-            Logger.exception(LegionLogger.STDERR, e);
+//            Logger.exception(LegionLogger.STDERR, e);
         }
     }
 
@@ -95,14 +110,23 @@ public class FloodCommunicator extends Communicator
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setName("legion:client");
         stanza.setSequenceId(this.localStanzaSequenceId++);
-        stanza.putAttribute("name", ClientCommunicator.CLIENT_NAME);
-        stanza.putAttribute("version", ClientCommunicator.CLIENT_VERSION);
+        stanza.putAttribute("name", FloodCommunicator.CLIENT_NAME);
+        stanza.putAttribute("version", FloodCommunicator.CLIENT_VERSION);
         this.write(stanza);
 
         stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.START_ELEMENT);
         stanza.setName("legion:features");
         this.write(stanza);
+
+        for(String feature : FloodCommunicator.CLIENT_FEATURES)
+        {
+            stanza = new Stanza();
+            stanza.setEventType(XMLStreamConstants.CHARACTERS);
+            stanza.setName("legion:feature");
+            stanza.setValue(feature);
+            this.write(stanza);
+        }
 
         stanza = new Stanza();
         stanza.setEventType(XMLStreamConstants.END_ELEMENT);
@@ -135,13 +159,61 @@ public class FloodCommunicator extends Communicator
                                                                                                         UnrecoverableKeyException,
                                                                                                         XMLStreamException
     {
-        return false;
+        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+
+        char[] passphrase = keyStorePassword.toCharArray();
+        KeyStore keystore = KeyStore.getInstance("JKS");
+
+        if(new File(keyStoreFile).exists())
+        {
+            InputStream in = new FileInputStream(keyStoreFile);
+            keystore.load(in, passphrase);
+            in.close();
+        } else
+        {
+            keystore.load(null, passphrase);
+        }
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+        tmf.init(keystore);
+        X509TrustManager defaultTrustManager = (X509TrustManager) tmf.getTrustManagers()[0];
+
+        ClientTrustManager trustManager = new ClientTrustManager(defaultTrustManager);
+        TrustManager[] trustManagers = new TrustManager[]{trustManager};
+
+        sslContext.init(null, trustManagers, null);
+        SSLSocketFactory sslFactory = sslContext.getSocketFactory();
+        this.sslSocket = (SSLSocket) sslFactory
+                .createSocket(this.socket, "localhost", this.socket.getLocalPort(), true);
+        SSLParameters sslParameters = this.sslSocket.getSSLParameters();
+        sslParameters.setEndpointIdentificationAlgorithm("HTTPS");
+        this.sslSocket.setSSLParameters(sslParameters);
+
+        if(cipherSuites != null && cipherSuites.length > 0)
+        {
+            this.sslSocket.setEnabledCipherSuites(cipherSuites);
+        }
+
+        this.sslSocket.setUseClientMode(true);
+        try
+        {
+            this.sslSocket.startHandshake();
+            this.replaceStreamsWithSslStreams();
+
+            return true;
+        } catch(SSLException e)
+        {
+            Logger.exception(LegionLogger.TLS, e);
+
+            this.close();
+            return false;
+        }
     }
 
     @Override
     protected void socketUnexpectedClosed()
     {
-
+        FloodingClient.broken();
     }
 
     @Override
@@ -181,13 +253,6 @@ public class FloodCommunicator extends Communicator
                         {
                             this.openStream();
                             this.resetReader();
-                            if(Client.getFxController().getCurrentController() instanceof ConnectController)
-                            {
-                                Client.getFxController().loadMask("/niobe/legion/client/fxml/connect/Login.fxml");
-                            } else if(!(Client.getFxController().getCurrentController() instanceof LoginController))
-                            {
-                                Client.showRelogin();
-                            }
                         } else
                         {
                             this.decline("proceedtls", "client don't trust server certificate");
@@ -347,6 +412,17 @@ public class FloodCommunicator extends Communicator
         } else if(!(Client.getFxController().getCurrentController() instanceof LoginController))
         {
             Client.showRelogin();
+        }
+    }
+
+    public void closeConnection()
+    {
+        try
+        {
+            this.closeSocket();
+        } catch(IOException e)
+        {
+            e.printStackTrace();
         }
     }
 }

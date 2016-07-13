@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (FloodingClient.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (FloodingClient.java) is part of Niobe Legion (module niobe-legion-client_test).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -23,6 +23,9 @@ package niobe.legion.client;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import niobe.legion.client.communicator.FloodCommunicator;
 
 /**
  * @author fireandfuel
@@ -31,26 +34,45 @@ public class FloodingClient
 {
     private static final int PORT = 5242;
     private static final String HOST = "localhost";
+    private static final int SLEEP_TIME = 10;
 
-    public static void floodServer(int connections)
+    private static final List<FloodCommunicator> COMMUNICATORS = new ArrayList<FloodCommunicator>();
+    private static boolean broken;
+
+    public static int floodServer(int connections)
     {
         for(int index = 0; index < connections; index++)
         {
             try
             {
-                Thread.sleep(10);
-                new Thread(new FloodCommunicator(new Socket(InetAddress.getByName(HOST), PORT))).start();
+                if(!broken)
+                {
+                    Thread.sleep(SLEEP_TIME);
+                    FloodCommunicator communicator = new FloodCommunicator(new Socket(InetAddress.getByName(HOST),
+                                                                                      PORT));
+                    COMMUNICATORS.add(communicator);
+                    new Thread(communicator, "Communicator #" + index).start();
+                } else
+                {
+                    break;
+                }
             } catch(IOException | InterruptedException e)
             {
                 e.printStackTrace();
-                System.out.println("broken after " + index + " connections");
                 break;
             }
         }
+        COMMUNICATORS.forEach(FloodCommunicator::closeConnection);
+        return COMMUNICATORS.size();
+    }
+
+    public synchronized static void broken()
+    {
+        broken = true;
     }
 
     public static void main(String[] args)
     {
-        floodServer(1000);
+        System.out.println("Flooded: " + floodServer(100000));
     }
 }
