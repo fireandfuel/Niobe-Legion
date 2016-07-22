@@ -640,6 +640,7 @@ public class ClientCommunicator extends Communicator
             stanza.setEmptyElement(true);
             stanza.setEventType(XMLStreamConstants.START_ELEMENT);
             stanza.setName("legion:starttls");
+            stanza.setEmptyElement(true);
             this.write(stanza);
         } else if(ClientCommunicator.CLIENT_FEATURES.contains("compressed_stream_xz") &&
                 this.serverFeatures.contains("compressed_stream_xz") && !compressionActive)
@@ -649,6 +650,7 @@ public class ClientCommunicator extends Communicator
             stanza.setEventType(XMLStreamConstants.START_ELEMENT);
             stanza.setName("legion:startcompression");
             stanza.putAttribute("algorithm", "xz");
+            stanza.setEmptyElement(true);
             this.write(stanza);
         } else if(ClientCommunicator.CLIENT_FEATURES.contains("compressed_stream_gzip") &&
                 this.serverFeatures.contains("compressed_stream_gzip") && !compressionActive)
@@ -658,6 +660,7 @@ public class ClientCommunicator extends Communicator
             stanza.setEventType(XMLStreamConstants.START_ELEMENT);
             stanza.setName("legion:startcompression");
             stanza.putAttribute("algorithm", "gzip");
+            stanza.setEmptyElement(true);
             this.write(stanza);
         } else if(Client.getFxController().getCurrentController() instanceof ConnectController)
         {

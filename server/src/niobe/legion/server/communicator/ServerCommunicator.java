@@ -294,6 +294,7 @@ public class ServerCommunicator extends Communicator
                             stanza.setEmptyElement(true);
                             stanza.setName("legion:proceedtls");
                             stanza.setSequenceId(this.localStanzaSequenceId++);
+                            stanza.setEmptyElement(true);
                             this.write(stanza);
                             this.tlsEstablished = this
                                     .setSslSocket(this.keyStorePassword, this.keyStoreFile, this.cipherSuites);
@@ -575,7 +576,7 @@ public class ServerCommunicator extends Communicator
                     String checkValue = this.clientName + "_" + this.clientVersion;
                     if(checkValue.matches(this.blacklistedClientsRegex))
                     {
-                        this.decline("legion:client", "Client is blacklisted on Server");
+                        this.decline("legion:client", "Client is blacklisted on server");
                         return;
                     }
                 }
