@@ -85,7 +85,7 @@ subprojects {
         reports {
             xml{
                 enabled true
-                destination "$rootDir/report-${project.name}.xml"
+                destination "$rootDir/jacoco-${project.name}.xml"
             }
         }
     }
