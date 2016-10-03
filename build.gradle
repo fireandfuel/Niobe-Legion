@@ -37,7 +37,6 @@ description = 'Niobe Legion Package'
 //}
 
 apply plugin: 'java'
-apply plugin: 'jacoco'
 
 sourceSets {
     test {
@@ -59,8 +58,14 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'jacoco'
+
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
+
+    def coverageSourceDirs = [
+            'src'
+    ]
 
     repositories {
         mavenLocal()
@@ -71,10 +76,35 @@ subprojects {
     tasks.withType(Jar) {
         destinationDir = file("$rootDir/package/$project.name")
     }
-}
 
-jacocoTestReport {
-    reports {
-        xml.enabled true
+    jacocoTestReport {
+        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
+        classDirectories =  files(sourceSets.main.output)
+        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+
+        reports {
+            xml{
+                enabled true
+                destination "$rootDir/report-${project.name}.xml"
+            }
+        }
+    }
+
+    test.finalizedBy(project.tasks.jacocoTestReport)
+
+    task jacocoRootTestReport(type: JacocoReport) {
+
+        sourceSets sourceSets.main
+
+        def jacocoTestFiles = ["$buildDir/jacoco/test.exec"]
+        subprojects.each { p ->
+            def coverageFileLocation = "$p.buildDir/jacoco/test.exec"
+            if (new File(coverageFileLocation).exists()) {
+                jacocoTestFiles << coverageFileLocation
+            }
+        }
+
+        logger.info('Aggregating next JaCoCo Coverage Files: {}', jacocoTestFiles)
+        executionData files(jacocoTestFiles)
     }
 }

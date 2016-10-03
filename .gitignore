@@ -1,6 +1,8 @@
 *.class
 package/
 target/
+.gradle/
+classes/
 out/
 client/modules/
 server/modules/
@@ -8,7 +10,6 @@ server/modules/
 *.war
 *.ear
 hs_err_pid*
-*.pydevproject
 .project
 .metadata
 bin/**
@@ -33,3 +34,5 @@ local.properties
 *.launch
 .idea/
 *.iml
+report-*.xml
+
