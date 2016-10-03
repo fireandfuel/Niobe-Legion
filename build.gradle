@@ -37,6 +37,7 @@ description = 'Niobe Legion Package'
 //}
 
 apply plugin: 'java'
+apply plugin: 'jacoco'
 
 sourceSets {
     test {
@@ -72,3 +73,8 @@ subprojects {
     }
 }
 
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
