@@ -3,7 +3,8 @@ Niobe Legion Framework
 
 A versatile server/client framework written in Java Programming Language.
 
-[![Build Status](https://travis-ci.org/fireandfuel/Niobe-Legion.svg?branch=master)](https://travis-ci.org/fireandfuel/Niobe-Legion)
+[![Build Status](https://travis-ci.org/fireandfuel/Niobe-Legion.svg?branch=master)](https://travis-ci.org/fireandfuel/Niobe-Legion)[![codecov](https://codecov.io/gh/fireandfuel/Niobe-Legion/branch/master/graph/badge.svg)](https://codecov.io/gh/fireandfuel/Niobe-Legion)
+
 
 Key features:
 -------------
