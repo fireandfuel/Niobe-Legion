@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (CompressedCommunication.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (CompressedCommunication.java) is part of Niobe Legion (module niobe-legion-shared_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.shared.communication;
@@ -85,7 +85,8 @@ public class CompressedCommunication implements ICommunication
                     break;
                 case "xz":
                     FilterOptions[] filters = {new DeltaOptions(), new LZMA2Options(8)};
-                    this.out = new XZOutputStream(out, filters){
+                    this.out = new XZOutputStream(out, filters)
+                    {
                         @Override
                         public void flush() throws IOException
                         {

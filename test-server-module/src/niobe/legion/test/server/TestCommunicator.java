@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (TestCommunicator.java) is part of Niobe Legion (module niobe-legion-test-server-module).
+ * This file (TestCommunicator.java) is part of Niobe Legion (module niobe-legion-test-server-module_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -27,8 +27,8 @@ import niobe.legion.shared.data.Stanza;
 
 public class TestCommunicator implements ICommunicator
 {
-    public static final String NAMESPACE = "niobe.module.test";
-    public static final String NAMESPACE_URI = "ashnurazg.de/niobe/legion-module-test";
+    public final static String NAMESPACE = "niobe.module.test";
+    public final static String NAMESPACE_URI = "ashnurazg.de/niobe/legion-module-test";
 
     private final ICommunicator parent;
 

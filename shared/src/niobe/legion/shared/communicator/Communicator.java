@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (Communicator.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (Communicator.java) is part of Niobe Legion (module niobe-legion-shared_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -49,18 +49,20 @@ import niobe.legion.shared.communication.ICommunication;
 import niobe.legion.shared.data.IRight;
 import niobe.legion.shared.data.LegionRight;
 import niobe.legion.shared.data.Stanza;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupRightEntity;
 import niobe.legion.shared.module.ModuleRightManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class Communicator implements XMLStreamConstants, ICommunicator, Runnable
 {
-    private static final String LEGION_NAMESPACE = "legion";
-    private static final String LEGION_NAMESPACE_URI = "https://github.com/fireandfuel/Niobe-Legion";
+    private final static Logger LOG = LogManager.getLogger(Communicator.class);
 
-    public static final String DEBUG_NAMESPACE = "debug";
-    public static final String DEBUG_NAMESPACE_URI = "https://github.com/fireandfuel/Niobe-Legion/debug";
+    private final static String LEGION_NAMESPACE = "legion";
+    private final static String LEGION_NAMESPACE_URI = "https://github.com/fireandfuel/Niobe-Legion";
+
+    public final static String DEBUG_NAMESPACE = "debug";
+    public final static String DEBUG_NAMESPACE_URI = "https://github.com/fireandfuel/Niobe-Legion/debug";
 
     private static ICommunicator DEBUG_COMMUNICATOR;
 
@@ -85,7 +87,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     protected Communicator(Socket socket, ICommunication communication)
     {
         this.socket = socket;
-        Logger.debug(LegionLogger.STDOUT, "connected to " + this.getAddress().getHostAddress() + ":" + this.getPort());
+        LOG.debug("connected to " + this.getAddress().getHostAddress() + ":" + this.getPort());
 
         try
         {
@@ -95,7 +97,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
             this.communication = communication;
         } catch(IOException e)
         {
-            Logger.exception(LegionLogger.STDERR, e);
+            LOG.catching(e);
         }
 
         ModuleRightManager.addRights(LegionRight.values());
@@ -225,9 +227,8 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
                                             communicator.consumeStartElement(currentStanza);
                                         } else
                                         {
-                                            Logger.debug(LegionLogger.RECEIVED,
-                                                         "Unknown xml stanza namespace " + currentStanza
-                                                                 .getNameSpaceURI());
+                                            LOG.debug("Unknown xml stanza namespace " + currentStanza
+                                                    .getNameSpaceURI());
                                         }
                                     }
                                 }
@@ -251,8 +252,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
                                         communicator.consumeCharacters(currentStanza);
                                     } else
                                     {
-                                        Logger.debug(LegionLogger.RECEIVED,
-                                                     "Unknown xml stanza namespace " + currentStanza.getNameSpaceURI());
+                                        LOG.debug("Unknown xml stanza namespace " + currentStanza.getNameSpaceURI());
                                     }
                                 }
                                 break;
@@ -275,8 +275,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
                                         communicator.consumeEndElement(currentStanza);
                                     } else
                                     {
-                                        Logger.debug(LegionLogger.RECEIVED,
-                                                     "Unknown xml stanza namespace " + currentStanza.getNameSpaceURI());
+                                        LOG.debug("Unknown xml stanza namespace " + currentStanza.getNameSpaceURI());
                                     }
                                 }
 
@@ -295,13 +294,13 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
                         Thread.sleep(500);
                     } catch(InterruptedException e)
                     {
-                        Logger.exception(LegionLogger.STDERR, e);
+                        LOG.catching(e);
                     }
                 }
             }
         } catch(Exception e)
         {
-            Logger.exception(LegionLogger.STDERR, e);
+            LOG.catching(e);
         } finally
         {
             try
@@ -310,7 +309,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
                 this.socketUnexpectedClosed();
             } catch(Exception e)
             {
-                Logger.exception(LegionLogger.STDERR, e);
+                LOG.catching(e);
             }
         }
     }
@@ -322,7 +321,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     {
         if(this.socket != null && !this.socket.isClosed() && message != null)
         {
-            Logger.debug(LegionLogger.SEND, "send: " + message);
+            LOG.debug("send: " + message);
 
             if(DEBUG_COMMUNICATOR != null)
             {
@@ -360,7 +359,7 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
             this.out.close();
             this.socket.close();
             this.socket = null;
-            Logger.info(LegionLogger.STDOUT, "Connection closed");
+            LOG.info("Connection closed");
         }
     }
 
@@ -461,8 +460,8 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 
     protected final String getValueAt(int index)
     {
-        if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null &&
-                this.stanzaStack.get(index).getEventType() == XMLStreamConstants.CHARACTERS)
+        if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null && this.stanzaStack.get(index)
+                .getEventType() == XMLStreamConstants.CHARACTERS)
         {
             return this.stanzaStack.get(index).getValue();
         }
@@ -480,8 +479,8 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
 
     protected final String getParameterValueAt(int index, String key)
     {
-        if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null &&
-                this.stanzaStack.get(index).containsAttributeKey(key))
+        if(index < this.stanzaStack.size() && this.stanzaStack.get(index) != null && this.stanzaStack.get(index)
+                .containsAttributeKey(key))
         {
             return this.stanzaStack.get(index).getAttribute(key);
         }
@@ -565,8 +564,8 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
     {
         if(groupRightEntity != null && right != null)
         {
-            if(groupRightEntity.getName() != null && right.getName() != null &&
-                    groupRightEntity.getName().equals(right.getName()))
+            if(groupRightEntity.getName() != null && right.getName() != null && groupRightEntity.getName()
+                    .equals(right.getName()))
             {
                 return groupRightEntity.isActive();
             }
@@ -586,7 +585,8 @@ public abstract class Communicator implements XMLStreamConstants, ICommunicator,
         return false;
     }
 
-    public String getCommunicationType(){
+    public String getCommunicationType()
+    {
         if(this.communication != null)
         {
             return this.communication.toString();

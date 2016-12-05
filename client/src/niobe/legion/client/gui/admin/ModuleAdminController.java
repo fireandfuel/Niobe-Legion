@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ModuleAdminController.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (ModuleAdminController.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.admin;
@@ -30,13 +30,15 @@ import niobe.legion.client.Client;
 import niobe.legion.client.DatasetReceiver;
 import niobe.legion.client.gui.databinding.FxDatasetColumn;
 import niobe.legion.client.gui.databinding.FxDatasetWrapper;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.ModuleEntity;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ModuleAdminController implements DatasetReceiver<ModuleEntity>
 {
-    private static final FxDatasetColumn[] columns = new FxDatasetColumn[]{new FxDatasetColumn<Long>("id",
+    private final static Logger LOG = LogManager.getLogger(ModuleAdminController.class);
+
+    private final static FxDatasetColumn[] columns = new FxDatasetColumn[]{new FxDatasetColumn<Long>("id",
                                                                                                      Client.getLocalisation(
                                                                                                              "id"),
                                                                                                      50), new FxDatasetColumn<String>(
@@ -75,7 +77,7 @@ public class ModuleAdminController implements DatasetReceiver<ModuleEntity>
             Client.getCommunicator().getDataset(ModuleEntity.class, this, null, null);
         } catch(IOException e)
         {
-            Logger.exception(LegionLogger.STDERR, e);
+            LOG.catching(e);
         }
     }
 

@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (UnmarshalSimpleTest.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (UnmarshalSimpleTest.java) is part of Niobe Legion (module niobe-legion-shared_test).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@
 
 package niobe.legion.shared.model.marshal;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -208,7 +209,27 @@ public class UnmarshalSimpleTest implements XMLStreamConstants
         Assert.assertNotNull(objects);
         Assert.assertEquals(1, objects.size());
         Assert.assertEquals(String.class, objects.get(0).getClass());
-        String value = (String)objects.get(0);
+        String value = (String) objects.get(0);
+        Assert.assertEquals(expected, value);
+    }
+
+    @Test
+    public void testBigIntegerUnmarshal()
+    {
+        BigInteger expected = new BigInteger("1024");
+        Stanza stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setValue("1024");
+        stanza.putAttribute("sequenceId", "12");
+        stanza.putAttribute("class", "java.math.BigInteger");
+        stanza.setEventType(START_ELEMENT);
+        List<Stanza> stanzas = new ArrayList<Stanza>(Arrays.asList(stanza));
+        List<Object> objects = StanzaMarshaller.unmarshal(stanzas);
+
+        Assert.assertNotNull(objects);
+        Assert.assertEquals(1, objects.size());
+        Assert.assertEquals(BigInteger.class, objects.get(0).getClass());
+        BigInteger value = (BigInteger) objects.get(0);
         Assert.assertEquals(expected, value);
     }
 }

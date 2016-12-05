@@ -4,7 +4,7 @@
   ~ Niobe Legion - a versatile client / server framework
   ~     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
   ~
-  ~ This file (MainOSX.fxml) is part of Niobe Legion (module niobe-legion-client).
+  ~ This file (MainOSX.fxml) is part of Niobe Legion (module niobe-legion-client_main).
   ~
   ~     Niobe Legion is free software: you can redistribute it and/or modify
   ~     it under the terms of the GNU Lesser General Public License as published by
@@ -17,7 +17,7 @@
   ~     GNU Lesser General Public License for more details.
   ~
   ~     You should have received a copy of the GNU Lesser General Public License
-  ~     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+  ~     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <?import javafx.scene.control.Button?>
@@ -81,7 +81,8 @@
                             <Button fx:id="iconButton" focusTraversable="false" onAction="#showAbout" prefHeight="26.0"
                                     prefWidth="26.0" maxHeight="26.0" maxWidth="26.0" minHeight="26.0" minWidth="26.0">
                                 <graphic>
-                                    <ImageView fx:id="icon" fitHeight="24.0" fitWidth="24.0"/></graphic>
+                                    <ImageView fx:id="icon" fitHeight="24.0" fitWidth="24.0"/>
+                                </graphic>
                             </Button>
                             <Label fx:id="topLabel" text="%windowTitle" alignment="CENTER" textAlignment="CENTER"/>
                         </HBox>

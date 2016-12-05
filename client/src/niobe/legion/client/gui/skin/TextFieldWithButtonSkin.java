@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (TextFieldWithButtonSkin.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (TextFieldWithButtonSkin.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.skin;
@@ -66,27 +66,33 @@ public class TextFieldWithButtonSkin extends TextFieldSkin
     {
 
         final TextField textField = this.getSkinnable();
-        this.rightButton.setOnMousePressed(event -> {
-            if(TextFieldWithButtonSkin.this.textField.isEditable() && !TextFieldWithButtonSkin.this.textField
-                    .isDisabled())
-            {
-                TextFieldWithButtonSkin.this.rightButtonPressed();
-            }
-        });
-        this.rightButton.setOnMouseReleased(event -> {
-            if(TextFieldWithButtonSkin.this.textField.isEditable() && !TextFieldWithButtonSkin.this.textField
-                    .isDisabled())
-            {
-                TextFieldWithButtonSkin.this.rightButtonReleased();
-            }
-        });
+        this.rightButton.setOnMousePressed(event ->
+                                           {
+                                               if(TextFieldWithButtonSkin.this.textField
+                                                       .isEditable() && !TextFieldWithButtonSkin.this.textField
+                                                       .isDisabled())
+                                               {
+                                                   TextFieldWithButtonSkin.this.rightButtonPressed();
+                                               }
+                                           });
+        this.rightButton.setOnMouseReleased(event ->
+                                            {
+                                                if(TextFieldWithButtonSkin.this.textField
+                                                        .isEditable() && !TextFieldWithButtonSkin.this.textField
+                                                        .isDisabled())
+                                                {
+                                                    TextFieldWithButtonSkin.this.rightButtonReleased();
+                                                }
+                                            });
 
-        textField.textProperty().addListener((observable, oldValue, newValue) -> {
-            TextFieldWithButtonSkin.this.textChanged();
-        });
-        textField.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            TextFieldWithButtonSkin.this.focusChanged();
-        });
+        textField.textProperty().addListener((observable, oldValue, newValue) ->
+                                             {
+                                                 TextFieldWithButtonSkin.this.textChanged();
+                                             });
+        textField.focusedProperty().addListener((observable, oldValue, newValue) ->
+                                                {
+                                                    TextFieldWithButtonSkin.this.focusChanged();
+                                                });
     }
 
     protected void textChanged()
@@ -102,8 +108,8 @@ public class TextFieldWithButtonSkin extends TextFieldSkin
 
     protected void focusChanged()
     {
-        if(this.textField.getText() == null || !TextFieldWithButtonSkin.this.textField.isEditable() ||
-                TextFieldWithButtonSkin.this.textField.isDisabled())
+        if(this.textField.getText() == null || !TextFieldWithButtonSkin.this.textField
+                .isEditable() || TextFieldWithButtonSkin.this.textField.isDisabled())
         {
             return;
         }

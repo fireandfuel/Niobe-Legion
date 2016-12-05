@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (AboutController.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (AboutController.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -120,29 +120,37 @@ public class AboutController implements ICloseableDialogController
         {
             view.getEngine().loadContent(content);
         }
-        Platform.runLater(() -> view.getEngine().locationProperty().addListener((observable, oldValue, newValue) -> {
-            try
-            {
-                URI address = new URI(newValue);
+        Platform.runLater(() -> view.getEngine().locationProperty().addListener((observable, oldValue, newValue) ->
+                                                                                {
+                                                                                    try
+                                                                                    {
+                                                                                        URI address = new URI(newValue);
 
-                if(newValue.startsWith("http://") || newValue.startsWith("https://"))
-                {
-                    // workaround for https://bugs.openjdk.java.net/browse/JDK-8087652
-                    Platform.runLater(() -> {
-                        if(url != null)
-                        {
-                            view.getEngine().load(url);
-                        } else if(content != null)
-                        {
-                            view.getEngine().loadContent(content);
-                        }
-                    });
-                    Desktop.getDesktop().browse(address);
-                }
-            } catch(IOException | URISyntaxException e)
-            {
-                System.out.println(e);
-            }
-        }));
+                                                                                        if(newValue
+                                                                                                .startsWith("http://") || newValue
+                                                                                                .startsWith("https://"))
+                                                                                        {
+                                                                                            // workaround for https://bugs.openjdk.java.net/browse/JDK-8087652
+                                                                                            Platform.runLater(() ->
+                                                                                                              {
+                                                                                                                  if(url != null)
+                                                                                                                  {
+                                                                                                                      view.getEngine()
+                                                                                                                              .load(url);
+                                                                                                                  } else if(content != null)
+                                                                                                                  {
+                                                                                                                      view.getEngine()
+                                                                                                                              .loadContent(
+                                                                                                                                      content);
+                                                                                                                  }
+                                                                                                              });
+                                                                                            Desktop.getDesktop()
+                                                                                                    .browse(address);
+                                                                                        }
+                                                                                    } catch(IOException | URISyntaxException e)
+                                                                                    {
+                                                                                        System.out.println(e);
+                                                                                    }
+                                                                                }));
     }
 }

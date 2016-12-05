@@ -51,18 +51,20 @@ import niobe.legion.client.gui.connect.LoginController;
 import niobe.legion.shared.communication.XmlCommunication;
 import niobe.legion.shared.communicator.Communicator;
 import niobe.legion.shared.data.Stanza;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * @author fireandfuel
  */
 public class FloodCommunicator extends Communicator
 {
+    private final static Logger LOG = LogManager.getLogger(FloodCommunicator.class);
+
     private final static List<String> CLIENT_FEATURES = new ArrayList<String>(Arrays.asList("starttls",
                                                                                             "compressed_stream_gzip"));
-    private static final String CLIENT_NAME = "legion_test_flood_client";
-    private static final String CLIENT_VERSION = "1.0";
+    private final static String CLIENT_NAME = "legion_test_flood_client";
+    private final static String CLIENT_VERSION = "1.0";
 
     private boolean clientAcceptedFromServer;
     private boolean tlsEstablished;
@@ -203,7 +205,7 @@ public class FloodCommunicator extends Communicator
             return true;
         } catch(SSLException e)
         {
-            Logger.exception(LegionLogger.TLS, e);
+            LOG.catching(e);
 
             this.close();
             return false;
@@ -238,12 +240,12 @@ public class FloodCommunicator extends Communicator
                 this.serverVersion = currentStanza.getAttribute("version");
                 break;
             case "legion:proceedtls":
-                if(this.clientAcceptedFromServer && !this.tlsEstablished && this.keyStorePassword != null &&
-                        this.keyStoreFile != null && !this.keyStoreFile.isEmpty())
+                if(this.clientAcceptedFromServer && !this.tlsEstablished && this.keyStorePassword != null && this.keyStoreFile != null && !this.keyStoreFile
+                        .isEmpty())
                 {
                     if(this.keyStorePassword.isEmpty())
                     {
-                        Logger.warn(LegionLogger.STDOUT, "WARNING: Your key store password is empty!!!");
+                        LOG.warn("WARNING: Your key store password is empty!!!");
                     }
                     try
                     {
@@ -259,7 +261,7 @@ public class FloodCommunicator extends Communicator
                         }
                     } catch(Exception e)
                     {
-                        Logger.exception(LegionLogger.STDERR, e);
+                        LOG.catching(e);
                         if(!this.tlsEstablished)
                         {
                             this.decline("proceedtls", "tls is not established, see client error log");
@@ -303,7 +305,7 @@ public class FloodCommunicator extends Communicator
                                         }
                                     } catch(Exception e)
                                     {
-                                        Logger.exception(LegionLogger.STDERR, e);
+                                        LOG.catching(e);
                                         this.decline("starttls", "can not start compression");
                                     }
                                 } else
@@ -342,8 +344,8 @@ public class FloodCommunicator extends Communicator
                 if(this.isAcceptAt(1) && currentStanza.getValue() != null)
                 {
                     String[] identification = currentStanza.getValue().split(":");
-                    if(identification.length == 2 && ClientCommunicator.CLIENT_NAME.equals(identification[0]) &&
-                            ClientCommunicator.CLIENT_VERSION.equals(identification[1]))
+                    if(identification.length == 2 && ClientCommunicator.CLIENT_NAME
+                            .equals(identification[0]) && ClientCommunicator.CLIENT_VERSION.equals(identification[1]))
                     {
                         this.clientAcceptedFromServer = true;
                     }
@@ -380,16 +382,15 @@ public class FloodCommunicator extends Communicator
     private void proceedConnection() throws IOException
     {
         Stanza stanza;
-        if(CLIENT_FEATURES.contains("starttls") &&
-                this.serverFeatures.contains("starttls") && !tlsEstablished)
+        if(CLIENT_FEATURES.contains("starttls") && this.serverFeatures.contains("starttls") && !tlsEstablished)
         {
             stanza = new Stanza();
             stanza.setEmptyElement(true);
             stanza.setEventType(XMLStreamConstants.START_ELEMENT);
             stanza.setName("legion:starttls");
             this.write(stanza);
-        } else if(CLIENT_FEATURES.contains("compressed_stream_xz") &&
-                this.serverFeatures.contains("compressed_stream_xz") && !compressionActive)
+        } else if(CLIENT_FEATURES.contains("compressed_stream_xz") && this.serverFeatures
+                .contains("compressed_stream_xz") && !compressionActive)
         {
             stanza = new Stanza();
             stanza.setEmptyElement(true);
@@ -397,8 +398,8 @@ public class FloodCommunicator extends Communicator
             stanza.setName("legion:startcompression");
             stanza.putAttribute("algorithm", "xz");
             this.write(stanza);
-        } else if(CLIENT_FEATURES.contains("compressed_stream_gzip") &&
-                this.serverFeatures.contains("compressed_stream_gzip") && !compressionActive)
+        } else if(CLIENT_FEATURES.contains("compressed_stream_gzip") && this.serverFeatures
+                .contains("compressed_stream_gzip") && !compressionActive)
         {
             stanza = new Stanza();
             stanza.setEmptyElement(true);

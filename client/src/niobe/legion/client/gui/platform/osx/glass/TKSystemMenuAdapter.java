@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (TKSystemMenuAdapter.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (TKSystemMenuAdapter.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.platform.osx.glass;
@@ -34,10 +34,10 @@ import niobe.legion.client.gui.platform.osx.util.ReflectionUtils;
 
 public class TKSystemMenuAdapter
 {
-    private static final String GLASS_SYSTEM_MENU_BAR = "glassSystemMenuBar";
-    private static final String INSERT_MENU = "insertMenu";
+    private final static String GLASS_SYSTEM_MENU_BAR = "glassSystemMenuBar";
+    private final static String INSERT_MENU = "insertMenu";
 
-    private static final int APPLE_MENU_INDEX = 0;
+    private final static int APPLE_MENU_INDEX = 0;
 
     private TKSystemMenu systemMenu;
 

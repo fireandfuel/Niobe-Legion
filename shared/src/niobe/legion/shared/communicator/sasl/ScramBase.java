@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ScramBase.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (ScramBase.java) is part of Niobe Legion (module niobe-legion-shared_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -49,9 +49,9 @@ public abstract class ScramBase
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    private static final byte[] INT1 = new byte[]{0, 0, 0, 1};
-    private static final byte[] CLIENT_KEY = "Client Key".getBytes(StandardCharsets.UTF_8);
-    private static final byte[] SERVER_KEY = "Server Key".getBytes(StandardCharsets.UTF_8);
+    private final static byte[] INT1 = new byte[]{0, 0, 0, 1};
+    private final static byte[] CLIENT_KEY = "Client Key".getBytes(StandardCharsets.UTF_8);
+    private final static byte[] SERVER_KEY = "Server Key".getBytes(StandardCharsets.UTF_8);
 
     protected final CallbackHandler callbackHandler;
     private final String hmacAlgorithm;
@@ -70,11 +70,11 @@ public abstract class ScramBase
 
         switch(hashAlgorithm)
         {
-            // MD5
+            // MD5, for historic use:
             case "MD5":
                 this.hmacAlgorithm = "HMac-MD5";
                 break;
-            // SHA-1
+            // SHA-1, for historic use:
             case "SHA-1":
                 this.hmacAlgorithm = "HMac-SHA1";
                 break;
@@ -405,15 +405,18 @@ public abstract class ScramBase
         return this.mechanism;
     }
 
-    public final boolean isComplete() {
+    public final boolean isComplete()
+    {
         return complete;
     }
 
-    public final byte[] unwrap(byte[] incoming, int offset, int len) throws SaslException {
+    public final byte[] unwrap(byte[] incoming, int offset, int len) throws SaslException
+    {
         throw new SaslException("Unwrap not supported");
     }
 
-    public final byte[] wrap(byte[] outgoing, int offset, int len) throws SaslException {
+    public final byte[] wrap(byte[] outgoing, int offset, int len) throws SaslException
+    {
         throw new SaslException("Wrap not supported");
     }
 

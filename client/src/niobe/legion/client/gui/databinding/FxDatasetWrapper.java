@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (FxDatasetWrapper.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (FxDatasetWrapper.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.databinding;
@@ -66,52 +66,77 @@ public class FxDatasetWrapper<T>
             {
                 List<Field> fieldList = Stream.of(fields).filter(field -> field != null).collect(Collectors.toList());
 
-                fieldList.stream().filter(field -> !Modifier.isTransient(field.getModifiers()) &&
-                        !(field.getType().isPrimitive() &&
-                                Modifier.isStatic(field.getModifiers()) &&
-                                Modifier.isFinal(field.getModifiers())) &&
-                        !Modifier.isNative(field.getModifiers())).forEach(field -> {
-                    Object value = null;
-                    try
-                    {
-                        String key = field.getName();
-                        field.setAccessible(true);
-                        value = field.get(this.dataset);
+                fieldList.stream().filter(field -> !Modifier.isTransient(field.getModifiers()) && !(field.getType()
+                        .isPrimitive() && Modifier.isStatic(field.getModifiers()) && Modifier
+                        .isFinal(field.getModifiers())) && !Modifier.isNative(field.getModifiers())).forEach(field ->
+                                                                                                             {
+                                                                                                                 Object value = null;
+                                                                                                                 try
+                                                                                                                 {
+                                                                                                                     String key = field
+                                                                                                                             .getName();
+                                                                                                                     field.setAccessible(
+                                                                                                                             true);
+                                                                                                                     value = field
+                                                                                                                             .get(this.dataset);
 
-                        if(value != null)
-                        {
-                            if(value instanceof Integer)
-                            {
-                                this.properties.put(key, new SimpleIntegerProperty((Integer) value));
-                            } else if(value instanceof Long)
-                            {
-                                this.properties.put(key, new SimpleLongProperty((Long) value));
-                            } else if(value instanceof Float)
-                            {
-                                this.properties.put(key, new SimpleFloatProperty((Float) value));
-                            } else if(value instanceof Double)
-                            {
-                                this.properties.put(key, new SimpleDoubleProperty((Double) value));
-                            } else if(value instanceof Boolean)
-                            {
-                                this.properties.put(key, new SimpleBooleanProperty((Boolean) value));
-                            } else if(value instanceof String)
-                            {
-                                this.properties.put(key, new SimpleStringProperty((String) value));
-                            } else if(value instanceof LocalDate || value instanceof LocalDateTime ||
-                                    value instanceof LocalTime)
-                            {
-                                this.properties.put(key, new SimpleObjectProperty<>(value));
-                            } else if(!(value instanceof Map || value instanceof Collection))
-                            {
-                                this.nestedProperties.put(key, new FxDatasetWrapper<>(value));
-                            }
-                        }
-                    } catch(IllegalAccessException e)
-                    {
-                        e.printStackTrace();
-                    }
-                });
+                                                                                                                     if(value != null)
+                                                                                                                     {
+                                                                                                                         if(value instanceof Integer)
+                                                                                                                         {
+                                                                                                                             this.properties
+                                                                                                                                     .put(key,
+                                                                                                                                          new SimpleIntegerProperty(
+                                                                                                                                                  (Integer) value));
+                                                                                                                         } else if(value instanceof Long)
+                                                                                                                         {
+                                                                                                                             this.properties
+                                                                                                                                     .put(key,
+                                                                                                                                          new SimpleLongProperty(
+                                                                                                                                                  (Long) value));
+                                                                                                                         } else if(value instanceof Float)
+                                                                                                                         {
+                                                                                                                             this.properties
+                                                                                                                                     .put(key,
+                                                                                                                                          new SimpleFloatProperty(
+                                                                                                                                                  (Float) value));
+                                                                                                                         } else if(value instanceof Double)
+                                                                                                                         {
+                                                                                                                             this.properties
+                                                                                                                                     .put(key,
+                                                                                                                                          new SimpleDoubleProperty(
+                                                                                                                                                  (Double) value));
+                                                                                                                         } else if(value instanceof Boolean)
+                                                                                                                         {
+                                                                                                                             this.properties
+                                                                                                                                     .put(key,
+                                                                                                                                          new SimpleBooleanProperty(
+                                                                                                                                                  (Boolean) value));
+                                                                                                                         } else if(value instanceof String)
+                                                                                                                         {
+                                                                                                                             this.properties
+                                                                                                                                     .put(key,
+                                                                                                                                          new SimpleStringProperty(
+                                                                                                                                                  (String) value));
+                                                                                                                         } else if(value instanceof LocalDate || value instanceof LocalDateTime || value instanceof LocalTime)
+                                                                                                                         {
+                                                                                                                             this.properties
+                                                                                                                                     .put(key,
+                                                                                                                                          new SimpleObjectProperty<>(
+                                                                                                                                                  value));
+                                                                                                                         } else if(!(value instanceof Map || value instanceof Collection))
+                                                                                                                         {
+                                                                                                                             this.nestedProperties
+                                                                                                                                     .put(key,
+                                                                                                                                          new FxDatasetWrapper<>(
+                                                                                                                                                  value));
+                                                                                                                         }
+                                                                                                                     }
+                                                                                                                 } catch(IllegalAccessException e)
+                                                                                                                 {
+                                                                                                                     e.printStackTrace();
+                                                                                                                 }
+                                                                                                             });
             }
         }
     }
@@ -237,59 +262,77 @@ public class FxDatasetWrapper<T>
             {
                 List<Field> fieldList = Stream.of(fields).filter(field -> field != null).collect(Collectors.toList());
 
-                fieldList.stream().filter(field -> !Modifier.isTransient(field.getModifiers()) &&
-                        !(field.getType().isPrimitive() &&
-                                Modifier.isStatic(field.getModifiers()) &&
-                                Modifier.isFinal(field.getModifiers())) &&
-                        !Modifier.isNative(field.getModifiers())).forEach(field -> {
-                    Object value = null;
-                    try
-                    {
-                        String key = field.getName();
-                        field.setAccessible(true);
-                        value = field.get(this.dataset);
+                fieldList.stream().filter(field -> !Modifier.isTransient(field.getModifiers()) && !(field.getType()
+                        .isPrimitive() && Modifier.isStatic(field.getModifiers()) && Modifier
+                        .isFinal(field.getModifiers())) && !Modifier.isNative(field.getModifiers())).forEach(field ->
+                                                                                                             {
+                                                                                                                 Object value = null;
+                                                                                                                 try
+                                                                                                                 {
+                                                                                                                     String key = field
+                                                                                                                             .getName();
+                                                                                                                     field.setAccessible(
+                                                                                                                             true);
+                                                                                                                     value = field
+                                                                                                                             .get(this.dataset);
 
-                        if(value != null)
-                        {
-                            if(value instanceof Integer)
-                            {
-                                SimpleIntegerProperty property = (SimpleIntegerProperty) this.properties.get(key);
-                                property.setValue((Integer) value);
-                            } else if(value instanceof Long)
-                            {
-                                SimpleLongProperty property = (SimpleLongProperty) this.properties.get(key);
-                                property.setValue((Long) value);
-                            } else if(value instanceof Float)
-                            {
-                                SimpleFloatProperty property = (SimpleFloatProperty) this.properties.get(key);
-                                property.setValue((Float) value);
-                            } else if(value instanceof Double)
-                            {
-                                SimpleDoubleProperty property = (SimpleDoubleProperty) this.properties.get(key);
-                                property.setValue((Double) value);
-                            } else if(value instanceof Boolean)
-                            {
-                                SimpleBooleanProperty property = (SimpleBooleanProperty) this.properties.get(key);
-                                property.setValue((Boolean) value);
-                            } else if(value instanceof String)
-                            {
-                                SimpleStringProperty property = (SimpleStringProperty) this.properties.get(key);
-                                property.setValue((String) value);
-                            } else if(value instanceof LocalDate || value instanceof LocalDateTime ||
-                                    value instanceof LocalTime)
-                            {
-                                SimpleObjectProperty property = (SimpleObjectProperty) this.properties.get(key);
-                                property.setValue(value);
-                            } else if(!(value instanceof Map || value instanceof Collection))
-                            {
-                                this.nestedProperties.get(key).setData(value);
-                            }
-                        }
-                    } catch(IllegalAccessException e)
-                    {
-                        e.printStackTrace();
-                    }
-                });
+                                                                                                                     if(value != null)
+                                                                                                                     {
+                                                                                                                         if(value instanceof Integer)
+                                                                                                                         {
+                                                                                                                             SimpleIntegerProperty property = (SimpleIntegerProperty) this.properties
+                                                                                                                                     .get(key);
+                                                                                                                             property.setValue(
+                                                                                                                                     (Integer) value);
+                                                                                                                         } else if(value instanceof Long)
+                                                                                                                         {
+                                                                                                                             SimpleLongProperty property = (SimpleLongProperty) this.properties
+                                                                                                                                     .get(key);
+                                                                                                                             property.setValue(
+                                                                                                                                     (Long) value);
+                                                                                                                         } else if(value instanceof Float)
+                                                                                                                         {
+                                                                                                                             SimpleFloatProperty property = (SimpleFloatProperty) this.properties
+                                                                                                                                     .get(key);
+                                                                                                                             property.setValue(
+                                                                                                                                     (Float) value);
+                                                                                                                         } else if(value instanceof Double)
+                                                                                                                         {
+                                                                                                                             SimpleDoubleProperty property = (SimpleDoubleProperty) this.properties
+                                                                                                                                     .get(key);
+                                                                                                                             property.setValue(
+                                                                                                                                     (Double) value);
+                                                                                                                         } else if(value instanceof Boolean)
+                                                                                                                         {
+                                                                                                                             SimpleBooleanProperty property = (SimpleBooleanProperty) this.properties
+                                                                                                                                     .get(key);
+                                                                                                                             property.setValue(
+                                                                                                                                     (Boolean) value);
+                                                                                                                         } else if(value instanceof String)
+                                                                                                                         {
+                                                                                                                             SimpleStringProperty property = (SimpleStringProperty) this.properties
+                                                                                                                                     .get(key);
+                                                                                                                             property.setValue(
+                                                                                                                                     (String) value);
+                                                                                                                         } else if(value instanceof LocalDate || value instanceof LocalDateTime || value instanceof LocalTime)
+                                                                                                                         {
+                                                                                                                             SimpleObjectProperty property = (SimpleObjectProperty) this.properties
+                                                                                                                                     .get(key);
+                                                                                                                             property.setValue(
+                                                                                                                                     value);
+                                                                                                                         } else if(!(value instanceof Map || value instanceof Collection))
+                                                                                                                         {
+                                                                                                                             this.nestedProperties
+                                                                                                                                     .get(key)
+                                                                                                                                     .setData(
+                                                                                                                                             value);
+                                                                                                                         }
+                                                                                                                     }
+                                                                                                                 } catch(IllegalAccessException e)
+                                                                                                                 {
+                                                                                                                     e.printStackTrace();
+                                                                                                                 }
+                                                                                                             });
             }
         }
     }

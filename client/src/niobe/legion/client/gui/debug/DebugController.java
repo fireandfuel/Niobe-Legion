@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (DebugController.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (DebugController.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -39,7 +39,7 @@ import niobe.legion.shared.data.Stanza;
 
 public class DebugController implements ICommunicator, ICloseableDialogController, XMLStreamConstants
 {
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("'Ping: '0.##'ms'");
+    private final static DecimalFormat DECIMAL_FORMAT = new DecimalFormat("'Ping: '0.##'ms'");
 
     @FXML
     private TextArea messages;

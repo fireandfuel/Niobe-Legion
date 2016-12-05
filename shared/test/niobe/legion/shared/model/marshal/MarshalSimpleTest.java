@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (MarshalSimpleTest.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (MarshalSimpleTest.java) is part of Niobe Legion (module niobe-legion-shared_test).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@
 
 package niobe.legion.shared.model.marshal;
 
+import java.math.BigInteger;
 import java.util.List;
 import javax.xml.stream.XMLStreamConstants;
 import niobe.legion.shared.data.Stanza;
@@ -171,6 +172,22 @@ public class MarshalSimpleTest implements XMLStreamConstants
         Assert.assertEquals(2, stanza.getAttributeKeys().size());
         Assert.assertEquals("12", stanza.getAttribute("sequenceId"));
         Assert.assertEquals("java.lang.String", stanza.getAttribute("class"));
+        Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+        Assert.assertTrue(stanza.isEmptyElement());
+    }
+
+    @Test
+    public void testBigIntegerMarshal()
+    {
+        BigInteger value = new BigInteger("1024");
+        List<Stanza> stanzaList = StanzaMarshaller.marshal(value, 12);
+        Assert.assertEquals(1, stanzaList.size());
+        Stanza stanza = stanzaList.get(0);
+        Assert.assertEquals("legion:dataset", stanza.getName());
+        Assert.assertEquals(value.toString(), stanza.getValue());
+        Assert.assertEquals(2, stanza.getAttributeKeys().size());
+        Assert.assertEquals("12", stanza.getAttribute("sequenceId"));
+        Assert.assertEquals("java.math.BigInteger", stanza.getAttribute("class"));
         Assert.assertEquals(START_ELEMENT, stanza.getEventType());
         Assert.assertTrue(stanza.isEmptyElement());
     }

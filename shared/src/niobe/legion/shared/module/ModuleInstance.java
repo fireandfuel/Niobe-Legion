@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ModuleInstance.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (ModuleInstance.java) is part of Niobe Legion (module niobe-legion-shared_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.shared.module;
@@ -27,8 +27,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.stream.Stream;
 import niobe.legion.shared.data.IRight;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Module state transitions:<br>
@@ -43,6 +43,8 @@ import niobe.legion.shared.logger.Logger;
  */
 public abstract class ModuleInstance
 {
+    public final static Logger LOG = LogManager.getLogger(ModuleInstance.class);
+
     public final static int UNINITIALIZED = 0;
     public final static int LOADING = 1;
     public final static int INITIALIZED = 2;
@@ -238,7 +240,7 @@ public abstract class ModuleInstance
                     this.state = ModuleInstance.UNINITIALIZED;
                 } catch(IOException e)
                 {
-                    Logger.exception(LegionLogger.MODULE, e);
+                    LOG.catching(e);
                 }
             }
         }
@@ -251,8 +253,7 @@ public abstract class ModuleInstance
 
     public synchronized void setState(int state)
     {
-        if(this.state == UNINITIALIZED && (state == MISSING_DEPENDENCIES || state == IN_CONFLICT ||
-                state == DATABASE_CONFLICT || state == DEPENDENCY_CYCLE))
+        if(this.state == UNINITIALIZED && (state == MISSING_DEPENDENCIES || state == IN_CONFLICT || state == DATABASE_CONFLICT || state == DEPENDENCY_CYCLE))
         {
             this.state = state;
         }
@@ -291,9 +292,7 @@ public abstract class ModuleInstance
 
     public IRight[] getRights()
     {
-        if(this.module == null || this.state == MISSING_DEPENDENCIES || this.state == IN_CONFLICT ||
-                this.state == UNINITIALIZED || this.state == DATABASE_CONFLICT || this.state == TERMINATED ||
-                this.state == MISSING_LIBRARIES || this.state == DEPENDENCY_CYCLE)
+        if(this.module == null || this.state == MISSING_DEPENDENCIES || this.state == IN_CONFLICT || this.state == UNINITIALIZED || this.state == DATABASE_CONFLICT || this.state == TERMINATED || this.state == MISSING_LIBRARIES || this.state == DEPENDENCY_CYCLE)
         {
             return null;
         }
@@ -303,7 +302,7 @@ public abstract class ModuleInstance
     @Override
     public String toString()
     {
-        return "ModuleInstance name=" + this.name + ", version=" + this.version + ", class=" + this.moduleClass +
-                ", state=" + this.getStateAsString();
+        return "ModuleInstance name=" + this.name + ", version=" + this.version + ", class=" + this.moduleClass + ", state=" + this
+                .getStateAsString();
     }
 }

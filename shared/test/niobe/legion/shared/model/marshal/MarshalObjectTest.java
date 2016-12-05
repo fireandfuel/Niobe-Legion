@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (MarshalObjectTest.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (MarshalObjectTest.java) is part of Niobe Legion (module niobe-legion-shared_test).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -118,7 +118,7 @@ public class MarshalObjectTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
-                    Assert.assertEquals("0",stanza.getAttribute("index"));
+                    Assert.assertEquals("0", stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 6:

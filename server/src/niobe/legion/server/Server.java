@@ -45,20 +45,20 @@ import niobe.legion.server.communicator.ServerCommunicatorThreadFactory;
 import niobe.legion.server.database.LegionDatabase;
 import niobe.legion.server.module.ServerModuleLoader;
 import niobe.legion.shared.communicator.Communicator;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 
 public class Server
 {
-    private static final String PERSISTENCE_NAME = "niobe_legion";
+    private final static Logger LOG = LogManager.getLogger(Server.class);
+    private final static String PERSISTENCE_NAME = "niobe_legion";
 
     private static ServerModuleLoader moduleLoader;
     private static LegionDatabase DATABASE;
 
-    private static final ServerCommunicatorThreadFactory COMMUNICATOR_THREAD_FACTORY = new ServerCommunicatorThreadFactory();
-    private static final List<Communicator> COMMUNICATORS = new ArrayList<Communicator>();
+    private final static ServerCommunicatorThreadFactory COMMUNICATOR_THREAD_FACTORY = new ServerCommunicatorThreadFactory();
+    private final static List<Communicator> COMMUNICATORS = new ArrayList<Communicator>();
 
     private final ExecutorService connectionPool;
     private final BlockingQueue<Runnable> connectionList;
@@ -87,7 +87,8 @@ public class Server
         {
             maxConnections = (short) Math.max(maxConnections, 1);
             connectionList = new ArrayBlockingQueue<Runnable>(maxConnections);
-            connectionPool = new ThreadPoolExecutor(maxConnections, maxConnections,
+            connectionPool = new ThreadPoolExecutor(maxConnections,
+                                                    maxConnections,
                                                     60L,
                                                     TimeUnit.SECONDS,
                                                     this.connectionList,
@@ -104,7 +105,7 @@ public class Server
                 moduleNames.forEach(moduleLoader::startModule);
             }
 
-            Logger.info(LegionLogger.STDOUT, "Server is ready");
+            LOG.info("Server is ready");
 
             while(!this.closeRequest)
             {
@@ -118,7 +119,7 @@ public class Server
                         {
                             synchronized(this)
                             {
-                                Logger.info(LegionLogger.STDOUT, "Accept new Connection");
+                                LOG.info("Accept new Connection");
                                 Communicator communicator = new ServerCommunicator(socket,
                                                                                    authMechanism,
                                                                                    blacklistedClientsRegex,
@@ -132,8 +133,7 @@ public class Server
                         }
                     } catch(IOException | RejectedExecutionException e)
                     {
-                        e.printStackTrace();
-                        Logger.exception(LegionLogger.STDERR, e);
+                        LOG.catching(e);
                         if(socket != null)
                         {
                             try
@@ -141,8 +141,7 @@ public class Server
                                 socket.close();
                             } catch(IOException e2)
                             {
-                                e2.printStackTrace();
-                                Logger.exception(LegionLogger.STDERR, e2);
+                                LOG.catching(e2);
                             }
                         }
                     }
@@ -150,8 +149,7 @@ public class Server
             }
         } catch(IOException e)
         {
-            e.printStackTrace();
-            Logger.exception(LegionLogger.STDERR, e);
+            LOG.catching(e);
         } finally
         {
             try
@@ -160,8 +158,7 @@ public class Server
                 connectionPool.shutdown();
             } catch(IOException e)
             {
-                e.printStackTrace();
-                Logger.exception(LegionLogger.STDERR, e);
+                LOG.catching(e);
             }
         }
     }
@@ -291,19 +288,13 @@ public class Server
                            cipherSuites,
                            maxThreadPoolSize);
 
-            } catch(NumberFormatException e)
+            } catch(NumberFormatException | XMLStreamException e)
             {
-                Logger.exception(LegionLogger.STDERR, e);
-            } catch(XMLStreamException e)
-            {
-                Logger.exception(LegionLogger.STDERR, e);
+                LOG.catching(e);
             }
-        } catch(IOException e)
+        } catch(IOException | SQLException e)
         {
-            Logger.exception(LegionLogger.STDERR, e);
-        } catch(SQLException e)
-        {
-            Logger.exception(LegionLogger.STDERR, e);
+            LOG.catching(e);
         }
     }
 

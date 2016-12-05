@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (DependencyTest.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (DependencyTest.java) is part of Niobe Legion (module niobe-legion-shared_test).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.shared.module;
@@ -85,47 +85,46 @@ public class DependencyTest
                                                           new File("test5.jar"),
                                                           "niobe.legion.shared.module.Test4")));
 
-        this.actualList = Arrays
-                .asList(new TestModuleInstance(hostModuleName + "$" + hostModuleVersion,
-                                               "",
-                                               "test1",
-                                               "1",
-                                               "",
-                                               "A test module 1",
-                                               new File("test1.jar"),
-                                               "niobe.legion.shared.module.Test1"),
-                        new TestModuleInstance(hostModuleName + "$" + hostModuleVersion + ", test1$1",
-                                               "",
-                                               "test2",
-                                               "1",
-                                               "",
-                                               "A test module 2, depends on test module 1",
-                                               new File("test2.jar"),
-                                               "niobe.legion.shared.module.Test2"),
-                        new TestModuleInstance(hostModuleName + "$" + hostModuleVersion,
-                                               "",
-                                               "test3",
-                                               "1",
-                                               "",
-                                               "A test module 3",
-                                               new File("test3.jar"),
-                                               "niobe.legion.shared.module.Test3"),
-                        new TestModuleInstance(hostModuleName + "$" + hostModuleVersion + ", test2$1",
-                                               "",
-                                               "test4",
-                                               "1",
-                                               "",
-                                               "A test module 4, depends on test module 2",
-                                               new File("test4.jar"),
-                                               "niobe.legion.shared.module.Test4"),
-                        new TestModuleInstance(hostModuleName + "$" + hostModuleVersion + ", test3$1, test4$1, test2$1",
-                                               "",
-                                               "test5",
-                                               "1",
-                                               "",
-                                               "A test module 5, depends on test module 3, test module 4 and test module 2",
-                                               new File("test5.jar"),
-                                               "niobe.legion.shared.module.Test4"));
+        this.actualList = Arrays.asList(new TestModuleInstance(hostModuleName + "$" + hostModuleVersion,
+                                                               "",
+                                                               "test1",
+                                                               "1",
+                                                               "",
+                                                               "A test module 1",
+                                                               new File("test1.jar"),
+                                                               "niobe.legion.shared.module.Test1"),
+                                        new TestModuleInstance(hostModuleName + "$" + hostModuleVersion + ", test1$1",
+                                                               "",
+                                                               "test2",
+                                                               "1",
+                                                               "",
+                                                               "A test module 2, depends on test module 1",
+                                                               new File("test2.jar"),
+                                                               "niobe.legion.shared.module.Test2"),
+                                        new TestModuleInstance(hostModuleName + "$" + hostModuleVersion,
+                                                               "",
+                                                               "test3",
+                                                               "1",
+                                                               "",
+                                                               "A test module 3",
+                                                               new File("test3.jar"),
+                                                               "niobe.legion.shared.module.Test3"),
+                                        new TestModuleInstance(hostModuleName + "$" + hostModuleVersion + ", test2$1",
+                                                               "",
+                                                               "test4",
+                                                               "1",
+                                                               "",
+                                                               "A test module 4, depends on test module 2",
+                                                               new File("test4.jar"),
+                                                               "niobe.legion.shared.module.Test4"),
+                                        new TestModuleInstance(hostModuleName + "$" + hostModuleVersion + ", test3$1, test4$1, test2$1",
+                                                               "",
+                                                               "test5",
+                                                               "1",
+                                                               "",
+                                                               "A test module 5, depends on test module 3, test module 4 and test module 2",
+                                                               new File("test5.jar"),
+                                                               "niobe.legion.shared.module.Test4"));
     }
 
     @Test

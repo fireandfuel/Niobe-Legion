@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (StageUtils.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (StageUtils.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.platform.osx.util;
@@ -39,15 +39,18 @@ public class StageUtils
 
     public static void zoomFocusedStage()
     {
-        getFocusedStage().ifPresent(stage -> {
-            ObservableList<Screen> screens = Screen
-                    .getScreensForRectangle(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight());
+        getFocusedStage().ifPresent(stage ->
+                                    {
+                                        ObservableList<Screen> screens = Screen.getScreensForRectangle(stage.getX(),
+                                                                                                       stage.getY(),
+                                                                                                       stage.getWidth(),
+                                                                                                       stage.getHeight());
 
-            if(screens.size() == 1)
-            {
-                StageUtils.setStageSize(stage, screens.get(0).getBounds());
-            }
-        });
+                                        if(screens.size() == 1)
+                                        {
+                                            StageUtils.setStageSize(stage, screens.get(0).getBounds());
+                                        }
+                                    });
     }
 
     public static void minimizeFocusedStage()

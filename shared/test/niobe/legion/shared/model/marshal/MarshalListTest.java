@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (MarshalListTest.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (MarshalListTest.java) is part of Niobe Legion (module niobe-legion-shared_test).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@
 
 package niobe.legion.shared.model.marshal;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +61,7 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
-                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -132,7 +133,7 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
-                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -204,7 +205,7 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
-                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -276,7 +277,7 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
-                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -348,7 +349,7 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
-                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -420,7 +421,7 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
-                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -492,7 +493,7 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
-                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -563,7 +564,7 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
-                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -608,7 +609,6 @@ public class MarshalListTest implements XMLStreamConstants
         }
     }
 
-
     @Test
     public void testStringListMarshal()
     {
@@ -635,7 +635,7 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("legion:entry", stanza.getName());
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
-                    Assert.assertEquals(Integer.toString((index - 1) / 3),stanza.getAttribute("index"));
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
                     Assert.assertFalse(stanza.isEmptyElement());
                     break;
                 case 2:
@@ -659,6 +659,79 @@ public class MarshalListTest implements XMLStreamConstants
                     Assert.assertEquals("3", stanza.getValue());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
                     Assert.assertEquals("java.lang.String", stanza.getAttribute("class"));
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertTrue(stanza.isEmptyElement());
+                    break;
+                case 3:
+                case 6:
+                case 9:
+                    Assert.assertEquals("legion:entry", stanza.getName());
+                    Assert.assertEquals(END_ELEMENT, stanza.getEventType());
+                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+                case 10:
+                    Assert.assertEquals("legion:dataset", stanza.getName());
+                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(END_ELEMENT, stanza.getEventType());
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testBigIntegerListMarshal()
+    {
+        List<BigInteger> list = new ArrayList<BigInteger>(Arrays.asList(new BigInteger("1"),
+                                                                        new BigInteger("2"),
+                                                                        new BigInteger("3")));
+        List<Stanza> stanzaList = StanzaMarshaller.marshal(list, 12);
+        Assert.assertEquals(11, stanzaList.size());
+        for(int index = 0; index < stanzaList.size(); index++)
+        {
+            Stanza stanza = stanzaList.get(index);
+            System.out.println("Test Stanza " + index + " of " + (stanzaList.size() - 1));
+
+            Assert.assertEquals("12", stanza.getAttribute("sequenceId"));
+            switch(index)
+            {
+                case 0:
+                    Assert.assertEquals("legion:dataset", stanza.getName());
+                    Assert.assertEquals("java.util.ArrayList", stanza.getAttribute("class"));
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+                case 1:
+                case 4:
+                case 7:
+                    Assert.assertEquals("legion:entry", stanza.getName());
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(Integer.toString((index - 1) / 3), stanza.getAttribute("index"));
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+                case 2:
+                    Assert.assertEquals("legion:dataset", stanza.getName());
+                    Assert.assertEquals("1", stanza.getValue());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals("java.math.BigInteger", stanza.getAttribute("class"));
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertTrue(stanza.isEmptyElement());
+                    break;
+                case 5:
+                    Assert.assertEquals("legion:dataset", stanza.getName());
+                    Assert.assertEquals("2", stanza.getValue());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals("java.math.BigInteger", stanza.getAttribute("class"));
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertTrue(stanza.isEmptyElement());
+                    break;
+                case 8:
+                    Assert.assertEquals("legion:dataset", stanza.getName());
+                    Assert.assertEquals("3", stanza.getValue());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals("java.math.BigInteger", stanza.getAttribute("class"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertTrue(stanza.isEmptyElement());
                     break;

@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ScramClient.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (ScramClient.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -48,7 +48,7 @@ import niobe.legion.shared.communicator.sasl.ScramBase;
 final class ScramClient extends ScramBase implements SaslClient
 {
 
-    private static final String GS2_CBIND_FLAG = "n";
+    private final static String GS2_CBIND_FLAG = "n";
 
     private final String gs2Header;
     private String authorizationId;

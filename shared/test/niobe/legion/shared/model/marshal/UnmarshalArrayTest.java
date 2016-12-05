@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (UnmarshalArrayTest.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (UnmarshalArrayTest.java) is part of Niobe Legion (module niobe-legion-shared_test).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@
 
 package niobe.legion.shared.model.marshal;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.stream.XMLStreamConstants;
@@ -876,5 +877,99 @@ public class UnmarshalArrayTest implements XMLStreamConstants
         Assert.assertEquals("1", array[0]);
         Assert.assertEquals("2", array[1]);
         Assert.assertEquals("3", array[2]);
+    }
+
+    @Test
+    public void testBigIntegerArrayUnmarshal()
+    {
+        List<Stanza> stanzas = new ArrayList<Stanza>();
+        Stanza stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.putAttribute("class", "java.math.BigInteger[]");
+        stanza.putAttribute("arrayCount", "3");
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("index", "0");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue("1");
+        stanza.putAttribute("class", "java.math.BigInteger");
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("index", "1");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue("2");
+        stanza.putAttribute("class", "java.math.BigInteger");
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("index", "2");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue("3");
+        stanza.putAttribute("class", "java.math.BigInteger");
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        List<Object> objects = StanzaMarshaller.unmarshal(stanzas);
+        Assert.assertEquals(1, objects.size());
+        Assert.assertEquals(BigInteger[].class, objects.get(0).getClass());
+        BigInteger[] array = (BigInteger[]) objects.get(0);
+        Assert.assertEquals(3, array.length);
+        Assert.assertEquals(new BigInteger("1"), array[0]);
+        Assert.assertEquals(new BigInteger("2"), array[1]);
+        Assert.assertEquals(new BigInteger("3"), array[2]);
     }
 }

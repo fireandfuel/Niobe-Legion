@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (LegionSaslServerProvider.java) is part of Niobe Legion (module niobe-legion-server).
+ * This file (LegionSaslServerProvider.java) is part of Niobe Legion (module niobe-legion-server_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -24,7 +24,7 @@ import java.security.Provider;
 
 public class LegionSaslServerProvider extends Provider
 {
-    private static final long serialVersionUID = 1L;
+    private final static long serialVersionUID = 1L;
 
     public LegionSaslServerProvider()
     {

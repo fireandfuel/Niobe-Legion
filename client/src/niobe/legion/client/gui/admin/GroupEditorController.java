@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (GroupEditorController.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (GroupEditorController.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.admin;
@@ -121,7 +121,8 @@ public class GroupEditorController implements ICloseableDialogController, Datase
 
         TreeItem<FxDatasetWrapper<GroupRightEntity>> item = new TreeItem<FxDatasetWrapper<GroupRightEntity>>(wrapper);
 
-        ChangeListener<Boolean> activeChangeListener = (ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
+        ChangeListener<Boolean> activeChangeListener = (ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) ->
+        {
             // change will automatically be bubbled up (select) or down (deselect)
             if(!oldValue && newValue)
             {
@@ -133,12 +134,13 @@ public class GroupEditorController implements ICloseableDialogController, Datase
             {
                 if(item.getChildren() != null)
                 {
-                    item.getChildren().forEach(child -> {
-                        if(child.getValue() != null)
-                        {
-                            child.getValue().getProperty("active").setValue(newValue);
-                        }
-                    });
+                    item.getChildren().forEach(child ->
+                                               {
+                                                   if(child.getValue() != null)
+                                                   {
+                                                       child.getValue().getProperty("active").setValue(newValue);
+                                                   }
+                                               });
                 }
             }
 
@@ -147,10 +149,12 @@ public class GroupEditorController implements ICloseableDialogController, Datase
         wrapper.getProperty("active").addListener((ChangeListener) activeChangeListener);
         if(!right.isLeaf())
         {
-            right.getChildren().forEach(child -> {
-                TreeItem<FxDatasetWrapper<GroupRightEntity>> childItem = this.createRightNode(child);
-                item.getChildren().add(childItem);
-            });
+            right.getChildren().forEach(child ->
+                                        {
+                                            TreeItem<FxDatasetWrapper<GroupRightEntity>> childItem = this
+                                                    .createRightNode(child);
+                                            item.getChildren().add(childItem);
+                                        });
         }
 
         return item;
@@ -166,8 +170,8 @@ public class GroupEditorController implements ICloseableDialogController, Datase
 
     private boolean setRightNode(GroupRightEntity rightNode, TreeItem<FxDatasetWrapper<GroupRightEntity>> item)
     {
-        if(item.getValue() != null && item.getValue().getProperty("name") != null &&
-                rightNode.getName().equals(item.getValue().getProperty("name").getValue()))
+        if(item.getValue() != null && item.getValue().getProperty("name") != null && rightNode.getName()
+                .equals(item.getValue().getProperty("name").getValue()))
         {
             item.getValue().setData(rightNode);
             return true;

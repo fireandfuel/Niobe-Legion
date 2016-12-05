@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (Client.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (Client.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -53,14 +53,15 @@ import niobe.legion.client.gui.connect.ReconnectController;
 import niobe.legion.client.gui.connect.ReloginController;
 import niobe.legion.client.gui.locale.EncodedControl;
 import niobe.legion.client.module.ClientModuleLoader;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 
 public class Client extends Application
 {
-    public static final int MAX_CONNECT_TRIALS = 10;
+    private final static Logger LOG = LogManager.getLogger(Client.class);
+
+    public final static int MAX_CONNECT_TRIALS = 10;
     public static String APP_NAME = "Niobe Legion Client";
 
     static String port = "";
@@ -97,10 +98,11 @@ public class Client extends Application
 
                 if(Client.reloginController != null)
                 {
-                    Platform.runLater(() -> {
-                        Client.reloginController.close();
-                        Client.reloginController = null;
-                    });
+                    Platform.runLater(() ->
+                                      {
+                                          Client.reloginController.close();
+                                          Client.reloginController = null;
+                                      });
                 }
 
                 // get the ConnectionController if loaded
@@ -182,7 +184,7 @@ public class Client extends Application
                         125);
             } catch(IOException e)
             {
-                Logger.exception(LegionLogger.STDERR, e);
+                LOG.catching(e);
             }
         }
     }
@@ -299,7 +301,7 @@ public class Client extends Application
                 Client.modulePath = properties.getProperty("module_path", null);
             } else
             {
-                Logger.error(LegionLogger.STDERR, "No config file found. Stop!");
+                LOG.fatal("No config file found. Stop!");
                 System.exit(0);
             }
 
@@ -338,7 +340,7 @@ public class Client extends Application
             Client.getCommunicator();
         } catch(IOException e)
         {
-            Logger.exception(LegionLogger.STDERR, e);
+            LOG.catching(e);
         }
     }
 
@@ -366,7 +368,7 @@ public class Client extends Application
                 {
                     Socket socket = new Socket(InetAddress.getByName(Client.server), Integer.parseInt(Client.port));
 
-                    Logger.info(LegionLogger.STDOUT, "Client: Connect");
+                    LOG.info("Client: Connect");
 
                     communicator = new ClientCommunicator(socket,
                                                           Client.authMechanisms,
@@ -378,7 +380,7 @@ public class Client extends Application
                     trials = 1;
                 } catch(IOException | NumberFormatException e)
                 {
-                    Logger.error(LegionLogger.STDERR, "Can not connect to server.");
+                    LOG.error("Can not connect to server.");
 
                     this.updateMessage(String.format(Client.getLocalisation("connectionTrialXofY"),
                                                      trials++,
@@ -406,10 +408,11 @@ public class Client extends Application
                 // hide reconnect controller if visible
                 if(Client.reconnectController != null)
                 {
-                    Platform.runLater(() -> {
-                        Client.reconnectController.close();
-                        Client.reconnectController = null;
-                    });
+                    Platform.runLater(() ->
+                                      {
+                                          Client.reconnectController.close();
+                                          Client.reconnectController = null;
+                                      });
                 }
 
                 // run the communictator if CertificateController is not loaded

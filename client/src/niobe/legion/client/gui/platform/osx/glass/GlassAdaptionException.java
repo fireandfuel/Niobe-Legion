@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (GlassAdaptionException.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (GlassAdaptionException.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.platform.osx.glass;
@@ -23,7 +23,7 @@ package niobe.legion.client.gui.platform.osx.glass;
 public class GlassAdaptionException extends RuntimeException
 {
 
-    private static final long serialVersionUID = 7315344041984700277L;
+    private final static long serialVersionUID = 7315344041984700277L;
 
     public GlassAdaptionException(Throwable e)
     {

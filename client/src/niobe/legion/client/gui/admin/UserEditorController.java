@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (UserEditorController.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (UserEditorController.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.admin;
@@ -47,10 +47,9 @@ public class UserEditorController implements ICloseableDialogController, Dataset
 
     private final EventHandler eventHandler = (event) -> UserEditorController.this.saveButton
             .setDisable((UserEditorController.this.password == null || UserEditorController.this.password.getText()
-                    .length() <= 7) ||
-                                (UserEditorController.this.userName == null || UserEditorController.this.userName
-                                        .getText().length() <= 1) ||
-                                UserEditorController.this.group.getSelectionModel().getSelectedItem() == null);
+                    .length() <= 7) || (UserEditorController.this.userName == null || UserEditorController.this.userName
+                    .getText().length() <= 1) || UserEditorController.this.group.getSelectionModel()
+                    .getSelectedItem() == null);
 
     @FXML
     private ComboBox<FxDatasetWrapper<GroupEntity>> group;
@@ -98,9 +97,10 @@ public class UserEditorController implements ICloseableDialogController, Dataset
         this.password.setText(this.dataset.getPassword());
         this.group.getSelectionModel().select(wrapper.getNested("group"));
 
-        this.saveButton.setDisable((this.password.getText() == null || this.password.getText().length() < 8) ||
-                                           (this.userName.getText() == null || this.userName.getText().length() < 2) ||
-                                           this.group.getSelectionModel().getSelectedItem() == null);
+        this.saveButton
+                .setDisable((this.password.getText() == null || this.password.getText().length() < 8) || (this.userName
+                        .getText() == null || this.userName.getText().length() < 2) || this.group.getSelectionModel()
+                        .getSelectedItem() == null);
     }
 
     @FXML

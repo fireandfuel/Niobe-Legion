@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (MainController.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (MainController.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -58,11 +58,13 @@ import javax.xml.stream.XMLStreamException;
 import niobe.legion.client.Client;
 import niobe.legion.client.gui.about.AboutController;
 import niobe.legion.client.gui.platform.osx.MenuToolkit;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MainController
 {
+    private final static Logger LOG = LogManager.getLogger(MainController.class);
+
     private Stage stage;
     private ResizeDragListener resizeDragListener;
 
@@ -83,19 +85,23 @@ public class MainController
         Platform.runLater(() -> setupMenuBar());
 
         this.userButton.setPadding(new Insets(0));
-        this.userButton.setOnAction(event -> {
-            Popup popup = new Popup();
-            Button logout = new Button(Client.getLocalisation("logout"));
-            logout.setOnAction(buttonEvent -> this.logout());
-            logout.setFocusTraversable(false);
+        this.userButton.setOnAction(event ->
+                                    {
+                                        Popup popup = new Popup();
+                                        Button logout = new Button(Client.getLocalisation("logout"));
+                                        logout.setOnAction(buttonEvent -> this.logout());
+                                        logout.setFocusTraversable(false);
 
-            popup.setAutoFix(true);
-            popup.setAutoHide(true);
-            popup.getContent().addAll(logout);
+                                        popup.setAutoFix(true);
+                                        popup.setAutoHide(true);
+                                        popup.getContent().addAll(logout);
 
-            Bounds bounds = this.userButton.localToScreen(this.userButton.getBoundsInLocal());
-            popup.show(this.userButton, bounds.getMinX(), bounds.getMinY() + this.userButton.getHeight());
-        });
+                                        Bounds bounds = this.userButton
+                                                .localToScreen(this.userButton.getBoundsInLocal());
+                                        popup.show(this.userButton,
+                                                   bounds.getMinX(),
+                                                   bounds.getMinY() + this.userButton.getHeight());
+                                    });
         this.loadMask("/niobe/legion/client/fxml/connect/Connect.fxml");
     }
 
@@ -115,32 +121,33 @@ public class MainController
         {
             Object[] wrapper = new Object[1];
 
-            Platform.runLater(() -> {
-                URL location = MainController.class.getResource(maskURI);
+            Platform.runLater(() ->
+                              {
+                                  URL location = MainController.class.getResource(maskURI);
 
-                if(location != null)
-                {
-                    FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
-                    try
-                    {
-                        Node node = loader.load();
-                        Object controller = loader.getController();
-                        this.setCurrentContent(node, controller);
+                                  if(location != null)
+                                  {
+                                      FXMLLoader loader = new FXMLLoader(location, Client.getLocalBundle());
+                                      try
+                                      {
+                                          Node node = loader.load();
+                                          Object controller = loader.getController();
+                                          this.setCurrentContent(node, controller);
 
-                        wrapper[0] = controller;
-                        synchronized(MainController.this)
-                        {
-                            MainController.this.notify();
-                        }
-                    } catch(IOException e)
-                    {
-                        e.printStackTrace();
-                    }
-                } else
-                {
-                    Logger.error(LegionLogger.STDERR, "FXML mask " + maskURI + " not found.");
-                }
-            });
+                                          wrapper[0] = controller;
+                                          synchronized(MainController.this)
+                                          {
+                                              MainController.this.notify();
+                                          }
+                                      } catch(IOException e)
+                                      {
+                                          e.printStackTrace();
+                                      }
+                                  } else
+                                  {
+                                      LOG.error("FXML mask " + maskURI + " not found.");
+                                  }
+                              });
 
             synchronized(MainController.this)
             {
@@ -205,9 +212,7 @@ public class MainController
     }
 
     public ICloseableDialogController showHeavyWeightDialog(final String maskURI, final String title, Modality modality,
-                                                            boolean closeable,
-                                                            int width,
-                                                            int height) throws IOException
+                                                            boolean closeable, int width, int height) throws IOException
     {
         if(Platform.isFxApplicationThread())
         {
@@ -263,19 +268,21 @@ public class MainController
             // array to wrap the result
             final ICloseableDialogController[] wrapper = new ICloseableDialogController[1];
 
-            Platform.runLater(() -> {
-                try
-                {
-                    wrapper[0] = MainController.this.showHeavyWeightDialog(maskURI, title, modality, closeable);
-                    synchronized(MainController.this)
-                    {
-                        MainController.this.notify();
-                    }
-                } catch(IOException e)
-                {
-                    Logger.exception(LegionLogger.STDERR, e);
-                }
-            });
+            Platform.runLater(() ->
+                              {
+                                  try
+                                  {
+                                      wrapper[0] = MainController.this
+                                              .showHeavyWeightDialog(maskURI, title, modality, closeable);
+                                      synchronized(MainController.this)
+                                      {
+                                          MainController.this.notify();
+                                      }
+                                  } catch(IOException e)
+                                  {
+                                      LOG.catching(e);
+                                  }
+                              });
 
             // wait for the dialog to load, we should be notified
             synchronized(MainController.this)
@@ -312,21 +319,24 @@ public class MainController
 
             if(buttons != null && buttons.length > 0)
             {
-                Stream.of(buttons).forEach(type -> {
-                    Button button = new Button(type.getText());
-                    button.setOnAction(event -> {
-                        dialog.close();
-                        observableButton.set(type);
-                    });
-                    buttonBox.getChildren().add(button);
-                });
+                Stream.of(buttons).forEach(type ->
+                                           {
+                                               Button button = new Button(type.getText());
+                                               button.setOnAction(event ->
+                                                                  {
+                                                                      dialog.close();
+                                                                      observableButton.set(type);
+                                                                  });
+                                               buttonBox.getChildren().add(button);
+                                           });
             } else
             {
                 Button okButton = new Button("OK");
-                okButton.setOnAction(event -> {
-                    dialog.close();
-                    observableButton.set(ButtonType.OK);
-                });
+                okButton.setOnAction(event ->
+                                     {
+                                         dialog.close();
+                                         observableButton.set(ButtonType.OK);
+                                     });
                 okButton.requestFocus();
                 buttonBox.getChildren().add(okButton);
             }
@@ -381,10 +391,13 @@ public class MainController
             dialog.setY(this.stage.getY() + this.stage.getHeight() / 2 - dialog.getHeight() / 2);
         } else
         {
-            Platform.runLater(() -> {
-                ObservableValue<ButtonType> innerObservableValue = MainController.this.showLightweightDialog(message);
-                innerObservableValue.addListener((observable, oldValue, newValue) -> observableButton.set(newValue));
-            });
+            Platform.runLater(() ->
+                              {
+                                  ObservableValue<ButtonType> innerObservableValue = MainController.this
+                                          .showLightweightDialog(message);
+                                  innerObservableValue.addListener((observable, oldValue, newValue) -> observableButton
+                                          .set(newValue));
+                              });
 
         }
         return observableButton;
@@ -407,10 +420,11 @@ public class MainController
             TextInputControl textField = singleLine ? new TextField() : new TextArea();
 
             Button okButton = new Button("OK");
-            okButton.setOnAction(event -> {
-                dialog.close();
-                stringProperty.set(textField.getText());
-            });
+            okButton.setOnAction(event ->
+                                 {
+                                     dialog.close();
+                                     stringProperty.set(textField.getText());
+                                 });
             okButton.requestFocus();
             buttonBox.getChildren().add(okButton);
 
@@ -464,11 +478,13 @@ public class MainController
             dialog.setY(this.stage.getY() + this.stage.getHeight() / 2 - dialog.getHeight() / 2);
         } else
         {
-            Platform.runLater(() -> {
-                ObservableValue<String> innerObservableValue = MainController.this
-                        .showLightweightTextInputDialog(message, singleLine);
-                innerObservableValue.addListener((observable, oldValue, newValue) -> stringProperty.set(newValue));
-            });
+            Platform.runLater(() ->
+                              {
+                                  ObservableValue<String> innerObservableValue = MainController.this
+                                          .showLightweightTextInputDialog(message, singleLine);
+                                  innerObservableValue.addListener((observable, oldValue, newValue) -> stringProperty
+                                          .set(newValue));
+                              });
         }
 
         return stringProperty;
@@ -578,18 +594,19 @@ public class MainController
     private void logout()
     {
         this.showLightweightDialog(Client.getLocalisation("logoutQuestion"), ButtonType.YES, ButtonType.NO)
-                .addListener((observable, oldValue, newValue) -> {
-                    if(newValue == ButtonType.YES)
-                    {
-                        try
-                        {
-                            Client.getCommunicator().logout();
-                        } catch(IOException e)
-                        {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+                .addListener((observable, oldValue, newValue) ->
+                             {
+                                 if(newValue == ButtonType.YES)
+                                 {
+                                     try
+                                     {
+                                         Client.getCommunicator().logout();
+                                     } catch(IOException e)
+                                     {
+                                         e.printStackTrace();
+                                     }
+                                 }
+                             });
     }
 
     @FXML
@@ -597,8 +614,7 @@ public class MainController
     {
         Stage stage = new Stage(StageStyle.TRANSPARENT);
 
-        FXMLLoader loader = new FXMLLoader(this.getClass()
-                                                   .getResource("/niobe/legion/client/fxml/about/AboutOSX.fxml"),
+        FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/niobe/legion/client/fxml/about/AboutOSX.fxml"),
                                            Client.getLocalBundle());
 
         try

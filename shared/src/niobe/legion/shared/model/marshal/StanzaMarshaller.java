@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (StanzaMarshaller.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (StanzaMarshaller.java) is part of Niobe Legion (module niobe-legion-shared_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -23,6 +23,7 @@ package niobe.legion.shared.model.marshal;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -48,7 +49,7 @@ import niobe.legion.shared.data.Stanza;
 public class StanzaMarshaller implements XMLStreamConstants
 {
 
-    private static final class StanzaColumn
+    private final static class StanzaColumn
     {
         final String columnName;
         final Class<?> columnClass;
@@ -162,12 +163,16 @@ public class StanzaMarshaller implements XMLStreamConstants
                     result.putAttribute("arrayCount", Integer.toString(((char[]) object).length));
                     results.addAll(getEntry((char[]) object, sequenceId));
                     break;
+                case "java.math.BigInteger":
+                    result.putAttribute("class", BigInteger.class.getCanonicalName() + "[]");
+                    result.putAttribute("arrayCount", Integer.toString(((BigInteger[]) object).length));
+                    results.addAll(getEntry((BigInteger[]) object, sequenceId));
+                    break;
                 default:
                     result.putAttribute("arrayCount", Integer.toString(((Object[]) object).length));
                     results.addAll(getStreamEntry(Stream.of((Object[]) object), sequenceId));
                     break;
             }
-
 
             result = new Stanza();
             result.setName("legion:dataset");
@@ -216,11 +221,8 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setEventType(END_ELEMENT);
             result.setSequenceId(sequenceId);
             results.add(result);
-        } else if(object.getClass().isPrimitive() || object instanceof Integer || object instanceof Long ||
-                object instanceof Double || object instanceof Float || object instanceof Boolean ||
-                object instanceof LocalDate || object instanceof LocalTime || object instanceof LocalDateTime ||
-                object instanceof String || object instanceof Byte || object instanceof Short ||
-                object instanceof Character)
+        } else if(object.getClass()
+                .isPrimitive() || object instanceof Integer || object instanceof Long || object instanceof Double || object instanceof Float || object instanceof Boolean || object instanceof LocalDate || object instanceof LocalTime || object instanceof LocalDateTime || object instanceof String || object instanceof Byte || object instanceof Short || object instanceof Character || object instanceof BigInteger)
         {
             // object is a primitive type like int, OR date, time or string
             result.setEmptyElement(true);
@@ -232,20 +234,23 @@ public class StanzaMarshaller implements XMLStreamConstants
 
             // for every non-transient, non-constant (primitive + static + final) and non-native field: marshal it
             // and add it to result list
-            Stream.of(fields).filter(field -> !Modifier.isTransient(field.getModifiers()) &&
-                    !(field.getType().isPrimitive() &&
-                            Modifier.isStatic(field.getModifiers()) &&
-                            Modifier.isFinal(field.getModifiers())) &&
-                    !Modifier.isNative(field.getModifiers())).map(field -> {
-                try
-                {
-                    return getField(field, object, sequenceId);
-                } catch(IllegalAccessException e)
-                {
-                    e.printStackTrace();
-                }
-                return null;
-            }).filter(list -> list != null && !list.isEmpty()).forEach(list -> results.addAll(list));
+            Stream.of(fields).filter(field -> !Modifier.isTransient(field.getModifiers()) && !(field.getType()
+                    .isPrimitive() && Modifier.isStatic(field.getModifiers()) && Modifier
+                    .isFinal(field.getModifiers())) && !Modifier.isNative(field.getModifiers())).map(field ->
+                                                                                                     {
+                                                                                                         try
+                                                                                                         {
+                                                                                                             return getField(
+                                                                                                                     field,
+                                                                                                                     object,
+                                                                                                                     sequenceId);
+                                                                                                         } catch(IllegalAccessException e)
+                                                                                                         {
+                                                                                                             e.printStackTrace();
+                                                                                                         }
+                                                                                                         return null;
+                                                                                                     })
+                    .filter(list -> list != null && !list.isEmpty()).forEach(list -> results.addAll(list));
 
             result = new Stanza();
             result.setName("legion:dataset");
@@ -360,10 +365,8 @@ public class StanzaMarshaller implements XMLStreamConstants
 
                 Class<?> objectClass = Class.forName(className);
 
-                if(objectClass.isPrimitive() || objectClass == Integer.class ||
-                        objectClass == Long.class || objectClass == Double.class ||
-                        objectClass == Float.class || objectClass == Boolean.class ||
-                        objectClass == Byte.class || objectClass == Short.class || objectClass == Character.class)
+                if(objectClass
+                        .isPrimitive() || objectClass == Integer.class || objectClass == Long.class || objectClass == Double.class || objectClass == Float.class || objectClass == Boolean.class || objectClass == Byte.class || objectClass == Short.class || objectClass == Character.class || objectClass == BigInteger.class)
                 {
                     if(objectClass == Boolean.class)
                     {
@@ -389,6 +392,9 @@ public class StanzaMarshaller implements XMLStreamConstants
                     } else if(objectClass == Character.class)
                     {
                         object = new char[arrayCount];
+                    } else if(objectClass == BigInteger.class)
+                    {
+                        object = new BigInteger[arrayCount];
                     }
                 } else
                 {
@@ -398,12 +404,8 @@ public class StanzaMarshaller implements XMLStreamConstants
             {
                 Class<?> objectClass = Class.forName(className);
 
-                if(objectClass.isPrimitive() || objectClass == Integer.class ||
-                        objectClass == Long.class || objectClass == Double.class ||
-                        objectClass == Float.class || objectClass == Boolean.class ||
-                        objectClass == LocalDate.class || objectClass == LocalTime.class ||
-                        objectClass == LocalDateTime.class || objectClass == String.class ||
-                        objectClass == Byte.class || objectClass == Short.class || objectClass == Character.class)
+                if(objectClass
+                        .isPrimitive() || objectClass == Integer.class || objectClass == Long.class || objectClass == Double.class || objectClass == Float.class || objectClass == Boolean.class || objectClass == LocalDate.class || objectClass == LocalTime.class || objectClass == LocalDateTime.class || objectClass == String.class || objectClass == Byte.class || objectClass == Short.class || objectClass == Character.class || objectClass == BigInteger.class)
                 {
                     String value = stanza.getValue();
 
@@ -440,6 +442,9 @@ public class StanzaMarshaller implements XMLStreamConstants
                     } else if(objectClass == LocalDateTime.class)
                     {
                         object = LocalDateTime.parse(value);
+                    } else if(objectClass == BigInteger.class)
+                    {
+                        object = new BigInteger(value);
                     } else if(objectClass == String.class)
                     {
                         object = value;
@@ -501,8 +506,8 @@ public class StanzaMarshaller implements XMLStreamConstants
 
                 // check if field class is a primitive class, date class, time class, string class,
                 // list class, map class or is an array
-                if(columnClass != null && (Collection.class.isAssignableFrom(columnClass) ||
-                        Map.class.isAssignableFrom(columnClass) || isArrayColumn))
+                if(columnClass != null && (Collection.class.isAssignableFrom(columnClass) || Map.class
+                        .isAssignableFrom(columnClass) || isArrayColumn))
                 {
                     Object value;
                     if(isArrayColumn)
@@ -557,14 +562,8 @@ public class StanzaMarshaller implements XMLStreamConstants
 
                 // check if field class is a primitive class, date class, time class, string class,
                 // list class, map class or is an array
-                if(columnClass != null && (columnClass.isPrimitive() || columnClass == Integer.class ||
-                        columnClass == Double.class || columnClass == Float.class ||
-                        columnClass == Boolean.class ||
-                        columnClass == LocalDate.class ||
-                        columnClass == LocalTime.class ||
-                        columnClass == LocalDateTime.class ||
-                        columnClass == String.class || columnClass == Byte.class ||
-                        columnClass == Short.class || columnClass == Character.class))
+                if(columnClass != null && (columnClass
+                        .isPrimitive() || columnClass == Integer.class || columnClass == Double.class || columnClass == Float.class || columnClass == Boolean.class || columnClass == LocalDate.class || columnClass == LocalTime.class || columnClass == LocalDateTime.class || columnClass == String.class || columnClass == Byte.class || columnClass == Short.class || columnClass == Character.class || columnClass == BigInteger.class))
                 {
                     // get the field value as a string
                     Object value = stanza.getValue();
@@ -614,6 +613,10 @@ public class StanzaMarshaller implements XMLStreamConstants
                         {
                             // convert string to datetime
                             value = LocalDateTime.parse((String) value);
+                        } else if(columnClass == BigInteger.class)
+                        {
+                            // convert string to datetime
+                            value = new BigInteger((String) value);
                         }
 
                         // set the object's field to the value
@@ -721,6 +724,9 @@ public class StanzaMarshaller implements XMLStreamConstants
                             } else if(keyClass == LocalDateTime.class)
                             {
                                 key = LocalDateTime.parse((String) key);
+                            } else if(keyClass == BigInteger.class)
+                            {
+                                key = new BigInteger((String) key);
                             }
 
                             // put child object with key to map
@@ -808,6 +814,13 @@ public class StanzaMarshaller implements XMLStreamConstants
                                         chars[arrayIndex] = (char) result;
                                     }
                                     break;
+                                case "java.math.BigInteger[]":
+                                    BigInteger[] integers = (BigInteger[]) object;
+                                    if(arrayIndex < integers.length)
+                                    {
+                                        integers[arrayIndex] = (BigInteger) result;
+                                    }
+                                    break;
                                 default:
                                     Object[] array = (Object[]) object;
                                     // add child object to the array
@@ -872,6 +885,9 @@ public class StanzaMarshaller implements XMLStreamConstants
                             } else if(keyClass == LocalDateTime.class)
                             {
                                 key = LocalDateTime.parse((String) key);
+                            } else if(keyClass == BigInteger.class)
+                            {
+                                key = new BigInteger((String) key);
                             }
 
                             // put child object with key to map
@@ -1041,15 +1057,12 @@ public class StanzaMarshaller implements XMLStreamConstants
                 result.setSequenceId(sequenceId);
                 result.setEventType(END_ELEMENT);
                 results.add(result);
-            } else if(value.getClass().isPrimitive() || value instanceof Integer || value instanceof Long ||
-                    value instanceof Double || value instanceof Byte || value instanceof Short ||
-                    value instanceof Float || value instanceof Boolean || value instanceof LocalDate ||
-                    value instanceof LocalTime || value instanceof LocalDateTime || value instanceof String || value instanceof Character)
+            } else if(value.getClass()
+                    .isPrimitive() || value instanceof Integer || value instanceof Long || value instanceof Double || value instanceof Byte || value instanceof Short || value instanceof Float || value instanceof Boolean || value instanceof LocalDate || value instanceof LocalTime || value instanceof LocalDateTime || value instanceof String || value instanceof Character || value instanceof BigInteger)
             {
                 // convert primitive types, date, time and string to string
                 result.setEventType(CHARACTERS);
                 result.setValue(value.toString());
-
             } else
             {
                 // otherwise marshal the child object
@@ -1090,28 +1103,29 @@ public class StanzaMarshaller implements XMLStreamConstants
         AtomicInteger counter = new AtomicInteger();
 
         // for every element of the stream
-        stream.forEach(value -> {
-            Stanza result = new Stanza();
-            result.setName("legion:entry");
-            result.setEventType(START_ELEMENT);
-            result.setSequenceId(sequenceId);
-            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
-            results.add(result);
+        stream.forEach(value ->
+                       {
+                           Stanza result = new Stanza();
+                           result.setName("legion:entry");
+                           result.setEventType(START_ELEMENT);
+                           result.setSequenceId(sequenceId);
+                           result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
+                           results.add(result);
 
-            // marshal the value
-            List<Stanza> stanzas = StanzaMarshaller.marshal(value, sequenceId);
+                           // marshal the value
+                           List<Stanza> stanzas = StanzaMarshaller.marshal(value, sequenceId);
 
-            if(stanzas != null)
-            {
-                results.addAll(stanzas);
-            }
+                           if(stanzas != null)
+                           {
+                               results.addAll(stanzas);
+                           }
 
-            result = new Stanza();
-            result.setName("legion:entry");
-            result.setEventType(END_ELEMENT);
-            result.setSequenceId(sequenceId);
-            results.add(result);
-        });
+                           result = new Stanza();
+                           result.setName("legion:entry");
+                           result.setEventType(END_ELEMENT);
+                           result.setSequenceId(sequenceId);
+                           results.add(result);
+                       });
 
         return results;
     }
@@ -1364,25 +1378,18 @@ public class StanzaMarshaller implements XMLStreamConstants
         return results;
     }
 
-    /**
-     * Marshalls a map to a list of xml stanza
-     *
-     * @param map
-     * @return
-     */
-    private static <S, T> List<Stanza> getMapEntry(Map<S, T> map, long sequenceId)
+    private static List<Stanza> getEntry(BigInteger[] array, long sequenceId)
     {
         List<Stanza> results = new ArrayList<Stanza>();
+        AtomicInteger counter = new AtomicInteger();
 
-        // for every key value pair in the map
-        map.forEach((key, value) -> {
+        for(BigInteger value : array)
+        {
             Stanza result = new Stanza();
             result.setName("legion:entry");
             result.setEventType(START_ELEMENT);
-            // set the key class and key
-            result.putAttribute("keyClass", key.getClass().getCanonicalName());
-            result.putAttribute("key", key.toString());
             result.setSequenceId(sequenceId);
+            result.putAttribute("index", Integer.toString(counter.getAndIncrement()));
             results.add(result);
 
             // marshal the value
@@ -1398,7 +1405,46 @@ public class StanzaMarshaller implements XMLStreamConstants
             result.setEventType(END_ELEMENT);
             result.setSequenceId(sequenceId);
             results.add(result);
-        });
+        }
+        return results;
+    }
+
+    /**
+     * Marshalls a map to a list of xml stanza
+     *
+     * @param map
+     * @return
+     */
+    private static <S, T> List<Stanza> getMapEntry(Map<S, T> map, long sequenceId)
+    {
+        List<Stanza> results = new ArrayList<Stanza>();
+
+        // for every key value pair in the map
+        map.forEach((key, value) ->
+                    {
+                        Stanza result = new Stanza();
+                        result.setName("legion:entry");
+                        result.setEventType(START_ELEMENT);
+                        // set the key class and key
+                        result.putAttribute("keyClass", key.getClass().getCanonicalName());
+                        result.putAttribute("key", key.toString());
+                        result.setSequenceId(sequenceId);
+                        results.add(result);
+
+                        // marshal the value
+                        List<Stanza> stanzas = StanzaMarshaller.marshal(value, sequenceId);
+
+                        if(stanzas != null)
+                        {
+                            results.addAll(stanzas);
+                        }
+
+                        result = new Stanza();
+                        result.setName("legion:entry");
+                        result.setEventType(END_ELEMENT);
+                        result.setSequenceId(sequenceId);
+                        results.add(result);
+                    });
 
         return results;
     }

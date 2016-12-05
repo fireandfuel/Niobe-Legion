@@ -32,11 +32,11 @@ import niobe.legion.client.communicator.FloodCommunicator;
  */
 public class FloodingClient
 {
-    private static final int PORT = 5242;
-    private static final String HOST = "localhost";
-    private static final int SLEEP_TIME = 10;
+    private final static int PORT = 5242;
+    private final static String HOST = "localhost";
+    private final static int SLEEP_TIME = 10;
 
-    private static final List<FloodCommunicator> COMMUNICATORS = new ArrayList<FloodCommunicator>();
+    private final static List<FloodCommunicator> COMMUNICATORS = new ArrayList<FloodCommunicator>();
     private static boolean broken;
 
     public static int floodServer(int connections)

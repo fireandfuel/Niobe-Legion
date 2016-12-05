@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (Base64.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (Base64.java) is part of Niobe Legion (module niobe-legion-shared_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,13 +15,14 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.shared;
 
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
+import java.io.IOException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * <p>
@@ -183,6 +184,7 @@ import niobe.legion.shared.logger.Logger;
  */
 public class Base64
 {
+    private final static Logger LOG = LogManager.getLogger(Base64.class);
 
 	/* ******** P U B L I C F I E L D S ******** */
 
@@ -267,7 +269,7 @@ public class Base64
      * The 64 valid Base64 values.
      */
     /*
-	 * Host platform me be something funny like EBCDIC, so we hardcode these
+     * Host platform me be something funny like EBCDIC, so we hardcode these
 	 * values.
 	 */
     private final static byte[] _STANDARD_ALPHABET = {(byte) 'A', (byte) 'B', (byte) 'C', (byte) 'D', (byte) 'E', (byte) 'F', (byte) 'G', (byte) 'H', (byte) 'I', (byte) 'J', (byte) 'K', (byte) 'L', (byte) 'M', (byte) 'N', (byte) 'O', (byte) 'P', (byte) 'Q', (byte) 'R', (byte) 'S', (byte) 'T', (byte) 'U', (byte) 'V', (byte) 'W', (byte) 'X', (byte) 'Y', (byte) 'Z', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e', (byte) 'f', (byte) 'g', (byte) 'h', (byte) 'i', (byte) 'j', (byte) 'k', (byte) 'l', (byte) 'm', (byte) 'n', (byte) 'o', (byte) 'p', (byte) 'q', (byte) 'r', (byte) 's', (byte) 't', (byte) 'u', (byte) 'v', (byte) 'w', (byte) 'x', (byte) 'y', (byte) 'z', (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6', (byte) '7', (byte) '8', (byte) '9', (byte) '+', (byte) '/'};
@@ -617,9 +619,7 @@ public class Base64
         // We have to shift left 24 in order to flush out the 1's that appear
         // when Java treats a value as negative that is cast from a byte to an
         // int.
-        int inBuff = (numSigBytes > 0 ? ((source[srcOffset] << 24) >>> 8) : 0) |
-                (numSigBytes > 1 ? ((source[srcOffset + 1] << 24) >>> 16) : 0) |
-                (numSigBytes > 2 ? ((source[srcOffset + 2] << 24) >>> 24) : 0);
+        int inBuff = (numSigBytes > 0 ? ((source[srcOffset] << 24) >>> 8) : 0) | (numSigBytes > 1 ? ((source[srcOffset + 1] << 24) >>> 16) : 0) | (numSigBytes > 2 ? ((source[srcOffset + 2] << 24) >>> 24) : 0);
 
         switch(numSigBytes)
         {
@@ -1231,8 +1231,7 @@ public class Base64
             // )
             // | ( ( DECODABET[ source[ srcOffset + 1 ] ] << 24 ) >>> 12 )
             // | ( ( DECODABET[ source[ srcOffset + 2 ] ] << 24 ) >>> 18 );
-            int outBuff = ((DECODABET[source[srcOffset]] & 0xFF) << 18) | ((DECODABET[source[srcOffset + 1]] & 0xFF) << 12) |
-                    ((DECODABET[source[srcOffset + 2]] & 0xFF) << 6);
+            int outBuff = ((DECODABET[source[srcOffset]] & 0xFF) << 18) | ((DECODABET[source[srcOffset + 1]] & 0xFF) << 12) | ((DECODABET[source[srcOffset + 2]] & 0xFF) << 6);
 
             destination[destOffset] = (byte) (outBuff >>> 16);
             destination[destOffset + 1] = (byte) (outBuff >>> 8);
@@ -1248,8 +1247,7 @@ public class Base64
             // | ( ( DECODABET[ source[ srcOffset + 1 ] ] << 24 ) >>> 12 )
             // | ( ( DECODABET[ source[ srcOffset + 2 ] ] << 24 ) >>> 18 )
             // | ( ( DECODABET[ source[ srcOffset + 3 ] ] << 24 ) >>> 24 );
-            int outBuff = ((DECODABET[source[srcOffset]] & 0xFF) << 18) | ((DECODABET[source[srcOffset + 1]] & 0xFF) << 12) |
-                    ((DECODABET[source[srcOffset + 2]] & 0xFF) << 6) | ((DECODABET[source[srcOffset + 3]] & 0xFF));
+            int outBuff = ((DECODABET[source[srcOffset]] & 0xFF) << 18) | ((DECODABET[source[srcOffset + 1]] & 0xFF) << 12) | ((DECODABET[source[srcOffset + 2]] & 0xFF) << 6) | ((DECODABET[source[srcOffset + 3]] & 0xFF));
 
             destination[destOffset] = (byte) (outBuff >> 16);
             destination[destOffset + 1] = (byte) (outBuff >> 8);
@@ -1455,9 +1453,9 @@ public class Base64
                     bytes = baos.toByteArray();
 
                 } // end try
-                catch(java.io.IOException e)
+                catch(IOException e)
                 {
-                    Logger.exception(LegionLogger.STDERR, e);
+                    LOG.catching(e);
                     // Just return originally-decoded bytes
                 } // end catch
                 finally

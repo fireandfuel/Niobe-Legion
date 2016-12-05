@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (LatencyService.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (LatencyService.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.latency;
@@ -27,31 +27,31 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
-import javafx.util.Duration;
 
 /**
  * @author fireandfuel
  */
 public class LatencyService extends ScheduledService<Double>
 {
-    static final long MAX_WAIT = 10000;
+    final static long MAX_WAIT = 10000;
     private static LatencyService INSTANCE;
 
-    private static final ThreadFactory THREAD_FACTORY = run -> AccessController
-            .doPrivileged((PrivilegedAction<Thread>) () -> {
+    private final static ThreadFactory THREAD_FACTORY = run -> AccessController
+            .doPrivileged((PrivilegedAction<Thread>) () ->
+            {
                 final Thread th = new Thread(run, "LatencyService");
                 th.setPriority(Thread.MIN_PRIORITY);
                 th.setDaemon(true);
                 return th;
             });
-    private static final Executor EXECUTOR = Executors.newSingleThreadScheduledExecutor(THREAD_FACTORY);
+    private final static Executor EXECUTOR = Executors.newSingleThreadScheduledExecutor(THREAD_FACTORY);
 
     private LatencyService()
     {
-        this.setPeriod(Duration.millis(MAX_WAIT));
-        this.setRestartOnFailure(true);
-        this.setExecutor(EXECUTOR);
-        this.start();
+//        this.setPeriod(Duration.millis(MAX_WAIT));
+//        this.setRestartOnFailure(true);
+//        this.setExecutor(EXECUTOR);
+//        this.start();
     }
 
     public static LatencyService getInstance()

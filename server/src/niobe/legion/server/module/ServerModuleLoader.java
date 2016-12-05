@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ServerModuleLoader.java) is part of Niobe Legion (module niobe-legion-server).
+ * This file (ServerModuleLoader.java) is part of Niobe Legion (module niobe-legion-server_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.server.module;
@@ -31,14 +31,15 @@ import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import niobe.legion.server.Server;
 import niobe.legion.shared.data.IRight;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.module.ModuleInstance;
 import niobe.legion.shared.module.ModuleLoader;
 import niobe.legion.shared.module.ModuleRightManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ServerModuleLoader extends ModuleLoader<ServerModuleInstance>
 {
+    private final static Logger LOG = LogManager.getLogger(ServerModuleLoader.class);
     private static ServerModuleLoader moduleLoader;
     private static List<String> usedDatabases = new ArrayList<String>();
 
@@ -89,8 +90,8 @@ public class ServerModuleLoader extends ModuleLoader<ServerModuleInstance>
                 }
             }
 
-            if(module.getNamespace() != null && !module.getNamespace().isEmpty() &&
-                    module.getNamespaceURI() != null && !module.getNamespaceURI().isEmpty())
+            if(module.getNamespace() != null && !module.getNamespace().isEmpty() && module
+                    .getNamespaceURI() != null && !module.getNamespaceURI().isEmpty())
             {
                 Server.getCommunicators().forEach(module::newCommunicator);
             }
@@ -103,8 +104,8 @@ public class ServerModuleLoader extends ModuleLoader<ServerModuleInstance>
         } else
         {
             instance.setState(ModuleInstance.UNINITIALIZED);
-            Logger.warn(LegionLogger.MODULE, instance.getName() + ": module class " + clazz.getCanonicalName() +
-                    " does not implement IModule! Unload module ...");
+            LOG.warn(instance.getName() + ": module class " + clazz
+                    .getCanonicalName() + " does not implement IModule! Unload module ...");
             loader.close();
         }
     }
@@ -132,9 +133,9 @@ public class ServerModuleLoader extends ModuleLoader<ServerModuleInstance>
                                                                              attributes.getValue("Module-Class"),
                                                                              attributes.getValue("Module-Libraries"));
 
-                    if(instance.getName() != null && !instance.getName().isEmpty() && instance.getVersion() != null &&
-                            !instance.getVersion().isEmpty() && instance.getModuleClass() != null &&
-                            !instance.getModuleClass().isEmpty())
+                    if(instance.getName() != null && !instance.getName().isEmpty() && instance
+                            .getVersion() != null && !instance.getVersion().isEmpty() && instance
+                            .getModuleClass() != null && !instance.getModuleClass().isEmpty())
                     {
                         MODULE_INSTANCES.add(instance);
                     }

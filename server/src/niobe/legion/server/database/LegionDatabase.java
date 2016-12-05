@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (LegionDatabase.java) is part of Niobe Legion (module niobe-legion-server).
+ * This file (LegionDatabase.java) is part of Niobe Legion (module niobe-legion-server_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -28,13 +28,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import niobe.legion.shared.Utils;
 import niobe.legion.shared.data.LegionRight;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupEntity;
 import niobe.legion.shared.model.UserEntity;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LegionDatabase extends AbstractDatabase
 {
+    private final static Logger LOG = LogManager.getLogger(LegionDatabase.class);
     private static LegionDatabase database;
 
     public static LegionDatabase init(String type, String persistenceName, String... args) throws SQLException
@@ -131,7 +132,7 @@ public class LegionDatabase extends AbstractDatabase
             System.out.println("SECURITY WARNING: Please change the root password later");
         } catch(NoSuchAlgorithmException e)
         {
-            Logger.exception(LegionLogger.DATABASE, e);
+            LOG.catching(e);
         }
     }
 }

@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (UnmarshalMapTest.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (UnmarshalMapTest.java) is part of Niobe Legion (module niobe-legion-shared_test).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@
 
 package niobe.legion.shared.model.marshal;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -104,17 +105,16 @@ public class UnmarshalMapTest implements XMLStreamConstants
         int counter = 0;
         for(Object key : map.keySet())
         {
-            if(key instanceof Boolean)
+            Assert.assertNotNull(key);
+            Assert.assertEquals(Boolean.class, key.getClass());
+            switch(counter)
             {
-                switch(counter)
-                {
-                    case 0:
-                        Assert.assertEquals(false, key);
-                        break;
-                    case 1:
-                        Assert.assertEquals(true, key);
-                        break;
-                }
+                case 0:
+                    Assert.assertEquals(false, key);
+                    break;
+                case 1:
+                    Assert.assertEquals(true, key);
+                    break;
             }
             counter++;
         }
@@ -196,17 +196,16 @@ public class UnmarshalMapTest implements XMLStreamConstants
         int counter = 0;
         for(Object key : map.keySet())
         {
-            if(key instanceof Byte)
+            Assert.assertNotNull(key);
+            Assert.assertEquals(Byte.class, key.getClass());
+            switch(counter)
             {
-                switch(counter)
-                {
-                    case 0:
-                        Assert.assertEquals((byte) 1, key);
-                        break;
-                    case 1:
-                        Assert.assertEquals((byte) 3, key);
-                        break;
-                }
+                case 0:
+                    Assert.assertEquals((byte) 1, key);
+                    break;
+                case 1:
+                    Assert.assertEquals((byte) 3, key);
+                    break;
             }
             counter++;
         }
@@ -288,17 +287,16 @@ public class UnmarshalMapTest implements XMLStreamConstants
         int counter = 0;
         for(Object key : map.keySet())
         {
-            if(key instanceof Short)
+            Assert.assertNotNull(key);
+            Assert.assertEquals(Short.class, key.getClass());
+            switch(counter)
             {
-                switch(counter)
-                {
-                    case 0:
-                        Assert.assertEquals((short) 1, key);
-                        break;
-                    case 1:
-                        Assert.assertEquals((short) 3, key);
-                        break;
-                }
+                case 0:
+                    Assert.assertEquals((short) 1, key);
+                    break;
+                case 1:
+                    Assert.assertEquals((short) 3, key);
+                    break;
             }
             counter++;
         }
@@ -380,17 +378,16 @@ public class UnmarshalMapTest implements XMLStreamConstants
         int counter = 0;
         for(Object key : map.keySet())
         {
-            if(key instanceof Integer)
+            Assert.assertNotNull(key);
+            Assert.assertEquals(Integer.class, key.getClass());
+            switch(counter)
             {
-                switch(counter)
-                {
-                    case 0:
-                        Assert.assertEquals(1, key);
-                        break;
-                    case 1:
-                        Assert.assertEquals(3, key);
-                        break;
-                }
+                case 0:
+                    Assert.assertEquals(1, key);
+                    break;
+                case 1:
+                    Assert.assertEquals(3, key);
+                    break;
             }
             counter++;
         }
@@ -472,17 +469,16 @@ public class UnmarshalMapTest implements XMLStreamConstants
         int counter = 0;
         for(Object key : map.keySet())
         {
-            if(key instanceof Long)
+            Assert.assertNotNull(key);
+            Assert.assertEquals(Long.class, key.getClass());
+            switch(counter)
             {
-                switch(counter)
-                {
-                    case 0:
-                        Assert.assertEquals(1L, key);
-                        break;
-                    case 1:
-                        Assert.assertEquals(3L, key);
-                        break;
-                }
+                case 0:
+                    Assert.assertEquals(1L, key);
+                    break;
+                case 1:
+                    Assert.assertEquals(3L, key);
+                    break;
             }
             counter++;
         }
@@ -564,17 +560,16 @@ public class UnmarshalMapTest implements XMLStreamConstants
         int counter = 0;
         for(Object key : map.keySet())
         {
-            if(key instanceof Float)
+            Assert.assertNotNull(key);
+            Assert.assertEquals(Float.class, key.getClass());
+            switch(counter)
             {
-                switch(counter)
-                {
-                    case 0:
-                        Assert.assertEquals(0.5F, key);
-                        break;
-                    case 1:
-                        Assert.assertEquals(3.14F, key);
-                        break;
-                }
+                case 0:
+                    Assert.assertEquals(0.5F, key);
+                    break;
+                case 1:
+                    Assert.assertEquals(3.14F, key);
+                    break;
             }
             counter++;
         }
@@ -656,17 +651,16 @@ public class UnmarshalMapTest implements XMLStreamConstants
         int counter = 0;
         for(Object key : map.keySet())
         {
-            if(key instanceof Double)
+            Assert.assertNotNull(key);
+            Assert.assertEquals(Double.class, key.getClass());
+            switch(counter)
             {
-                switch(counter)
-                {
-                    case 0:
-                        Assert.assertEquals(0.5D, key);
-                        break;
-                    case 1:
-                        Assert.assertEquals(3.14D, key);
-                        break;
-                }
+                case 0:
+                    Assert.assertEquals(0.5D, key);
+                    break;
+                case 1:
+                    Assert.assertEquals(3.14D, key);
+                    break;
             }
             counter++;
         }
@@ -748,17 +742,16 @@ public class UnmarshalMapTest implements XMLStreamConstants
         int counter = 0;
         for(Object key : map.keySet())
         {
-            if(key instanceof Character)
+            Assert.assertNotNull(key);
+            Assert.assertEquals(Character.class, key.getClass());
+            switch(counter)
             {
-                switch(counter)
-                {
-                    case 0:
-                        Assert.assertEquals('A', key);
-                        break;
-                    case 1:
-                        Assert.assertEquals('C', key);
-                        break;
-                }
+                case 0:
+                    Assert.assertEquals('A', key);
+                    break;
+                case 1:
+                    Assert.assertEquals('C', key);
+                    break;
             }
             counter++;
         }
@@ -840,17 +833,16 @@ public class UnmarshalMapTest implements XMLStreamConstants
         int counter = 0;
         for(Object key : map.keySet())
         {
-            if(key instanceof String)
+            Assert.assertNotNull(key);
+            Assert.assertEquals(String.class, key.getClass());
+            switch(counter)
             {
-                switch(counter)
-                {
-                    case 0:
-                        Assert.assertEquals("A", key);
-                        break;
-                    case 1:
-                        Assert.assertEquals("C", key);
-                        break;
-                }
+                case 0:
+                    Assert.assertEquals("A", key);
+                    break;
+                case 1:
+                    Assert.assertEquals("C", key);
+                    break;
             }
             counter++;
         }
@@ -859,5 +851,96 @@ public class UnmarshalMapTest implements XMLStreamConstants
         Assert.assertEquals("B", map.get("A"));
         Assert.assertEquals(String.class, map.get("C").getClass());
         Assert.assertEquals("D", map.get("C"));
+    }
+
+    @Test
+    public void testBigIntegerMapUnmarshal()
+    {
+        List<Stanza> stanzas = new ArrayList<Stanza>();
+        Stanza stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.putAttribute("class", "java.util.TreeMap");
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("keyClass", "java.math.BigInteger");
+        stanza.putAttribute("key", "1");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue("1000");
+        stanza.putAttribute("class", "java.math.BigInteger");
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("keyClass", "java.math.BigInteger");
+        stanza.putAttribute("key", "2");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue("2000");
+        stanza.putAttribute("class", "java.math.BigInteger");
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        List<Object> objects = StanzaMarshaller.unmarshal(stanzas);
+        Assert.assertEquals(1, objects.size());
+        Assert.assertEquals(TreeMap.class, objects.get(0).getClass());
+        TreeMap map = (TreeMap) objects.get(0);
+        Assert.assertEquals(2, map.size());
+        int counter = 0;
+        for(Object key : map.keySet())
+        {
+            Assert.assertNotNull(key);
+            Assert.assertEquals(BigInteger.class, key.getClass());
+            switch(counter)
+            {
+                case 0:
+                    Assert.assertEquals(new BigInteger("1"), key);
+                    break;
+                case 1:
+                    Assert.assertEquals(new BigInteger("2"), key);
+                    break;
+            }
+            counter++;
+        }
+        Assert.assertEquals(2, counter);
+        Assert.assertEquals(BigInteger.class, map.get(new BigInteger("1")).getClass());
+        Assert.assertEquals(new BigInteger("1000"), map.get(new BigInteger("1")));
+        Assert.assertEquals(BigInteger.class, map.get(new BigInteger("2")).getClass());
+        Assert.assertEquals(new BigInteger("2000"), map.get(new BigInteger("2")));
     }
 }

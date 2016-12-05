@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (MenuToolkit.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (MenuToolkit.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.platform.osx;
@@ -44,18 +44,18 @@ import niobe.legion.client.gui.platform.osx.util.StageUtils;
 
 public class MenuToolkit
 {
-    private static final String APP_NAME = "Apple";
+    private final static String APP_NAME = "Apple";
 
-    private static final String HIDE = "hide";
-    private static final String QUIT = "quit";
-    private static final String ABOUT = "about";
-    private static final String SHOW_ALL = "show_all";
-    private static final String HIDE_OTHERS = "hide_others";
-    private static final String MINIMIZE = "minimize";
-    private static final String ZOOM = "zoom";
-    private static final String CLOSE_WINDOW = "close_window";
-    private static final String BRING_ALL_TO_FRONT = "bring_all_to_front";
-    private static final String CYCLE_THROUGH_WINDOWS = "cycle_through_windows";
+    private final static String HIDE = "hide";
+    private final static String QUIT = "quit";
+    private final static String ABOUT = "about";
+    private final static String SHOW_ALL = "show_all";
+    private final static String HIDE_OTHERS = "hide_others";
+    private final static String MINIMIZE = "minimize";
+    private final static String ZOOM = "zoom";
+    private final static String CLOSE_WINDOW = "close_window";
+    private final static String BRING_ALL_TO_FRONT = "bring_all_to_front";
+    private final static String CYCLE_THROUGH_WINDOWS = "cycle_through_windows";
 
     private final TKSystemMenuAdapter systemMenuAdapter;
     private final MacApplicationAdapter applicationAdapter;

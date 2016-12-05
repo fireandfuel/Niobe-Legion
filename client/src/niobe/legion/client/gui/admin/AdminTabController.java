@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (AdminTabController.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (AdminTabController.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.admin;
@@ -36,12 +36,14 @@ import javafx.scene.layout.AnchorPane;
 import niobe.legion.client.Client;
 import niobe.legion.client.gui.IMaskType;
 import niobe.legion.client.gui.MainController;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AdminTabController
 {
-    private static final List<IMaskType> children = new ArrayList<IMaskType>(Arrays.asList(new AdminType(Client.getLocalisation(
+    private final static Logger LOG = LogManager.getLogger(AdminTabController.class);
+
+    private final static List<IMaskType> children = new ArrayList<IMaskType>(Arrays.asList(new AdminType(Client.getLocalisation(
             "userAdministration"), "/niobe/legion/client/fxml/tab/admin/UserAdmin.fxml"),
                                                                                            new AdminType(Client.getLocalisation(
                                                                                                    "groupAdministration"),
@@ -104,7 +106,7 @@ public class AdminTabController
                             AdminTabController.this.childController = loader.getController();
                         } catch(IOException e)
                         {
-                            Logger.exception(LegionLogger.STDERR, e);
+                            LOG.catching(e);
                         }
                     }
                 }

@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ScramServer.java) is part of Niobe Legion (module niobe-legion-server).
+ * This file (ScramServer.java) is part of Niobe Legion (module niobe-legion-server_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -47,9 +47,9 @@ import niobe.legion.shared.communicator.sasl.ScramBase;
 class ScramServer extends ScramBase implements SaslServer
 {
 
-    private static final int ITERATION_COUNT = 4096;
+    private final static int ITERATION_COUNT = 4096;
 
-    private static final Pattern USER_VALIDATION = Pattern.compile("=(?!2C|3D)");
+    private final static Pattern USER_VALIDATION = Pattern.compile("=(?!2C|3D)");
 
     private char[] password;
 
@@ -162,8 +162,7 @@ class ScramServer extends ScramBase implements SaslServer
             // user's iteration count i and the user's salt, and appends its own
             // nonce to the client-specified one.
             this.serverFirstMessage = "r=" + this.nonce + ",s=" + DatatypeConverter
-                    .printBase64Binary(this.salt) + ",i=" +
-                    ScramServer.ITERATION_COUNT;
+                    .printBase64Binary(this.salt) + ",i=" + ScramServer.ITERATION_COUNT;
             return this.serverFirstMessage.getBytes();
 
         } else

@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ResizeDragListener.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (ResizeDragListener.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui;
@@ -32,13 +32,13 @@ import javafx.stage.Stage;
 
 public class ResizeDragListener implements EventHandler<MouseEvent>
 {
-    private static final int NONE = 0x00;
-    private static final int WEST = 0x01;
-    private static final int NORTH = 0x02;
-    private static final int EAST = 0x04;
-    private static final int SOUTH = 0x08;
+    private final static int NONE = 0x00;
+    private final static int WEST = 0x01;
+    private final static int NORTH = 0x02;
+    private final static int EAST = 0x04;
+    private final static int SOUTH = 0x08;
 
-    private static final int BORDER = 8;
+    private final static int BORDER = 8;
 
     private Stage stage;
     private int state;

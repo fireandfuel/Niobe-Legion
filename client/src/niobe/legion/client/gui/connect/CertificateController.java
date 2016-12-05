@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (CertificateController.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (CertificateController.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.gui.connect;
@@ -37,14 +37,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import niobe.legion.client.Client;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CertificateController
 {
+    private final static Logger LOG = LogManager.getLogger(CertificateController.class);
 
-    private static final char[] HEXDIGITS = "0123456789ABCDEF".toCharArray();
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.YYYY");
+    private final static char[] HEXDIGITS = "0123456789ABCDEF".toCharArray();
+    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.YYYY");
 
     private static MessageDigest SHA1;
 
@@ -120,57 +121,70 @@ public class CertificateController
         this.keystoreFile = keyStoreFile;
         this.passphrase = passphrase;
 
-        Platform.runLater(() -> {
-            try
-            {
-                this.certificateQuestion.setText(this.certificateQuestion.getText().replace("%s", serverName));
-                this.certificateName.setText(this.certificateName.getText().replace("%s", serverName));
+        Platform.runLater(() ->
+                          {
+                              try
+                              {
+                                  this.certificateQuestion
+                                          .setText(this.certificateQuestion.getText().replace("%s", serverName));
+                                  this.certificateName
+                                          .setText(this.certificateName.getText().replace("%s", serverName));
 
-                this.subject.setText(cert.getSubjectX500Principal().toString().replace(", ", "\n"));
+                                  this.subject.setText(cert.getSubjectX500Principal().toString().replace(", ", "\n"));
 
-                SHA1.update(cert.getEncoded());
+                                  SHA1.update(cert.getEncoded());
 
-                this.sha1
-                        .setText(Client.getLocalisation("certificateFingerprintSha1") + ": " + toHexString(SHA1.digest()));
-                this.validBegin.setText(Client.getLocalisation("certificateCreationDate") + ": " +
-                                                DATE_FORMAT.format(cert.getNotBefore()));
-                this.validEnd.setText(Client.getLocalisation("certificateExpireDate") + ": " +
-                                              DATE_FORMAT.format(cert.getNotAfter()));
-            } catch(CertificateEncodingException e)
-            {
-                Logger.exception(LegionLogger.STDERR, e);
-            }
+                                  this.sha1
+                                          .setText(Client.getLocalisation("certificateFingerprintSha1") + ": " + toHexString(
+                                                  SHA1.digest()));
+                                  this.validBegin
+                                          .setText(Client.getLocalisation("certificateCreationDate") + ": " + DATE_FORMAT
+                                                  .format(cert.getNotBefore()));
+                                  this.validEnd
+                                          .setText(Client.getLocalisation("certificateExpireDate") + ": " + DATE_FORMAT
+                                                  .format(cert.getNotAfter()));
+                              } catch(CertificateEncodingException e)
+                              {
+                                  LOG.catching(e);
+                              }
 
-        });
+                          });
     }
 
     public synchronized void setCertificateExpired(final String serverName, final X509Certificate cert)
     {
-        Platform.runLater(() -> {
-            try
-            {
-                this.accept.setDisable(true);
+        Platform.runLater(() ->
+                          {
+                              try
+                              {
+                                  this.accept.setDisable(true);
 
-                this.certificateQuestion
-                        .setText(String.format(Client.getLocalisation("certificateNotValidatedName"), serverName));
-                this.certificateName.setText(String.format(Client.getLocalisation("certificateExpiredValidation")));
-                this.subject.setText(cert.getSubjectX500Principal().toString().replace(", ", "\n"));
-                this.certificateTrust.setText(Client.getLocalisation("certificateExpiredExplaination"));
+                                  this.certificateQuestion
+                                          .setText(String.format(Client.getLocalisation("certificateNotValidatedName"),
+                                                                 serverName));
+                                  this.certificateName
+                                          .setText(String.format(Client.getLocalisation("certificateExpiredValidation")));
+                                  this.subject.setText(cert.getSubjectX500Principal().toString().replace(", ", "\n"));
+                                  this.certificateTrust
+                                          .setText(Client.getLocalisation("certificateExpiredExplaination"));
 
-                SHA1.update(cert.getEncoded());
+                                  SHA1.update(cert.getEncoded());
 
-                this.sha1
-                        .setText(Client.getLocalisation("certificateFingerprintSha1") + ": " + toHexString(SHA1.digest()));
-                this.validBegin.setText(Client.getLocalisation("certificateCreationDate") + ": " +
-                                                DATE_FORMAT.format(cert.getNotBefore()));
-                this.validEnd.setText(Client.getLocalisation("certificateExpireDate") + ": " +
-                                              DATE_FORMAT.format(cert.getNotAfter()));
-            } catch(CertificateEncodingException e)
-            {
-                Logger.exception(LegionLogger.STDERR, e);
-            }
+                                  this.sha1
+                                          .setText(Client.getLocalisation("certificateFingerprintSha1") + ": " + toHexString(
+                                                  SHA1.digest()));
+                                  this.validBegin
+                                          .setText(Client.getLocalisation("certificateCreationDate") + ": " + DATE_FORMAT
+                                                  .format(cert.getNotBefore()));
+                                  this.validEnd
+                                          .setText(Client.getLocalisation("certificateExpireDate") + ": " + DATE_FORMAT
+                                                  .format(cert.getNotAfter()));
+                              } catch(CertificateEncodingException e)
+                              {
+                                  LOG.catching(e);
+                              }
 
-        });
+                          });
     }
 
     @FXML

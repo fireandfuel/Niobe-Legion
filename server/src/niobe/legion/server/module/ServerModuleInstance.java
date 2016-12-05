@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ServerModuleInstance.java) is part of Niobe Legion (module niobe-legion-server).
+ * This file (ServerModuleInstance.java) is part of Niobe Legion (module niobe-legion-server_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -21,8 +21,8 @@
 package niobe.legion.server.module;
 
 import java.io.File;
-import niobe.legion.server.database.AbstractDatabase;
 import niobe.legion.server.Server;
+import niobe.legion.server.database.AbstractDatabase;
 import niobe.legion.shared.module.ModuleInstance;
 import niobe.legion.shared.module.ModuleRightManager;
 

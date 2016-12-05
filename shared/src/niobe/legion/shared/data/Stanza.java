@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (Stanza.java) is part of Niobe Legion (module niobe-legion-shared).
+ * This file (Stanza.java) is part of Niobe Legion (module niobe-legion-shared_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.shared.data;
@@ -202,8 +202,8 @@ public class Stanza
     @Override
     public String toString()
     {
-        String output = "Stanza name: " + this.getName() + ", localname: " + this.getLocalName() + ", eventType: " +
-                this.getEventTypeAsString() + ", value: " + this.getValue();
+        String output = "Stanza name: " + this.getName() + ", localname: " + this
+                .getLocalName() + ", eventType: " + this.getEventTypeAsString() + ", value: " + this.getValue();
         for(String key : this.attributes.keySet())
         {
             output += "\n, attribute " + key + " : " + this.attributes.get(key);

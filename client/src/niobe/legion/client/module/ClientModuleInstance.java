@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (ClientModuleInstance.java) is part of Niobe Legion (module niobe-legion-client).
+ * This file (ClientModuleInstance.java) is part of Niobe Legion (module niobe-legion-client_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *     GNU Lesser General Public License for more details.
  *
  *     You should have received a copy of the GNU Lesser General Public License
- *     along with Niobe Legion. If not, see <http://www.gnu.org/licenses/>.
+ *     along with Niobe Legion.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package niobe.legion.client.module;
@@ -56,8 +56,7 @@ public class ClientModuleInstance extends ModuleInstance
 
     public IModuleTab[] getMainTabs()
     {
-        if(!(this.module instanceof IClientModule) || this.state == MISSING_DEPENDENCIES || this.state == IN_CONFLICT ||
-                this.state == UNINITIALIZED)
+        if(!(this.module instanceof IClientModule) || this.state == MISSING_DEPENDENCIES || this.state == IN_CONFLICT || this.state == UNINITIALIZED)
         {
             return null;
         }

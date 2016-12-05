@@ -2,7 +2,7 @@
  * Niobe Legion - a versatile client / server framework
  *     Copyright (C) 2013-2016 by fireandfuel (fireandfuel<at>hotmail<dot>de)
  *
- * This file (AbstractDatabase.java) is part of Niobe Legion (module niobe-legion-server).
+ * This file (AbstractDatabase.java) is part of Niobe Legion (module niobe-legion-server_main).
  *
  *     Niobe Legion is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Lesser General Public License as published by
@@ -66,9 +66,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import niobe.legion.shared.Base64;
 import niobe.legion.shared.Utils;
 import niobe.legion.shared.data.IRight;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupRightEntity;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
@@ -76,6 +76,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
  */
 public abstract class AbstractDatabase
 {
+    private final static Logger LOG = LogManager.getLogger(AbstractDatabase.class);
+
     @PersistenceUnit
     EntityManagerFactory entityManagerFactory;
 
@@ -135,10 +137,9 @@ public abstract class AbstractDatabase
                 this.decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
                 this.decryptCipher.init(Cipher.DECRYPT_MODE, keyValue, iVSpec);
             }
-        } catch(NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException
-                | InvalidKeyException | InvalidAlgorithmParameterException | IOException e)
+        } catch(NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IOException e)
         {
-            Logger.exception(LegionLogger.DATABASE, e);
+            LOG.catching(e);
         }
 
         if(type.equalsIgnoreCase("mariadb") && args.length == 8)
@@ -156,9 +157,9 @@ public abstract class AbstractDatabase
             properties.put("hibernate.connection.user", user);
             properties.put("hibernate.connection.password", password);
             properties.put("hibernate.dialect", "org.hibernate.dialect.MySQL5Dialect");
-            properties.put("hibernate.c3p0.min_size", minConnections);
-            properties.put("hiberante.c3p0.max_size", maxConnections);
-            properties.put("hibernate.c3p0.max_statements", "50");
+            properties.put("hibernate.hikari.minimumIdle", minConnections);
+            properties.put("hibernate.hikari.maximumPoolSize", maxConnections);
+            properties.put("hibernate.hikari.idleTimeout", "30000");
 
         } else if(type.equalsIgnoreCase("h2-embedded") && args.length == 6)
         {
@@ -170,17 +171,17 @@ public abstract class AbstractDatabase
             String maxConnections = args[5];
 
             properties.put("hibernate.connection.driver_class", "org.h2.Driver");
-            properties.put("hibernate.connection.url", "jdbc:h2:file:./" + database +
-                    ((encryptionPassword != null && encryptionPassword
-                            .isEmpty()) ? ";CIPHER=AES;DATABASE_TO_UPPER=FALSE" : ";DATABASE_TO_UPPER=FALSE"));
+            properties.put("hibernate.connection.url",
+                           "jdbc:h2:file:./" + database + ((encryptionPassword != null && encryptionPassword
+                                   .isEmpty()) ? ";CIPHER=AES;DATABASE_TO_UPPER=FALSE" : ";DATABASE_TO_UPPER=FALSE"));
             properties.put("hibernate.connection.user", user);
             properties.put("hibernate.connection.password",
                            (encryptionPassword != null && encryptionPassword
                                    .isEmpty()) ? (password + " " + encryptionPassword) : password);
             properties.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            properties.put("hibernate.c3p0.min_size", minConnections);
-            properties.put("hiberante.c3p0.max_size", maxConnections);
-            properties.put("hibernate.c3p0.max_statements", "50");
+            properties.put("hibernate.hikari.minimumIdle", minConnections);
+            properties.put("hibernate.hikari.maximumPoolSize", maxConnections);
+            properties.put("hibernate.hikari.idleTimeout", "30000");
         } else if(type.equalsIgnoreCase("h2-server") && args.length == 7)
         {
             String host = args[0];
@@ -193,17 +194,17 @@ public abstract class AbstractDatabase
             String maxConnections = args[7];
 
             properties.put("hibernate.connection.driver_class", "org.h2.Driver");
-            properties.put("hibernate.connection.url", "jdbc:h2:tcp://" + host + ":" + port + "/" + database +
-                    ((encryptionPassword != null && encryptionPassword
-                            .isEmpty()) ? ";CIPHER=AES;DATABASE_TO_UPPER=FALSE" : ";DATABASE_TO_UPPER=FALSE"));
+            properties.put("hibernate.connection.url",
+                           "jdbc:h2:tcp://" + host + ":" + port + "/" + database + ((encryptionPassword != null && encryptionPassword
+                                   .isEmpty()) ? ";CIPHER=AES;DATABASE_TO_UPPER=FALSE" : ";DATABASE_TO_UPPER=FALSE"));
             properties.put("hibernate.connection.user", user);
             properties.put("hibernate.connection.password",
                            (encryptionPassword != null && encryptionPassword
                                    .isEmpty()) ? (password + " " + encryptionPassword) : password);
             properties.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            properties.put("hibernate.c3p0.min_size", minConnections);
-            properties.put("hiberante.c3p0.max_size", maxConnections);
-            properties.put("hibernate.c3p0.max_statements", "50");
+            properties.put("hibernate.hikari.minimumIdle", minConnections);
+            properties.put("hibernate.hikari.maximumPoolSize", maxConnections);
+            properties.put("hibernate.hikari.idleTimeout", "30000");
         }
 
         this.entityManagerFactory = Persistence.createEntityManagerFactory(persistenceName, properties);
@@ -472,10 +473,9 @@ public abstract class AbstractDatabase
                 byte[] output = writer.toByteArray();
 
                 return Base64.encodeBytes(output);
-            } catch(ShortBufferException | IOException | IllegalBlockSizeException
-                    | BadPaddingException e)
+            } catch(ShortBufferException | IOException | IllegalBlockSizeException | BadPaddingException e)
             {
-                Logger.exception(LegionLogger.DATABASE, e);
+                LOG.catching(e);
                 return text;
             }
         }
@@ -517,10 +517,9 @@ public abstract class AbstractDatabase
                 byte[] output = writer.toByteArray();
                 return new String(output, "UTF-8");
 
-            } catch(IOException | ShortBufferException | IllegalBlockSizeException
-                    | BadPaddingException e)
+            } catch(IOException | ShortBufferException | IllegalBlockSizeException | BadPaddingException e)
             {
-                Logger.exception(LegionLogger.DATABASE, e);
+                LOG.catching(e);
                 return text;
             }
         }

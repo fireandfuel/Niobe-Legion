@@ -65,21 +65,21 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import niobe.legion.client.Client;
 import niobe.legion.client.DatasetReceiver;
+import niobe.legion.client.communicator.sasl.LegionSaslClientProvider;
 import niobe.legion.client.gui.connect.CertificateController;
 import niobe.legion.client.gui.connect.ConnectController;
 import niobe.legion.client.gui.connect.LoginController;
 import niobe.legion.client.gui.debug.DebugController;
-import niobe.legion.client.communicator.sasl.LegionSaslClientProvider;
 import niobe.legion.shared.Base64;
-import niobe.legion.shared.communicator.Communicator;
 import niobe.legion.shared.communication.XmlCommunication;
+import niobe.legion.shared.communicator.Communicator;
 import niobe.legion.shared.data.IRight;
 import niobe.legion.shared.data.LegionRight;
 import niobe.legion.shared.data.Stanza;
-import niobe.legion.shared.logger.LegionLogger;
-import niobe.legion.shared.logger.Logger;
 import niobe.legion.shared.model.GroupRightEntity;
 import niobe.legion.shared.model.marshal.StanzaMarshaller;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Bidirectional communicator client to server based on XML stream parsing
@@ -93,8 +93,10 @@ import niobe.legion.shared.model.marshal.StanzaMarshaller;
  */
 public class ClientCommunicator extends Communicator
 {
-    private static final int SERVER_AUTH_ERR = 0;
-    private static final int CLIENT_AUTH_ERR = 1;
+    private final static Logger LOG = LogManager.getLogger(ClientCommunicator.class);
+
+    private final static int SERVER_AUTH_ERR = 0;
+    private final static int CLIENT_AUTH_ERR = 1;
     public final static String CLIENT_NAME = "legion_client";
     public final static String CLIENT_VERSION = "1.0";
     private final static List<String> CLIENT_FEATURES = new ArrayList<String>(Arrays.asList("starttls"));
@@ -166,7 +168,7 @@ public class ClientCommunicator extends Communicator
                 }
             } catch(IOException e)
             {
-                Logger.exception(LegionLogger.STDERR, e);
+                LOG.catching(e);
             }
         }
     }
@@ -180,7 +182,7 @@ public class ClientCommunicator extends Communicator
             super.run();
         } catch(IOException e)
         {
-            Logger.exception(LegionLogger.STDERR, e);
+            LOG.catching(e);
         }
     }
 
@@ -276,12 +278,12 @@ public class ClientCommunicator extends Communicator
                 this.serverVersion = currentStanza.getAttribute("version");
                 break;
             case "legion:proceedtls":
-                if(this.clientAcceptedFromServer && !this.tlsEstablished && this.keyStorePassword != null &&
-                        this.keyStoreFile != null && !this.keyStoreFile.isEmpty())
+                if(this.clientAcceptedFromServer && !this.tlsEstablished && this.keyStorePassword != null && this.keyStoreFile != null && !this.keyStoreFile
+                        .isEmpty())
                 {
                     if(this.keyStorePassword.isEmpty())
                     {
-                        Logger.warn(LegionLogger.STDOUT, "WARNING: Your key store password is empty!!!");
+                        LOG.warn("WARNING: Your key store password is empty!!!");
                     }
                     try
                     {
@@ -304,7 +306,7 @@ public class ClientCommunicator extends Communicator
                         }
                     } catch(Exception e)
                     {
-                        Logger.exception(LegionLogger.STDERR, e);
+                        LOG.catching(e);
                         if(!this.tlsEstablished)
                         {
                             this.decline("proceedtls", "tls is not established, see client error log");
@@ -349,7 +351,7 @@ public class ClientCommunicator extends Communicator
                                         }
                                     } catch(Exception e)
                                     {
-                                        Logger.exception(LegionLogger.STDERR, e);
+                                        LOG.catching(e);
                                         this.decline("starttls", "can not start compression");
                                     }
                                 } else
@@ -371,8 +373,8 @@ public class ClientCommunicator extends Communicator
             case "legion:query":
                 if(this.isAuthenficated())
                 {
-                    if("result".equals(currentStanza.getAttribute("type")) &&
-                            currentStanza.getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
+                    if("result".equals(currentStanza.getAttribute("type")) && currentStanza
+                            .getSequenceId() != null && currentStanza.getSequenceId().matches("\\d+"))
                     {
                         long id = Long.parseLong(currentStanza.getSequenceId());
 
@@ -425,7 +427,7 @@ public class ClientCommunicator extends Communicator
                 if(this.saslClient != null)
                 {
                     this.loginFailed(ClientCommunicator.SERVER_AUTH_ERR);
-                    Logger.error(LegionLogger.AUTH, currentStanza.getValue());
+                    LOG.error(currentStanza.getValue());
                 }
                 break;
             case "legion:dataset":
@@ -458,8 +460,8 @@ public class ClientCommunicator extends Communicator
                 if(this.isAcceptAt(1) && currentStanza.getValue() != null)
                 {
                     String[] identification = currentStanza.getValue().split(":");
-                    if(identification.length == 2 && ClientCommunicator.CLIENT_NAME.equals(identification[0]) &&
-                            ClientCommunicator.CLIENT_VERSION.equals(identification[1]))
+                    if(identification.length == 2 && ClientCommunicator.CLIENT_NAME
+                            .equals(identification[0]) && ClientCommunicator.CLIENT_VERSION.equals(identification[1]))
                     {
                         this.clientAcceptedFromServer = true;
                     }
@@ -468,8 +470,8 @@ public class ClientCommunicator extends Communicator
             case "legion:server":
                 if(this.clientAcceptedFromServer)
                 {
-                    if(this.serverName == null || this.serverName.isEmpty() || this.serverVersion == null ||
-                            this.serverVersion.isEmpty())
+                    if(this.serverName == null || this.serverName
+                            .isEmpty() || this.serverVersion == null || this.serverVersion.isEmpty())
                     {
                         this.decline("legion:server", "Invalid Server Identification received");
                         this.connectionFailed("clientRefusedConnection");
@@ -532,7 +534,7 @@ public class ClientCommunicator extends Communicator
                     } catch(SaslException e)
                     {
                         this.loginFailed(ClientCommunicator.CLIENT_AUTH_ERR);
-                        Logger.exception(LegionLogger.AUTH, e);
+                        LOG.catching(e);
                     }
                 }
                 break;
@@ -633,8 +635,8 @@ public class ClientCommunicator extends Communicator
     private void proceedConnection() throws IOException
     {
         Stanza stanza;
-        if(ClientCommunicator.CLIENT_FEATURES.contains("starttls") &&
-                this.serverFeatures.contains("starttls") && !tlsEstablished)
+        if(ClientCommunicator.CLIENT_FEATURES.contains("starttls") && this.serverFeatures
+                .contains("starttls") && !tlsEstablished)
         {
             stanza = new Stanza();
             stanza.setEmptyElement(true);
@@ -642,8 +644,8 @@ public class ClientCommunicator extends Communicator
             stanza.setName("legion:starttls");
             stanza.setEmptyElement(true);
             this.write(stanza);
-        } else if(ClientCommunicator.CLIENT_FEATURES.contains("compressed_stream_xz") &&
-                this.serverFeatures.contains("compressed_stream_xz") && !compressionActive)
+        } else if(ClientCommunicator.CLIENT_FEATURES.contains("compressed_stream_xz") && this.serverFeatures
+                .contains("compressed_stream_xz") && !compressionActive)
         {
             stanza = new Stanza();
             stanza.setEmptyElement(true);
@@ -652,8 +654,8 @@ public class ClientCommunicator extends Communicator
             stanza.putAttribute("algorithm", "xz");
             stanza.setEmptyElement(true);
             this.write(stanza);
-        } else if(ClientCommunicator.CLIENT_FEATURES.contains("compressed_stream_gzip") &&
-                this.serverFeatures.contains("compressed_stream_gzip") && !compressionActive)
+        } else if(ClientCommunicator.CLIENT_FEATURES.contains("compressed_stream_gzip") && this.serverFeatures
+                .contains("compressed_stream_gzip") && !compressionActive)
         {
             stanza = new Stanza();
             stanza.setEmptyElement(true);
@@ -678,12 +680,13 @@ public class ClientCommunicator extends Communicator
                 .getCurrentController() : null;
         if(connectController != null)
         {
-            Platform.runLater(() -> {
-                connectController.getProgressStatusProperty().unbind();
-                connectController.getProgressStatusProperty().setValue(0);
-                connectController.getProgressLabelProperty().unbind();
-                connectController.getProgressLabelProperty().setValue(Client.getLocalisation(reason));
-            });
+            Platform.runLater(() ->
+                              {
+                                  connectController.getProgressStatusProperty().unbind();
+                                  connectController.getProgressStatusProperty().setValue(0);
+                                  connectController.getProgressLabelProperty().unbind();
+                                  connectController.getProgressLabelProperty().setValue(Client.getLocalisation(reason));
+                              });
         }
     }
 
@@ -696,7 +699,8 @@ public class ClientCommunicator extends Communicator
                                                 "legion",
                                                 this.serverName + "_" + this.serverVersion,
                                                 new HashMap<String, Object>(),
-                                                callbacks -> {
+                                                callbacks ->
+                                                {
                                                     for(Callback callback : callbacks)
                                                     {
                                                         if(callback instanceof NameCallback)
@@ -708,8 +712,7 @@ public class ClientCommunicator extends Communicator
                                                         } else if(callback instanceof RealmCallback)
                                                         {
                                                             ((RealmCallback) callback)
-                                                                    .setText(ClientCommunicator.this.serverName + "_" +
-                                                                                     ClientCommunicator.this.serverVersion);
+                                                                    .setText(ClientCommunicator.this.serverName + "_" + ClientCommunicator.this.serverVersion);
                                                         } else if(callback instanceof TextInputCallback)
                                                         {
                                                             ((TextInputCallback) callback).setText(null);
@@ -721,16 +724,20 @@ public class ClientCommunicator extends Communicator
                                                                                                     true);
 
                                                             observableValue
-                                                                    .addListener((observable, oldValue, newValue) -> {
-                                                                        new Thread(() -> {
-                                                                            ((TextInputCallback) callback)
-                                                                                    .setText(newValue);
-                                                                            synchronized(ClientCommunicator.this)
-                                                                            {
-                                                                                ClientCommunicator.this.notify();
-                                                                            }
-                                                                        }).start();
-                                                                    });
+                                                                    .addListener((observable, oldValue, newValue) ->
+                                                                                 {
+                                                                                     new Thread(() ->
+                                                                                                {
+                                                                                                    ((TextInputCallback) callback)
+                                                                                                            .setText(
+                                                                                                                    newValue);
+                                                                                                    synchronized(ClientCommunicator.this)
+                                                                                                    {
+                                                                                                        ClientCommunicator.this
+                                                                                                                .notify();
+                                                                                                    }
+                                                                                                }).start();
+                                                                                 });
 
 
                                                             while(((TextInputCallback) callback).getText() == null)
@@ -742,15 +749,14 @@ public class ClientCommunicator extends Communicator
                                                                         ClientCommunicator.this.wait();
                                                                     } catch(InterruptedException e)
                                                                     {
-                                                                        Logger.exception(LegionLogger.STDERR, e);
+                                                                        LOG.catching(e);
                                                                     }
                                                                 }
                                                             }
                                                         } else
                                                         {
-                                                            Logger.debug(LegionLogger.AUTH,
-                                                                         "Unknown Callback: " + callback.getClass()
-                                                                                 .toString());
+                                                            LOG.debug("Unknown Callback: " + callback.getClass()
+                                                                    .toString());
                                                         }
                                                     }
                                                 });
@@ -828,7 +834,7 @@ public class ClientCommunicator extends Communicator
             return true;
         } catch(SSLException e)
         {
-            Logger.exception(LegionLogger.TLS, e);
+            LOG.catching(e);
 
             // client don't know certificate
             X509Certificate[] chain = trustManager.getChain();
@@ -851,7 +857,7 @@ public class ClientCommunicator extends Communicator
                                                           passphrase);
                     } catch(CertificateExpiredException | CertificateNotYetValidException e1)
                     {
-                        Logger.exception(LegionLogger.TLS, e1);
+                        LOG.catching(e1);
                         certController.setCertificateExpired(this.socket.getInetAddress().getCanonicalHostName(), cert);
                     }
                 }
