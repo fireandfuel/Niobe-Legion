@@ -20,13 +20,14 @@
 
 package niobe.legion.shared.model.marshal;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import javax.xml.stream.XMLStreamConstants;
 import niobe.legion.shared.data.Stanza;
 import org.junit.Assert;
 import org.junit.Test;
+
+import javax.xml.stream.XMLStreamConstants;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author fireandfuel
@@ -880,8 +881,7 @@ public class UnmarshalArrayTest implements XMLStreamConstants
     }
 
     @Test
-    public void testBigIntegerArrayUnmarshal()
-    {
+    public void testBigIntegerArrayUnmarshal() {
         List<Stanza> stanzas = new ArrayList<Stanza>();
         Stanza stanza = new Stanza();
         stanza.setName("legion:dataset");
@@ -971,5 +971,98 @@ public class UnmarshalArrayTest implements XMLStreamConstants
         Assert.assertEquals(new BigInteger("1"), array[0]);
         Assert.assertEquals(new BigInteger("2"), array[1]);
         Assert.assertEquals(new BigInteger("3"), array[2]);
+    }
+
+    @Test
+    public void testEnumArrayUnmarshal() {
+        List<Stanza> stanzas = new ArrayList<Stanza>();
+        Stanza stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.putAttribute("class", TestEnum.class.getName() + "[]");
+        stanza.putAttribute("arrayCount", "3");
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("index", "0");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue(TestEnum.FIRST.name());
+        stanza.putAttribute("class", TestEnum.class.getName());
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("index", "1");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue(TestEnum.SECOND.name());
+        stanza.putAttribute("class", TestEnum.class.getName());
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("index", "2");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue(TestEnum.THIRD.name());
+        stanza.putAttribute("class", TestEnum.class.getName());
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        List<Object> objects = StanzaMarshaller.unmarshal(stanzas);
+        Assert.assertEquals(1, objects.size());
+        Assert.assertEquals(TestEnum[].class, objects.get(0).getClass());
+        TestEnum[] array = (TestEnum[]) objects.get(0);
+        Assert.assertEquals(3, array.length);
+        Assert.assertEquals(TestEnum.FIRST, array[0]);
+        Assert.assertEquals(TestEnum.SECOND, array[1]);
+        Assert.assertEquals(TestEnum.THIRD, array[2]);
     }
 }

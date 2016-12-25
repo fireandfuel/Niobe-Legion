@@ -20,6 +20,9 @@
 
 package niobe.legion.shared.model.marshal;
 
+import niobe.legion.shared.data.Stanza;
+
+import javax.xml.stream.XMLStreamConstants;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -27,21 +30,9 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-import javax.xml.stream.XMLStreamConstants;
-import niobe.legion.shared.data.Stanza;
 
 /**
  * @author fireandfuel, 07.04.15
@@ -55,7 +46,7 @@ public class StanzaMarshaller implements XMLStreamConstants
         final Class<?> columnClass;
         final boolean isArrayColumn;
 
-        protected StanzaColumn(String columnName, Class<?> columnClass, boolean isArrayColumn)
+        StanzaColumn(String columnName, Class<?> columnClass, boolean isArrayColumn)
         {
             this.columnName = columnName;
             this.columnClass = columnClass;
@@ -227,7 +218,11 @@ public class StanzaMarshaller implements XMLStreamConstants
             // object is a primitive type like int, OR date, time or string
             result.setEmptyElement(true);
             result.setValue(object.toString());
-        } else // object is not an array, collection, map or primitive
+        } else if (object.getClass().isEnum()) {
+            Enum<?> enumObject = (Enum<?>) object;
+            result.setEmptyElement(true);
+            result.setValue(enumObject.name());
+        } else // object is not an array, collection, map, primitive or enum
         {
             // get all declared fields (includes private fields, too) of the object
             Field[] fields = object.getClass().getDeclaredFields();
@@ -250,7 +245,7 @@ public class StanzaMarshaller implements XMLStreamConstants
                                                                                                          }
                                                                                                          return null;
                                                                                                      })
-                    .filter(list -> list != null && !list.isEmpty()).forEach(list -> results.addAll(list));
+                    .filter(list -> list != null && !list.isEmpty()).forEach(results::addAll);
 
             result = new Stanza();
             result.setName("legion:dataset");
@@ -405,7 +400,7 @@ public class StanzaMarshaller implements XMLStreamConstants
                 Class<?> objectClass = Class.forName(className);
 
                 if(objectClass
-                        .isPrimitive() || objectClass == Integer.class || objectClass == Long.class || objectClass == Double.class || objectClass == Float.class || objectClass == Boolean.class || objectClass == LocalDate.class || objectClass == LocalTime.class || objectClass == LocalDateTime.class || objectClass == String.class || objectClass == Byte.class || objectClass == Short.class || objectClass == Character.class || objectClass == BigInteger.class)
+                        .isPrimitive() || objectClass.isEnum() || objectClass == Integer.class || objectClass == Long.class || objectClass == Double.class || objectClass == Float.class || objectClass == Boolean.class || objectClass == LocalDate.class || objectClass == LocalTime.class || objectClass == LocalDateTime.class || objectClass == String.class || objectClass == Byte.class || objectClass == Short.class || objectClass == Character.class || objectClass == BigInteger.class)
                 {
                     String value = stanza.getValue();
 
@@ -445,7 +440,13 @@ public class StanzaMarshaller implements XMLStreamConstants
                     } else if(objectClass == BigInteger.class)
                     {
                         object = new BigInteger(value);
-                    } else if(objectClass == String.class)
+                    } else if (objectClass.isEnum()) {
+                        Optional optional = EnumSet.allOf((Class) objectClass).stream()
+                                .filter(e -> e.getClass().isEnum() && value.equals(((Enum<?>) e).name())).findFirst();
+                        if (optional.isPresent()) {
+                            object = optional.get();
+                        }
+                    } else if (objectClass == String.class)
                     {
                         object = value;
                     }
@@ -639,7 +640,7 @@ public class StanzaMarshaller implements XMLStreamConstants
     {
         Class<?> columnClass = stanzaColumn != null ? stanzaColumn.columnClass : null;
         String columnName = stanzaColumn != null ? stanzaColumn.columnName : null;
-        boolean isArrayColumn = stanzaColumn != null ? stanzaColumn.isArrayColumn : false;
+        boolean isArrayColumn = stanzaColumn != null && stanzaColumn.isArrayColumn;
 
         // unmarshal the child object
         Object result = unmarshalStanzas(stanzas);
@@ -885,9 +886,16 @@ public class StanzaMarshaller implements XMLStreamConstants
                             } else if(keyClass == LocalDateTime.class)
                             {
                                 key = LocalDateTime.parse((String) key);
-                            } else if(keyClass == BigInteger.class)
-                            {
+                            } else if(keyClass == BigInteger.class) {
                                 key = new BigInteger((String) key);
+                            } else if (keyClass.isEnum()) {
+                                Object finalKey = key;
+
+                                Optional optional = EnumSet.allOf((Class) keyClass).stream()
+                                        .filter(e -> e.getClass().isEnum() && finalKey.equals(((Enum<?>) e).name())).findFirst();
+                                if (optional.isPresent()) {
+                                    key = optional.get();
+                                }
                             }
 
                             // put child object with key to map
@@ -1498,8 +1506,7 @@ public class StanzaMarshaller implements XMLStreamConstants
 
     private static Map convertMap(Map map)
     {
-        Map newMap = new HashMap<>();
-        newMap.putAll(map);
+        Map newMap = new HashMap<>(map);
         return newMap;
     }
 }

@@ -20,13 +20,14 @@
 
 package niobe.legion.shared.model.marshal;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import javax.xml.stream.XMLStreamConstants;
 import niobe.legion.shared.data.Stanza;
 import org.junit.Assert;
 import org.junit.Test;
+
+import javax.xml.stream.XMLStreamConstants;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author fireandfuel
@@ -123,11 +124,11 @@ public class UnmarshalListTest implements XMLStreamConstants
         ArrayList list = (ArrayList) objects.get(0);
         Assert.assertEquals(3, list.size());
         Assert.assertEquals(Boolean.class, list.get(0).getClass());
-        Assert.assertEquals(true, (boolean) list.get(0));
+        Assert.assertEquals(true, list.get(0));
         Assert.assertEquals(Boolean.class, list.get(1).getClass());
-        Assert.assertEquals(false, (boolean) list.get(1));
+        Assert.assertEquals(false, list.get(1));
         Assert.assertEquals(Boolean.class, list.get(2).getClass());
-        Assert.assertEquals(true, (boolean) list.get(2));
+        Assert.assertEquals(true, list.get(2));
     }
 
     @Test
@@ -899,16 +900,15 @@ public class UnmarshalListTest implements XMLStreamConstants
         ArrayList list = (ArrayList) objects.get(0);
         Assert.assertEquals(3, list.size());
         Assert.assertEquals(String.class, list.get(0).getClass());
-        Assert.assertEquals("1", (String) list.get(0));
+        Assert.assertEquals("1", list.get(0));
         Assert.assertEquals(String.class, list.get(1).getClass());
-        Assert.assertEquals("2", (String) list.get(1));
+        Assert.assertEquals("2", list.get(1));
         Assert.assertEquals(String.class, list.get(2).getClass());
-        Assert.assertEquals("3", (String) list.get(2));
+        Assert.assertEquals("3", list.get(2));
     }
 
     @Test
-    public void testBigIntegerListUnmarshal()
-    {
+    public void testBigIntegerListUnmarshal() {
         List<Stanza> stanzas = new ArrayList<Stanza>();
         Stanza stanza = new Stanza();
         stanza.setName("legion:dataset");
@@ -996,10 +996,106 @@ public class UnmarshalListTest implements XMLStreamConstants
         ArrayList list = (ArrayList) objects.get(0);
         Assert.assertEquals(3, list.size());
         Assert.assertEquals(BigInteger.class, list.get(0).getClass());
-        Assert.assertEquals(new BigInteger("1"), (BigInteger) list.get(0));
+        Assert.assertEquals(new BigInteger("1"), list.get(0));
         Assert.assertEquals(BigInteger.class, list.get(1).getClass());
-        Assert.assertEquals(new BigInteger("2"), (BigInteger) list.get(1));
+        Assert.assertEquals(new BigInteger("2"), list.get(1));
         Assert.assertEquals(BigInteger.class, list.get(2).getClass());
-        Assert.assertEquals(new BigInteger("3"), (BigInteger) list.get(2));
+        Assert.assertEquals(new BigInteger("3"), list.get(2));
+    }
+
+    @Test
+    public void testEnumListUnmarshal() {
+        List<Stanza> stanzas = new ArrayList<Stanza>();
+        Stanza stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.putAttribute("class", "java.util.ArrayList");
+        stanza.putAttribute("arrayCount", "3");
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("index", "0");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue(TestEnum.FIRST.name());
+        stanza.putAttribute("class", TestEnum.class.getName());
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("index", "1");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue(TestEnum.SECOND.name());
+        stanza.putAttribute("class", TestEnum.class.getName());
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("index", "2");
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue(TestEnum.THIRD.name());
+        stanza.putAttribute("class", TestEnum.class.getName());
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        List<Object> objects = StanzaMarshaller.unmarshal(stanzas);
+        Assert.assertEquals(1, objects.size());
+        Assert.assertEquals(ArrayList.class, objects.get(0).getClass());
+        ArrayList list = (ArrayList) objects.get(0);
+        Assert.assertEquals(3, list.size());
+        Assert.assertEquals(TestEnum.class, list.get(0).getClass());
+        Assert.assertEquals(TestEnum.FIRST, list.get(0));
+        Assert.assertEquals(TestEnum.class, list.get(1).getClass());
+        Assert.assertEquals(TestEnum.SECOND, list.get(1));
+        Assert.assertEquals(TestEnum.class, list.get(2).getClass());
+        Assert.assertEquals(TestEnum.THIRD, list.get(2));
     }
 }

@@ -20,14 +20,15 @@
 
 package niobe.legion.shared.model.marshal;
 
+import niobe.legion.shared.data.Stanza;
+import org.junit.Assert;
+import org.junit.Test;
+
+import javax.xml.stream.XMLStreamConstants;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.xml.stream.XMLStreamConstants;
-import niobe.legion.shared.data.Stanza;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * @author fireandfuel
@@ -230,6 +231,25 @@ public class UnmarshalSimpleTest implements XMLStreamConstants
         Assert.assertEquals(1, objects.size());
         Assert.assertEquals(BigInteger.class, objects.get(0).getClass());
         BigInteger value = (BigInteger) objects.get(0);
+        Assert.assertEquals(expected, value);
+    }
+
+    @Test
+    public void testEnumUnmarshal() {
+        TestEnum expected = TestEnum.FIRST;
+        Stanza stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setValue(TestEnum.FIRST.name());
+        stanza.putAttribute("sequenceId", "12");
+        stanza.putAttribute("class", TestEnum.class.getName());
+        stanza.setEventType(START_ELEMENT);
+        List<Stanza> stanzas = new ArrayList<Stanza>(Arrays.asList(stanza));
+        List<Object> objects = StanzaMarshaller.unmarshal(stanzas);
+
+        Assert.assertNotNull(objects);
+        Assert.assertEquals(1, objects.size());
+        Assert.assertEquals(TestEnum.class, objects.get(0).getClass());
+        TestEnum value = (TestEnum) objects.get(0);
         Assert.assertEquals(expected, value);
     }
 }

@@ -20,14 +20,15 @@
 
 package niobe.legion.shared.model.marshal;
 
+import niobe.legion.shared.data.Stanza;
+import org.junit.Assert;
+import org.junit.Test;
+
+import javax.xml.stream.XMLStreamConstants;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import javax.xml.stream.XMLStreamConstants;
-import niobe.legion.shared.data.Stanza;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * @author fireandfuel
@@ -734,6 +735,75 @@ public class MarshalMapTest implements XMLStreamConstants
                     Assert.assertEquals("2000", stanza.getValue());
                     Assert.assertEquals(2, stanza.getAttributeKeys().size());
                     Assert.assertEquals("java.math.BigInteger", stanza.getAttribute("class"));
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertTrue(stanza.isEmptyElement());
+                    break;
+                case 3:
+                case 6:
+                    Assert.assertEquals("legion:entry", stanza.getName());
+                    Assert.assertEquals(END_ELEMENT, stanza.getEventType());
+                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+                case 7:
+                    Assert.assertEquals("legion:dataset", stanza.getName());
+                    Assert.assertEquals(1, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(END_ELEMENT, stanza.getEventType());
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+            }
+        }
+    }
+
+    @Test
+    public void testEnumMapMarshal() {
+        Map<TestEnum, TestEnum> map = new TreeMap<TestEnum, TestEnum>();
+        map.put(TestEnum.FIRST, TestEnum.SECOND);
+        map.put(TestEnum.THIRD, TestEnum.FOURTH);
+        List<Stanza> stanzaList = StanzaMarshaller.marshal(map, 12);
+        Assert.assertEquals(8, stanzaList.size());
+        for (int index = 0; index < stanzaList.size(); index++) {
+            Stanza stanza = stanzaList.get(index);
+            System.out.println("Test Stanza " + index + " of " + (stanzaList.size() - 1));
+
+            Assert.assertEquals("12", stanza.getAttribute("sequenceId"));
+            switch (index) {
+                case 0:
+                    Assert.assertEquals("legion:dataset", stanza.getName());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals("java.util.TreeMap", stanza.getAttribute("class"));
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+                case 1:
+                    Assert.assertEquals("legion:entry", stanza.getName());
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(TestEnum.class.getName(), stanza.getAttribute("keyClass"));
+                    Assert.assertEquals(TestEnum.FIRST.name(), stanza.getAttribute("key"));
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+                case 2:
+                    Assert.assertEquals("legion:dataset", stanza.getName());
+                    Assert.assertEquals(TestEnum.SECOND.name(), stanza.getValue());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(TestEnum.class.getName(), stanza.getAttribute("class"));
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertTrue(stanza.isEmptyElement());
+                    break;
+                case 4:
+                    Assert.assertEquals("legion:entry", stanza.getName());
+                    Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+                    Assert.assertEquals(3, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(TestEnum.class.getName(), stanza.getAttribute("keyClass"));
+                    Assert.assertEquals(TestEnum.THIRD.name(), stanza.getAttribute("key"));
+                    Assert.assertFalse(stanza.isEmptyElement());
+                    break;
+                case 5:
+                    Assert.assertEquals("legion:dataset", stanza.getName());
+                    Assert.assertEquals(TestEnum.FOURTH.name(), stanza.getValue());
+                    Assert.assertEquals(2, stanza.getAttributeKeys().size());
+                    Assert.assertEquals(TestEnum.class.getName(), stanza.getAttribute("class"));
                     Assert.assertEquals(START_ELEMENT, stanza.getEventType());
                     Assert.assertTrue(stanza.isEmptyElement());
                     break;

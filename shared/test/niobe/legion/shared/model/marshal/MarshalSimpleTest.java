@@ -20,12 +20,13 @@
 
 package niobe.legion.shared.model.marshal;
 
-import java.math.BigInteger;
-import java.util.List;
-import javax.xml.stream.XMLStreamConstants;
 import niobe.legion.shared.data.Stanza;
 import org.junit.Assert;
 import org.junit.Test;
+
+import javax.xml.stream.XMLStreamConstants;
+import java.math.BigInteger;
+import java.util.List;
 
 /**
  * @author fireandfuel
@@ -188,6 +189,21 @@ public class MarshalSimpleTest implements XMLStreamConstants
         Assert.assertEquals(2, stanza.getAttributeKeys().size());
         Assert.assertEquals("12", stanza.getAttribute("sequenceId"));
         Assert.assertEquals("java.math.BigInteger", stanza.getAttribute("class"));
+        Assert.assertEquals(START_ELEMENT, stanza.getEventType());
+        Assert.assertTrue(stanza.isEmptyElement());
+    }
+
+    @Test
+    public void testEnumMarshal() {
+        TestEnum value = TestEnum.FIRST;
+        List<Stanza> stanzaList = StanzaMarshaller.marshal(value, 12);
+        Assert.assertEquals(1, stanzaList.size());
+        Stanza stanza = stanzaList.get(0);
+        Assert.assertEquals("legion:dataset", stanza.getName());
+        Assert.assertEquals(value.name(), stanza.getValue());
+        Assert.assertEquals(2, stanza.getAttributeKeys().size());
+        Assert.assertEquals("12", stanza.getAttribute("sequenceId"));
+        Assert.assertEquals(TestEnum.class.getName(), stanza.getAttribute("class"));
         Assert.assertEquals(START_ELEMENT, stanza.getEventType());
         Assert.assertTrue(stanza.isEmptyElement());
     }

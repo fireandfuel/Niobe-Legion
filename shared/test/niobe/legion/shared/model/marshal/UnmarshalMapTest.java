@@ -20,14 +20,15 @@
 
 package niobe.legion.shared.model.marshal;
 
+import niobe.legion.shared.data.Stanza;
+import org.junit.Assert;
+import org.junit.Test;
+
+import javax.xml.stream.XMLStreamConstants;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
-import javax.xml.stream.XMLStreamConstants;
-import niobe.legion.shared.data.Stanza;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * @author fireandfuel
@@ -854,8 +855,7 @@ public class UnmarshalMapTest implements XMLStreamConstants
     }
 
     @Test
-    public void testBigIntegerMapUnmarshal()
-    {
+    public void testBigIntegerMapUnmarshal() {
         List<Stanza> stanzas = new ArrayList<Stanza>();
         Stanza stanza = new Stanza();
         stanza.setName("legion:dataset");
@@ -922,12 +922,10 @@ public class UnmarshalMapTest implements XMLStreamConstants
         TreeMap map = (TreeMap) objects.get(0);
         Assert.assertEquals(2, map.size());
         int counter = 0;
-        for(Object key : map.keySet())
-        {
+        for (Object key : map.keySet()) {
             Assert.assertNotNull(key);
             Assert.assertEquals(BigInteger.class, key.getClass());
-            switch(counter)
-            {
+            switch (counter) {
                 case 0:
                     Assert.assertEquals(new BigInteger("1"), key);
                     break;
@@ -942,5 +940,93 @@ public class UnmarshalMapTest implements XMLStreamConstants
         Assert.assertEquals(new BigInteger("1000"), map.get(new BigInteger("1")));
         Assert.assertEquals(BigInteger.class, map.get(new BigInteger("2")).getClass());
         Assert.assertEquals(new BigInteger("2000"), map.get(new BigInteger("2")));
+    }
+
+    @Test
+    public void testEnumMapUnmarshal() {
+        List<Stanza> stanzas = new ArrayList<Stanza>();
+        Stanza stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.putAttribute("class", "java.util.TreeMap");
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("keyClass", TestEnum.class.getName());
+        stanza.putAttribute("key", TestEnum.FIRST.name());
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue(TestEnum.SECOND.name());
+        stanza.putAttribute("class", TestEnum.class.getName());
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanza.putAttribute("keyClass", TestEnum.class.getName());
+        stanza.putAttribute("key", TestEnum.THIRD.name());
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(START_ELEMENT);
+        stanza.setValue(TestEnum.FOURTH.name());
+        stanza.putAttribute("class", TestEnum.class.getName());
+        stanza.setSequenceId(12L);
+        stanza.setEmptyElement(true);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:entry");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        stanza = new Stanza();
+        stanza.setName("legion:dataset");
+        stanza.setEventType(END_ELEMENT);
+        stanza.setSequenceId(12L);
+        stanzas.add(stanza);
+
+        List<Object> objects = StanzaMarshaller.unmarshal(stanzas);
+        Assert.assertEquals(1, objects.size());
+        Assert.assertEquals(TreeMap.class, objects.get(0).getClass());
+        TreeMap map = (TreeMap) objects.get(0);
+        Assert.assertEquals(2, map.size());
+        int counter = 0;
+        for(Object key : map.keySet()) {
+            Assert.assertNotNull(key);
+            Assert.assertEquals(TestEnum.class, key.getClass());
+            switch(counter) {
+                case 0:
+                    Assert.assertEquals(TestEnum.FIRST, key);
+                    break;
+                case 1:
+                    Assert.assertEquals(TestEnum.THIRD, key);
+                    break;
+            }
+            counter++;
+        }
+        Assert.assertEquals(2, counter);
+        Assert.assertEquals(TestEnum.class, map.get(TestEnum.FIRST).getClass());
+        Assert.assertEquals(TestEnum.SECOND, map.get(TestEnum.FIRST));
+        Assert.assertEquals(TestEnum.class, map.get(TestEnum.THIRD).getClass());
+        Assert.assertEquals(TestEnum.FOURTH, map.get(TestEnum.THIRD));
     }
 }
